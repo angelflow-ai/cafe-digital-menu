@@ -30,6 +30,7 @@ import logoUrl from "./assets/infusion-saga-logo.png";
 import ordersStore from "./ordersStore";
 import sync from "./sync";
 import inventoryStore from "./inventoryStore";
+import demoMode from "./demoMode";
 
 function generateOrderId() {
   return `INF-${String(Date.now()).slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
@@ -128,7 +129,63 @@ async function api(path, options = {}) {
       ...options
     });
   } catch (error) {
-    throw new Error("Server not running");
+    // Backend is down, enable demo mode
+    if (!demoMode.isDemoModeEnabled()) {
+      console.log("Backend unavailable, enabling demo mode");
+      demoMode.setDemoMode(true);
+    }
+    // Return demo data for common API calls
+    if (path === "/categories") {
+      return demoMode.getDemoCategories();
+    }
+    if (path === "/menu" || path === "/menu?includeInactive=true") {
+      return demoMode.getDemoInventory();
+    }
+    if (path === "/inventory") {
+      return demoMode.getDemoInventory();
+    }
+    // Demo auth - allow access to admin/biller pages
+    if (path === "/auth/me") {
+      // Return demo user data based on location
+      const role = window.location.pathname.startsWith("/admin") ? "admin" : 
+                   window.location.pathname.startsWith("/biller") ? "biller" : "customer";
+      return { user: { email: `demo-${role}@demo.local`, role } };
+    }
+    if (path === "/auth/logout") {
+      return { success: true };
+    }
+    // For auth and other critical endpoints in demo mode, throw error
+    if (path.includes("/auth/") || path === "/coc-requests" || path === "/recipes" || path === "/reports") {
+      throw new Error("Demo mode: feature not available");
+    }
+    // For orders endpoints in demo mode, return empty or saved data
+    if (path === "/orders") {
+      if (options.method === "POST") {
+        // Save order to localStorage in demo mode
+        const body = JSON.parse(options.body || "{}");
+        const order = demoMode.createDemoOrder(body, body.items || []);
+        demoMode.addDemoOrder(order);
+        return order;
+      }
+      return demoMode.loadDemoOrders();
+    }
+    // Handle /orders/public/{orderId} - search in demo orders
+    if (path.includes("/orders/public/")) {
+      const orderId = path.split("/").pop();
+      const orders = demoMode.loadDemoOrders();
+      const order = orders.find(o => o.orderId === orderId || o.id === orderId || o._id === orderId);
+      if (order) return order;
+      throw new Error("Order not found");
+    }
+    // Handle /orders/public/{orderId}/retry
+    if (path.includes("/orders/public/") && path.includes("/retry")) {
+      // In demo mode, just return success
+      return { success: true };
+    }
+    if (path.includes("/orders/stream")) {
+      throw new Error("EventSource not available in demo mode");
+    }
+    throw new Error("Backend unavailable");
   }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
@@ -238,7 +295,10 @@ function CustomerApp({ navigate, counterMode = false }) {
         setAppError(null);
       })
       .catch((error) => {
-        setAppError(error.message || "Unable to load menu data.");
+        // In demo mode, don't show error message to customer
+        if (!demoMode.isDemoModeEnabled()) {
+          setAppError(error.message || "Unable to load menu data.");
+        }
         // Dev fallback: show a demo item so UI can be verified when backend is down
         try {
           setItems([
@@ -321,24 +381,44 @@ function CustomerApp({ navigate, counterMode = false }) {
   async function placeOrder(customer) {
     // if paymentMethod is cash, create a COC request for owner approval
     if (customer.paymentMethod === "cash") {
-      const request = await api("/coc-requests", {
-        method: "POST",
-        body: JSON.stringify({
-          ...customer,
-          items: cart.map(({ itemId, sizeId, quantity, serveType }) => ({ itemId, sizeId, quantity, serveType }))
-        })
-      });
-      setCart([]);
-      setCartOpen(false);
-      // show a pending confirmation modal
-      setOrderPlaced(preparePrintableOrder({
-        ...request,
-        pendingApproval: true,
-        total: cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
-        items: cart
-      }));
-      try { await ordersStore.loadOrders(); } catch (e) {}
-      return;
+      try {
+        const request = await api("/coc-requests", {
+          method: "POST",
+          body: JSON.stringify({
+            ...customer,
+            items: cart.map(({ itemId, sizeId, quantity, serveType }) => ({ itemId, sizeId, quantity, serveType }))
+          })
+        });
+        setCart([]);
+        setCartOpen(false);
+        // show a pending confirmation modal
+        setOrderPlaced(preparePrintableOrder({
+          ...request,
+          pendingApproval: true,
+          total: cart.reduce((s, i) => s + i.unitPrice * i.quantity, 0),
+          items: cart
+        }));
+        try { await ordersStore.loadOrders(); } catch (e) {}
+        return;
+      } catch (err) {
+        // In demo mode, create order directly
+        if (demoMode.isDemoModeEnabled()) {
+          console.log("Demo mode: creating order directly instead of COC request");
+          const order = demoMode.createDemoOrder(
+            customer,
+            cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, name }) => ({ 
+              itemId, sizeId, quantity, serveType, unitPrice, name 
+            }))
+          );
+          demoMode.addDemoOrder(order);
+          setCart([]);
+          setCartOpen(false);
+          setOrderPlaced(preparePrintableOrder(order));
+          try { await ordersStore.loadOrders(); } catch (e) {}
+          return;
+        }
+        throw err;
+      }
     }
 
     // For online payments we use a static UPI QR modal for manual verification flow.
@@ -361,7 +441,7 @@ function CustomerApp({ navigate, counterMode = false }) {
       method: "POST",
       body: JSON.stringify({
         ...customer,
-        items: cart.map(({ itemId, sizeId, quantity, serveType }) => ({ itemId, sizeId, quantity, serveType }))
+        items: cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, name }) => ({ itemId, sizeId, quantity, serveType, unitPrice, name }))
       })
     }));
     setCart([]);
@@ -2796,7 +2876,36 @@ function LowStockAlerts({ rawMaterials }) {
 function ReportsPage({ reports, items, orders = [] }) {
   const savedReports = reports || {};
   const savedItems = Array.isArray(items) ? items : [];
-  const topItems = Array.isArray(savedReports.topItems) ? savedReports.topItems : [];
+  const savedOrders = Array.isArray(orders) ? orders : [];
+  
+  // Calculate reports from orders if not available from API (demo mode)
+  let topItems = Array.isArray(savedReports.topItems) ? savedReports.topItems : [];
+  let totalSales = savedReports.totalSales || 0;
+  let totalOrders = savedReports.totalOrders || 0;
+  
+  if (topItems.length === 0 && savedOrders.length > 0) {
+    // Calculate from orders
+    const itemSales = {};
+    let sales = 0;
+    savedOrders.forEach(order => {
+      if (order.total) sales += Number(order.total);
+      if (Array.isArray(order.items)) {
+        order.items.forEach(item => {
+          if (!itemSales[item.itemId]) {
+            itemSales[item.itemId] = 0;
+          }
+          itemSales[item.itemId] += Number(item.quantity || 1);
+        });
+      }
+    });
+    topItems = Object.entries(itemSales)
+      .map(([itemId, quantity]) => ({ itemId, quantity }))
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+    totalSales = sales;
+    totalOrders = savedOrders.length;
+  }
+  
   const enrichedTopItems = topItems.map((record) => ({ ...record, name: savedItems.find((item) => item.id === record.itemId)?.name || record.itemId }));
   return (
     <section className="space-y-5">
@@ -2806,19 +2915,19 @@ function ReportsPage({ reports, items, orders = [] }) {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Total sales</p>
-              <p className="mt-3 text-3xl font-black">{rupees(reports.totalSales || 0)}</p>
+              <p className="mt-3 text-3xl font-black">{rupees(totalSales || 0)}</p>
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Total orders</p>
-              <p className="mt-3 text-3xl font-black">{reports.totalOrders || 0}</p>
+              <p className="mt-3 text-3xl font-black">{totalOrders || 0}</p>
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Inventory value</p>
-              <p className="mt-3 text-3xl font-black">{rupees(reports.inventoryValue || 0)}</p>
+              <p className="mt-3 text-3xl font-black">{rupees(savedReports.inventoryValue || 0)}</p>
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Low stock count</p>
-              <p className="mt-3 text-3xl font-black">{reports.lowStockCount || 0}</p>
+              <p className="mt-3 text-3xl font-black">{savedReports.lowStockCount || 0}</p>
             </div>
           </div>
         </div>

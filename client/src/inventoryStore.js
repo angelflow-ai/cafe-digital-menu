@@ -1,6 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const API = API_URL.replace(/\/$/, "") + "/api";
 import sync from "./sync";
+import demoMode from "./demoMode";
 
 let inventory = [];
 let initialized = false;
@@ -24,6 +25,13 @@ export async function loadInventory() {
     try { sync.saveInventory(inventory); } catch (e) {}
     return inventory;
   } catch (err) {
+    // In demo mode, use demo inventory
+    if (demoMode.isDemoModeEnabled()) {
+      console.log("inventoryStore: loading from demo mode");
+      inventory = demoMode.getDemoInventory();
+      notify();
+      return inventory;
+    }
     console.error("inventoryStore: failed to load inventory", err);
     return inventory;
   }

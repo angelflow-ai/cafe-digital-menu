@@ -2,6 +2,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 const API = API_URL.replace(/\/$/, "") + "/api";
 
 import sync from "./sync";
+import demoMode from "./demoMode";
 
 let orders = [];
 let initialized = false;
@@ -29,6 +30,13 @@ export async function loadOrders() {
     if (!initialized) setupStream();
     return orders;
   } catch (err) {
+    // In demo mode, load orders from localStorage
+    if (demoMode.isDemoModeEnabled()) {
+      console.log("ordersStore: loading from demo mode (localStorage)");
+      orders = demoMode.loadDemoOrders();
+      notify();
+      return orders;
+    }
     console.error("ordersStore: failed to load orders", err);
     return orders;
   }
@@ -48,6 +56,11 @@ export function subscribe(cb) {
 
 function setupStream() {
   initialized = true;
+  // In demo mode, don't try to setup EventSource
+  if (demoMode.isDemoModeEnabled()) {
+    console.log("ordersStore: skipping EventSource setup in demo mode");
+    return;
+  }
   try {
     es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
     es.addEventListener("order:created", () => loadOrders());
