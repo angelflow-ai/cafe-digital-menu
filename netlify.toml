@@ -1,0 +1,13 @@
+[build]
+command = "npm run build"
+publish = "client/dist"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[env]
+[env.production]
+  [env.production.context.VITE_API_URL]
+  value = "https://your-backend-url/api"

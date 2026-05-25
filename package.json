@@ -1,0 +1,18 @@
+{
+  "name": "the-infusion-saga",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack restaurant web application for The Infusion Saga.",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "start": "npm run dev",
+    "server": "npm run dev --prefix server",
+    "client": "npm run dev --prefix client",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "build": "npm run build --prefix client"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
+

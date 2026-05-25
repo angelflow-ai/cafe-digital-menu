@@ -1,0 +1,127 @@
+export const categories = [
+  { id: "hot-drinks", name: "Hot Drinks", icon: "Coffee", sortOrder: 1 },
+  { id: "cold-drinks", name: "Cold Drinks", icon: "CupSoda", sortOrder: 10 },
+  { id: "snacks", name: "Snacks", icon: "Sandwich", sortOrder: 20 },
+  { id: "dessert", name: "Dessert", icon: "CakeSlice", sortOrder: 30 }
+];
+
+function s(id, label, price) {
+  return { id, name: label, label, price };
+}
+
+export const menuItems = [
+  // Chai
+  { id: "personal-blend-chai", name: "Personal Blend Chai", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/chai/regular-chai.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "black-tea", name: "Black Tea", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Black Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "green-tea", name: "Green Tea", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Green Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "tulsi-tea", name: "Tulsi Tea", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Tulsi Chai.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "lemon-tea", name: "Lemon Tea", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Lemon Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "honey-lemon-tea", name: "Honey Lemon Tea", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Honey Lemon Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 48 }], active: true },
+  { id: "signature-infusion-chai", name: "Signature Infusion Chai", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/masala-special-chai/Masala Chai.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 28 }], active: true },
+
+  // Hot Coffee
+  { id: "infusion-heritage-coffee", name: "Infusion Heritage Coffee", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/coffee/Classic Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "hot-chocolate", name: "Hot Chocolate", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/coffee/Chocolate Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+  { id: "core-coffee", name: "Core Coffee", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/coffee/Strong Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 68 }], active: true },
+  { id: "black-coffee", name: "Black Coffee", categoryId: "hot-drinks", description: "", image: "/assets/images/hot-drinks/coffee/Classic Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 58 }], active: true },
+
+  // Ice Tea
+  { id: "infusion-signature-ice-tea", name: "Infusion Signature Ice Tea", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-tea/Lemon Ice Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
+  { id: "watermelon-ice-tea", name: "Watermelon Ice Tea", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-tea/Watermelon Ice Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+  { id: "peach-ice-tea", name: "Peach Ice Tea", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-tea/Peach Ice Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+  { id: "lemon-ice-tea", name: "Lemon Ice Tea", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-tea/Lemon Ice Tea.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 88 }], active: true },
+
+  // Cold Coffee
+  { id: "infusion-heritage-cold-coffee", name: "Infusion Heritage Cold Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Classic Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "hazelnut-cold-coffee", name: "Hazelnut Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Hazelnut Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true },
+  { id: "caramel-cold-coffee", name: "Caramel Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Caramel Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
+  { id: "mocha-cold-coffee", name: "Mocha Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Mocha Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
+  { id: "chocolate-cold-coffee", name: "Chocolate Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Strong Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "signature-coffee", name: "Signature Coffee", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/cold-coffee/Classic Cold Coffee.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+
+  // Mojito
+  { id: "guava-chilli-mojito", name: "Guava Chilli Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Classic Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "masala-lemonade-mojito", name: "Masala Lemonade Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Classic Mint Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "spicy-mango-mojito", name: "Spicy Mango Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Lemon Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "green-apple-mojito", name: "Green Apple Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Green Apple Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "watermelon-mojito", name: "Watermelon Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Watermelon Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "cranberry-mojito", name: "Cranberry Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Classic Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "blue-curacao-mojito", name: "Blue Curacao Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Kiwi Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 108 }], active: true },
+  { id: "lime-mint-mojito", name: "Lime & Mint Mojito", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/mojito/Classic Mint Mojito.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+
+  // Ice Slush
+  { id: "watermelon-slush", name: "Watermelon Slush", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-crusher/Watermelon Ice Crusher.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "green-apple-slush", name: "Green Apple Slush", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-crusher/Orange Ice Crusher.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 108 }], active: true },
+  { id: "cranberry-slush", name: "Cranberry Slush", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-crusher/Strawberry Ice Crusher.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 108 }], active: true },
+  { id: "kala-khatta-slush", name: "Kala Khatta Slush", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-crusher/Kala Khatta Ice Crusher.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+  { id: "strawberry-slush", name: "Strawberry Slush", categoryId: "cold-drinks", description: "", image: "/assets/images/cold-drinks/ice-crusher/Strawberry Ice Crusher.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+
+  // Milk Shakes
+  { id: "kunafa-shake", name: "Kunafa Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
+  { id: "brownie-shake", name: "Brownie Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "dark-chocolate-shake", name: "Dark Chocolate Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "kit-kat-shake", name: "Kit-Kat Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "oreo-shake", name: "Oreo Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "butterscotch-shake", name: "Butterscotch Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Butterscotch Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "mango-shake", name: "Mango Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Vanilla Ice Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "strawberry-shake", name: "Strawberry Shake", categoryId: "cold-drinks", description: "", image: "/assets/images/dessert/Vanilla Ice Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+
+  // Sandwich
+  { id: "infusion-heritage-melt", name: "Infusion Heritage Melt", categoryId: "snacks", description: "", image: "/assets/images/snacks/sandwich/Veg Cheese Grilled Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 173 }], active: true },
+  { id: "paneer-tikka-melt", name: "Paneer Tikka Melt", categoryId: "snacks", description: "", image: "/assets/images/snacks/sandwich/Paneer Grilled Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 143 }], active: true },
+  { id: "trio-delight-sandwich", name: "Trio Delight Sandwich", categoryId: "snacks", description: "", image: "/assets/images/snacks/sandwich/Veg Grilled Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 113 }], active: true },
+  { id: "garden-fresh-sandwich", name: "Garden Fresh Sandwich", categoryId: "snacks", description: "", image: "/assets/images/snacks/sandwich/Veg Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 93 }], active: true },
+
+  // Pasta
+  { id: "blush-bowl-pasta", name: "Blush Bowl Pasta (Pink Sauce Pasta)", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Veg Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "tomato-basil-pasta", name: "Tomato Basil Pasta (Red Sauce Pasta)", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Schezwan Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true },
+  { id: "herbed-bechamel-pasta", name: "Herbed Bechamel Pasta (White Sauce Pasta)", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Garlic Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+
+  // Garlic Bread
+  { id: "jalapeno-corn-stuffed-garlic-bread", name: "Jalapeno Corn Stuffed Garlic Bread", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Cheese Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },
+  { id: "cheesy-melt-garlic-bread", name: "Cheesy Melt Garlic Bread", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Cheese Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "pure-garlic-bread", name: "Pure Garlic Bread", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Simple Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+
+  // French Fries
+  { id: "infusion-velvet-cheese-fries", name: "Infusion Velvet Cheese Fries", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Cheese Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },
+  { id: "honey-chilli-glazed-potato", name: "Honey Chilli Glazed Potato", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Honey Chilli Potato.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+  { id: "chilli-blaze-potato", name: "Chilli Blaze Potato", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Chilli Potato.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true },
+  { id: "fiery-peri-peri-fries", name: "Fiery Peri-Peri Fries", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Peri-peri Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "golden-crisp-fries", name: "Golden Crisp Fries", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Simple Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+
+  // Burger
+  { id: "infusion-loaded-stack", name: "Infusion Loaded Stack", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Classic Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },
+  { id: "paneer-bliss-burger", name: "Paneer Bliss Burger", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Paneer Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "cheese-indulgence-burger", name: "Cheese Indulgence Burger", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Cheese Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
+  { id: "veg-essence-burger", name: "Veg Essence Burger", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Veg Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
+  { id: "spiced-aloo-burger", name: "Spiced Aloo Burger", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Veg Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 78 }], active: true },
+
+  // Noodles
+  { id: "infusion-wok-hakka", name: "Infusion Wok Hakka", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Hakka Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 178 }], active: true },
+  { id: "schezwan-blaze-noodles", name: "Schezwan Blaze Noodles", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Schezwan Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "garlic-essence-noodles", name: "Garlic Essence Noodles", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Garlic Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "harvest-veg-noodles", name: "Harvest Veg Noodles", categoryId: "snacks", description: "", image: "/assets/images/snacks/noodles/Veg Noodles.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 108 }], active: true },
+
+  // Maggi
+  { id: "infusion-maxxed-maggi", name: "Infusion Maxxed Maggi", categoryId: "snacks", description: "", image: "/assets/images/snacks/maggi/Paneer Maggi.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 163 }], active: true },
+  { id: "cheese-luxe-maggi", name: "Cheese Luxe Maggi", categoryId: "snacks", description: "", image: "/assets/images/snacks/maggi/Cheese Maggi.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 133 }], active: true },
+  { id: "tandoori-twist-maggi", name: "Tandoori Twist Maggi", categoryId: "snacks", description: "", image: "/assets/images/snacks/maggi/Plain Maggi.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 123 }], active: true },
+  { id: "veggie-comfort-maggi", name: "Veggie Comfort Maggi", categoryId: "snacks", description: "", image: "/assets/images/snacks/maggi/Veg Maggi.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 93 }], active: true },
+  { id: "just-maggi", name: "Just Maggi", categoryId: "snacks", description: "", image: "/assets/images/snacks/maggi/Plain Maggi.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 63 }], active: true },
+
+  // Pizza
+  { id: "paneer-tikka-supreme", name: "Paneer Tikka Supreme", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Classic Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 318 }], active: true },
+  { id: "garden-harvest-pizza", name: "Garden Harvest Pizza", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Classic Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 278 }], active: true },
+  { id: "margherita-delight", name: "Margherita Delight", categoryId: "snacks", description: "", image: "/assets/images/snacks/burger/Classic Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 248 }], active: true },
+
+  // Dumplings
+  { id: "kurkure-delight-momos", name: "Kurkure Delight Momos", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Chilli Potato.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 228 }], active: true },
+  { id: "fusion-gravy-momos", name: "Fusion Gravy Momos", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Chilli Potato.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
+  { id: "golden-crunch-momos", name: "Golden Crunch Momos", categoryId: "snacks", description: "", image: "/assets/images/snacks/french-fries/Chilli Potato.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
+
+  // Dessert
+  { id: "red-velvet-lava-cake", name: "Red Velvet Lava Cake", categoryId: "dessert", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true },
+  { id: "choco-lava-cake", name: "Choco Lava Cake", categoryId: "dessert", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
+  { id: "sizzling-brownie-with-ice-cream", name: "Sizzling Brownie with Ice Cream", categoryId: "dessert", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 118 }], active: true },
+  { id: "hot-brownie", name: "Hot Brownie", categoryId: "dessert", description: "", image: "/assets/images/dessert/Brownie Ice-Cream.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 108 }], active: true }
+];
