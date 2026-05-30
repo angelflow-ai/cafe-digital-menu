@@ -1,8 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API = API_URL.replace(/\/$/, "") + "/api";
-
 import sync from "./sync";
 import demoMode from "./demoMode";
+import { api, API } from "./services/apiClient";
 
 let orders = [];
 let initialized = false;
@@ -21,9 +19,8 @@ function notify() {
 
 export async function loadOrders() {
   try {
-    const res = await fetch(`${API}/orders`, { credentials: "include" });
-    if (!res.ok) return orders;
-    orders = await res.json();
+    const res = await api("/orders");
+    orders = res || [];
     notify();
     try { sync.saveOrders(orders); } catch (e) {}
     try { window.dispatchEvent(new CustomEvent('inventoryRefresh')); } catch (e) {}

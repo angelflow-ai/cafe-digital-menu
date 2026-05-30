@@ -9,7 +9,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Twilio from "twilio";
 import nodemailer from "nodemailer";
-import { connectDatabase, store } from "./db.js";
+import { connectDatabase, isCompletedSale, store } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +64,38 @@ function scheduleOrderReadySms(order) {
 
 // Simple SSE clients list for order broadcasts
 const sseClients = new Set();
+const publicOrderCache = new Map();
+
+function cacheOrder(order) {
+  if (!order) return;
+  const keys = [order._id, order.id, order.orderId].filter(Boolean).map((value) => String(value));
+  for (const key of keys) {
+    publicOrderCache.set(key, order);
+  }
+}
+
+async function findPublicOrder(identifier) {
+  const key = String(identifier || "").trim();
+  if (!key) return null;
+
+  const cached = publicOrderCache.get(key);
+  if (cached) return cached;
+
+  const direct = await store.orderById(key);
+  if (direct) {
+    cacheOrder(direct);
+    return direct;
+  }
+
+  const allOrders = await store.orders();
+  const match = allOrders.find((order) => String(order._id || "") === key || String(order.id || "") === key || String(order.orderId || "") === key);
+  if (match) {
+    cacheOrder(match);
+    return match;
+  }
+
+  return null;
+}
 
 function sendSseEvent(name, data) {
   const payload = typeof data === "string" ? data : JSON.stringify(data);
@@ -339,6 +371,7 @@ app.get("/api/orders", requireStaff, async (_req, res, next) => {
 app.post("/api/orders", async (req, res, next) => {
   try {
     const order = await store.createOrder(req.body);
+    cacheOrder(order);
     res.status(201).json(order);
     scheduleOrderReadySms(order);
     try {
@@ -354,7 +387,7 @@ app.post("/api/orders", async (req, res, next) => {
 // Public endpoint to fetch order by orderId (no auth) for customer tracking
 app.get("/api/orders/public/:id", async (req, res, next) => {
   try {
-    const order = await store.orderById(req.params.id);
+    const order = await findPublicOrder(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found." });
     return res.json(order);
   } catch (error) {
@@ -362,39 +395,37 @@ app.get("/api/orders/public/:id", async (req, res, next) => {
   }
 });
 
-// Public endpoint for customers to retry payment verification for their order.
-// This allows customers to mark their order as awaiting verification again
-// (e.g. after a rejection or payment failure) without requiring staff auth.
+// Public retry: allow customers to re-submit payment verification for a public order id
 app.post("/api/orders/public/:id/retry", async (req, res, next) => {
   try {
-    const order = await store.orderById(req.params.id);
+    const order = await findPublicOrder(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found." });
-
-    // Do not allow retry if order is already confirmed/completed/paid
-    if (order.paymentStatus === 'pending_verification' || order.paymentStatus === 'paid' || order.status === 'confirmed' || order.status === 'completed') {
-      return res.status(400).json({ message: 'Order cannot be retried in its current state.' });
-    }
-
-    // Prepare update: set payment back to pending verification, clear rejection metadata
-    const payload = {
-      paymentStatus: 'pending_verification',
-      status: 'pending',
-      rejectedAt: null,
-      notes: '',
-      warnings: []
-    };
-
-    const updated = await store.updateOrder(order._id || order.id || order.orderId, payload);
-    if (!updated) return res.status(404).json({ message: 'Order not found.' });
-
-    try {
-      sendSseEvent('order:updated', { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus });
-    } catch (e) {}
-
+    const updated = await store.updateOrder(order._id || order.id, { paymentStatus: "pending_verification", status: "pending" });
+    cacheOrder(updated);
     res.json(updated);
+    try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }); } catch (e) {}
   } catch (error) {
     next(error);
   }
+});
+
+// Server-Sent Events endpoint for orders
+app.get("/api/orders/stream", (req, res) => {
+  res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  // Allow event stream for cross-origin when CORS is configured
+  res.flushHeaders?.();
+
+  sseClients.add(res);
+
+  // send initial ping
+  res.write(`event: hello\n`);
+  res.write(`data: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
+
+  req.on("close", () => {
+    sseClients.delete(res);
+  });
 });
 
 app.get("/api/orders/:id", requireStaff, async (req, res, next) => {
@@ -411,9 +442,22 @@ app.patch("/api/orders/:id/status", requireStaff, async (req, res, next) => {
   try {
     const order = await store.updateOrder(req.params.id, { status: req.body.status });
     if (!order) return res.status(404).json({ message: "Order not found." });
-    res.json(order);
+    cacheOrder(order);
+
+    const nextStatus = String(req.body.status || "").toLowerCase().trim();
+    if (nextStatus === "confirmed" || nextStatus === "completed") {
+      try {
+        await store.deductOrderInventory(order._id || order.id);
+      } catch (err) {
+        console.error("Failed to deduct inventory on status change:", err);
+      }
+    }
+
+    const updated = await store.orderById(order._id || order.id);
+    cacheOrder(updated);
+    res.json(updated);
     try {
-      sendSseEvent("order:updated", { id: order._id || order.id, status: order.status });
+      sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus });
     } catch (e) {
       // ignore
     }
@@ -552,12 +596,13 @@ app.delete("/api/recipes/:id", requireAdmin, async (req, res, next) => {
 app.get("/api/reports", requireAdmin, async (_req, res, next) => {
   try {
     const [orders, rawMaterials] = await Promise.all([store.orders(), store.rawMaterials()]);
-    const totalSales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-    const totalOrders = orders.length;
+    const completedOrders = orders.filter((order) => isCompletedSale(order));
+    const totalSales = completedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
+    const totalOrders = completedOrders.length;
     const lowStockItems = rawMaterials.filter((item) => Number(item.stock || 0) <= Number(item.minStock || 0));
     const inventoryValue = rawMaterials.reduce((sum, item) => sum + Number(item.stock || 0) * Number(item.costPerUnit || 0), 0);
     const itemCount = {};
-    orders.forEach((order) => {
+    completedOrders.forEach((order) => {
       (order.items || []).forEach((item) => {
         itemCount[item.itemId] = (itemCount[item.itemId] || 0) + Number(item.quantity || 0);
       });
@@ -600,32 +645,15 @@ app.get("/api/orders/history", requireAdmin, async (_req, res, next) => {
   }
 });
 
-// Server-Sent Events endpoint for orders
-app.get("/api/orders/stream", (req, res) => {
-  res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
-  res.setHeader("Cache-Control", "no-cache");
-  res.setHeader("Connection", "keep-alive");
-  // Allow event stream for cross-origin when CORS is configured
-  res.flushHeaders?.();
-
-  sseClients.add(res);
-
-  // send initial ping
-  res.write(`event: hello\n`);
-  res.write(`data: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
-
-  req.on("close", () => {
-    sseClients.delete(res);
-  });
-});
-
 app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
   try {
     const order = await store.updateOrder(req.params.id, req.body);
     if (!order) return res.status(404).json({ message: "Order not found." });
+    cacheOrder(order);
 
-    // If order moved to confirmed (by biller), ensure inventory is deducted
-    if (req.body && req.body.status === "confirmed") {
+    // If order moved to a completed sale state, ensure inventory is deducted once.
+    const nextStatus = String(req.body?.status || "").toLowerCase().trim();
+    if (nextStatus === "confirmed" || nextStatus === "completed") {
       try {
         await store.deductOrderInventory(order._id || order.id);
       } catch (err) {
@@ -635,6 +663,7 @@ app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
     }
 
     const updated = await store.orderById(order._id || order.id);
+    cacheOrder(updated);
     res.json(updated);
     try {
       sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus });

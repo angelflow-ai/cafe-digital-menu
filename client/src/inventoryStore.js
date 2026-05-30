@@ -1,7 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
-const API = API_URL.replace(/\/$/, "") + "/api";
 import sync from "./sync";
 import demoMode from "./demoMode";
+import { api } from "./services/apiClient";
 
 let inventory = [];
 let initialized = false;
@@ -18,9 +17,8 @@ function notify() {
 
 export async function loadInventory() {
   try {
-    const res = await fetch(`${API}/inventory`, { credentials: "include" });
-    if (!res.ok) return inventory;
-    inventory = await res.json();
+    const res = await api("/inventory");
+    inventory = res || [];
     notify();
     try { sync.saveInventory(inventory); } catch (e) {}
     return inventory;

@@ -10,6 +10,7 @@ const DEMO_INVENTORY = [
     id: "hot-coffee-premium",
     name: "Heritage Coffee",
     categoryId: "hot-drinks",
+    subcategory: "Coffee",
     description: "Rich, aromatic premium coffee blend",
     image: "/assets/images/Hot Drinks/Hot Coffee/demo.jpg",
     sizes: [
@@ -22,6 +23,7 @@ const DEMO_INVENTORY = [
     id: "hot-chai-signature",
     name: "Signature Chai",
     categoryId: "hot-drinks",
+    subcategory: "Chai",
     description: "Traditional spiced chai with fresh milk",
     image: "/assets/images/Hot Drinks/Chai/demo.jpg",
     sizes: [
@@ -34,6 +36,7 @@ const DEMO_INVENTORY = [
     id: "cold-coffee-shake",
     name: "Cold Coffee Shake",
     categoryId: "cold-drinks",
+    subcategory: "Cold Coffee",
     description: "Iced coffee with milk and cream",
     image: "/assets/images/Cold Drinks/Milk Shakes/demo.jpg",
     sizes: [

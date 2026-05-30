@@ -28,6 +28,7 @@ const menuItemSchema = new mongoose.Schema(
     name: { type: String, required: true },
     categoryId: { type: String, required: true },
     description: { type: String, default: "" },
+    subcategory: { type: String, default: "" },
     image: { type: String, default: "" },
     sizes: { type: [sizeSchema], validate: [(v) => v.length > 0, "At least one size is required"] },
     featured: { type: Boolean, default: false },
@@ -42,10 +43,19 @@ const orderItemSchema = new mongoose.Schema(
     name: String,
     sizeId: String,
     sizeName: String,
+    size: String,
+    variant: String,
     serveType: String,
     quantity: Number,
+    basePrice: Number,
+    originalPrice: Number,
     unitPrice: Number,
-    lineTotal: Number
+    lineTotal: Number,
+    finalLineTotal: Number,
+    addons: {
+      extraCheese: Boolean,
+      extraCheesePrice: Number
+    }
   },
   { _id: false }
 );
@@ -126,6 +136,35 @@ function generateOrderId() {
   return `INF-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
 }
 
+function normalizeSalesStatus(value) {
+  return String(value || "").toLowerCase().trim().replace(/[\s_]+/g, " ");
+}
+
+function shouldDeductInventoryOnCreate(order) {
+  const status = normalizeSalesStatus(order?.status);
+  const paymentStatus = normalizeSalesStatus(order?.paymentStatus);
+  return ["confirmed", "completed"].includes(status) || ["confirmed", "paid", "verified", "completed"].includes(paymentStatus);
+}
+
+export function isCompletedSale(order) {
+  if (!order) return false;
+
+  const status = normalizeSalesStatus(order.status);
+  const paymentStatus = normalizeSalesStatus(order.paymentStatus);
+  const paymentMethod = String(order.paymentMethod || order.method || "").toLowerCase();
+
+  const rejected = ["cancelled", "rejected", "payment issue", "payment rejected", "failed", "unpaid", "pending verification"];
+  if (rejected.includes(status) || rejected.includes(paymentStatus)) return false;
+
+  const onlineIndicators = ["online", "upi", "qr", "intent", "static_qr"];
+  const onlineCompleted = onlineIndicators.some((indicator) => paymentMethod.includes(indicator)) && ["confirmed", "verified", "paid", "completed"].includes(paymentStatus);
+
+  const counterIndicators = ["cash", "counter", "coc"];
+  const counterCompleted = counterIndicators.some((indicator) => paymentMethod.includes(indicator)) || ["approved", "confirmed", "completed"].includes(status);
+
+  return !!(onlineCompleted || counterCompleted);
+}
+
 const memory = {
   categories: seedCategories.map((item) => ({ ...item })),
   menuItems: seedItems.map((item) => ({ ...item, sizes: item.sizes.map((size) => ({ ...size })) })),
@@ -160,6 +199,15 @@ async function seedDatabase() {
   }
   if (itemCount === 0) {
     await MenuItem.insertMany(seedItems);
+  } else {
+    await MenuItem.updateOne(
+      { id: "kit-kat-shake" },
+      { $set: { image: "/assets/images/Cold Drinks/Milk Shakes/kitkat-shake-v2.jpg" } }
+    );
+    await MenuItem.updateOne(
+      { id: "paneer-tikka-melt" },
+      { $set: { image: "/assets/images/Snacks/Sandwich/paneer-tikka-melt-v2.jpg" } }
+    );
   }
   if (rawMaterialCount === 0) {
     await RawMaterial.insertMany(seedRawMaterials);
@@ -308,9 +356,7 @@ export const store = {
     const order = await buildOrder(payload);
     order.orderId = order.orderId || generateOrderId();
     order.deductionStatus = "pending";
-    // If this is a static UPI payment awaiting verification, do not deduct inventory yet.
-    const skipDeduction = order.paymentMethod === "UPI_STATIC_QR" && order.paymentStatus === "pending_verification" && order.status === "pending";
-    if (!skipDeduction) {
+    if (shouldDeductInventoryOnCreate(order)) {
       await deductInventoryForOrder(order);
       order.deductionStatus = "deducted";
     }
@@ -387,7 +433,7 @@ export const store = {
     toDate.setDate(fromDate.getDate() + 1);
     const orders = (await this.orders()).filter((order) => {
       const createdAt = new Date(order.createdAt);
-      return createdAt >= fromDate && createdAt < toDate;
+      return createdAt >= fromDate && createdAt < toDate && isCompletedSale(order);
     });
     const totalSales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const totalOrders = orders.length;
@@ -399,7 +445,7 @@ export const store = {
     const toDate = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 1);
     const orders = (await this.orders()).filter((order) => {
       const createdAt = new Date(order.createdAt);
-      return createdAt >= fromDate && createdAt < toDate;
+      return createdAt >= fromDate && createdAt < toDate && isCompletedSale(order);
     });
     const totalSales = orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const totalOrders = orders.length;
@@ -431,6 +477,7 @@ function validateMenuItem(payload) {
     name: String(payload.name || "").trim(),
     categoryId: payload.categoryId,
     description: payload.description || "",
+    subcategory: String(payload.subcategory || payload.subCategory || "").trim(),
     image: payload.image || "",
     sizes: sizes.sort((a, b) => a.sortOrder - b.sortOrder),
     featured: Boolean(payload.featured),
@@ -447,16 +494,31 @@ async function buildOrder(payload) {
     const size = menuItem.sizes.find((candidate) => candidate.id === raw.sizeId) || menuItem.sizes[0];
     if (!size || !Number.isFinite(Number(size.price))) throw new Error(`Price missing for ${menuItem.name}`);
     const quantity = Math.max(1, Number(raw.quantity || 1));
-    const unitPrice = Number(size.price);
+    const basePrice = Number(raw.basePrice ?? raw.originalPrice ?? raw.baseUnitPrice ?? size.price ?? 0);
+    const extraCheeseSelected = !!raw.addons?.extraCheese;
+    const extraCheesePrice = extraCheeseSelected ? Number(raw.addons?.extraCheesePrice || 0) : 0;
+    const unitPrice = basePrice + extraCheesePrice;
+    const computedLineTotal = unitPrice * quantity;
+    const rawLineTotal = Number(raw.lineTotal ?? raw.finalLineTotal);
+    const lineTotal = Number.isFinite(rawLineTotal) && rawLineTotal > 0 ? rawLineTotal : computedLineTotal;
     items.push({
       itemId: menuItem.id,
-      name: menuItem.name,
+      name: raw.name || menuItem.name,
       sizeId: size.id,
-      sizeName: size.name,
+      sizeName: raw.sizeName || size.name,
+      size: raw.size || raw.sizeName || size.name,
+      variant: raw.variant || raw.size || raw.sizeName || size.name,
       serveType: raw.serveType || "",
       quantity,
+      basePrice,
+      originalPrice: basePrice,
       unitPrice,
-      lineTotal: unitPrice * quantity
+      lineTotal,
+      finalLineTotal: lineTotal,
+      addons: {
+        extraCheese: extraCheeseSelected,
+        extraCheesePrice
+      }
     });
   }
 

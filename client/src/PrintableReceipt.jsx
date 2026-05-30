@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import JsBarcode from "jsbarcode";
 import logoUrl from "./assets/infusion-saga-logo.png";
+import { formatOrderItemLine, getFinalItemTotal, getOrderTotal } from "./utils/orderDisplayFormatter";
 
 function rupees(value) {
   return `Rs. ${Number(value || 0).toFixed(2)}`;
@@ -19,32 +20,56 @@ function formatDate(value) {
 }
 
 function normalizeLineItem(item) {
-  const unitPrice = Number(item.unitPrice ?? item.price ?? 0);
   const quantity = Number(item.quantity ?? 1);
+  const lineText = formatOrderItemLine(item);
   return {
-    name: item.name || item.itemId || item.id || "Item",
+    name: item.name || item.title || item.itemId || item.id || "Item",
     qty: quantity,
-    price: unitPrice,
-    total: unitPrice * quantity,
-    sizeName: item.sizeName || item.size || ""
+    total: getFinalItemTotal(item),
+    sizeName: item.sizeName || item.size || "",
+    serveType: item.serveType || "",
+    addons: item.addons || {},
+    lineText
+  };
+}
+
+export function normalizeReceiptOrder(order = {}) {
+  const receiptId = order.orderId || order.id || order._id || `INF-${String(Date.now()).slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
+  const createdAt = order.createdAt || order.createdAtAt || order.date || order.orderDate || order.confirmedAt || order.updatedAt || new Date().toISOString();
+  const paymentStatus = String(order.paymentStatus || order.status || "").toLowerCase().replace(/[_\s-]+/g, " ");
+  const paymentLabel = paymentStatus ? paymentStatus.replace(/\b\w/g, (match) => match.toUpperCase()) : "Unknown";
+
+  return {
+    ...order,
+    orderId: receiptId,
+    createdAt,
+    customerName: order.customerName || order.name || order.customer || "Guest",
+    phone: order.phone || order.mobile || order.contact || "-",
+    tableNumber: order.tableNumber ?? order.table ?? order.tableNo ?? "-",
+    paymentMethod: order.paymentMethod || order.payment || "cash",
+    paymentStatus: paymentLabel,
+    items: Array.isArray(order.items) ? order.items : Array.isArray(order.cart) ? order.cart : [],
+    subtotal: Number(order.subtotal ?? getOrderTotal(order) ?? 0),
+    total: Number(order.total ?? order.grandTotal ?? getOrderTotal(order) ?? 0),
+    gst: Number(order.gst ?? Math.round((Number(order.subtotal ?? getOrderTotal(order) ?? 0)) * (Number(order.gstRate ?? 0.05)) ))
   };
 }
 
 export default function PrintableReceipt({ order, copyType = "customer", receiptWidth, fontSize }) {
-  const receiptId = order.orderId || order.id || order._id || `INF-${String(Date.now()).slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
-  const createdAt = order.createdAt || order.createdAtAt || order.date || new Date().toISOString();
-  const items = Array.isArray(order.items) ? order.items.map(normalizeLineItem) : [];
-  const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+  const normalizedOrder = normalizeReceiptOrder(order);
+  const receiptId = normalizedOrder.orderId;
+  const createdAt = normalizedOrder.createdAt;
+  const items = Array.isArray(normalizedOrder.items) ? normalizedOrder.items.map(normalizeLineItem) : [];
+  const subtotal = Number(normalizedOrder.subtotal || getOrderTotal(normalizedOrder) || 0);
   const gstRate = 0.05;
-  const gstAmount = Number(order.gst ?? Math.round(subtotal * gstRate));
-  const total = Number(order.total ?? subtotal + gstAmount);
-  const paymentMethod = String(order.paymentMethod || order.payment || "Cash").replace(/online/i, "Online").replace(/cash/i, "Cash");
-  const tableLabel = order.tableNumber ? `Table ${order.tableNumber}` : order.paymentMethod === "online" ? "Online order" : order.pendingApproval ? "Counter" : "Counter";
+  const gstAmount = Number(normalizedOrder.gst ?? Math.round(subtotal * gstRate));
+  const total = Number(normalizedOrder.total ?? subtotal + gstAmount);
+  const paymentMethod = String(normalizedOrder.paymentMethod || "Cash").replace(/online/i, "Online").replace(/cash/i, "Cash");
   const copyLabel = copyType === "kitchen" ? "Kitchen Copy" : copyType === "both" ? "Customer / Kitchen Copy" : "Customer Copy";
   const orderLines = copyType === "both" ? ["Customer Copy", "Kitchen Copy"] : [copyLabel];
 
-  const qrData = order.qrData || receiptId;
-  const gstin = order.gstin || order.GSTIN || order.gstinNo || order.businessGstin || "08AAAPL1234C1Z1";
+  const qrData = normalizedOrder.qrData || receiptId;
+  const gstin = normalizedOrder.gstin || normalizedOrder.GSTIN || normalizedOrder.gstinNo || normalizedOrder.businessGstin || "08AAAPL1234C1Z1";
   const qrImgRef = useRef(null);
   const barcodeRef = useRef(null);
 
@@ -82,8 +107,12 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
 
           <div style={{marginTop:6}}>
             <div className="receipt-row"><div>Date</div><div>{formatDate(createdAt)}</div></div>
-            <div className="receipt-row"><div>Table</div><div>{order.tableNumber ?? (order.table ?? "-")}</div></div>
-            <div className="receipt-row"><div>Order No.</div><div>{receiptId}</div></div>
+            <div className="receipt-row"><div>Order ID</div><div>{receiptId}</div></div>
+            <div className="receipt-row"><div>Table</div><div>{normalizedOrder.tableNumber ?? (normalizedOrder.table ?? "-")}</div></div>
+            <div className="receipt-row"><div>Customer</div><div>{normalizedOrder.customerName || "Guest"}</div></div>
+            <div className="receipt-row"><div>Phone</div><div>{normalizedOrder.phone || "-"}</div></div>
+            <div className="receipt-row"><div>Payment</div><div>{paymentMethod}</div></div>
+            <div className="receipt-row"><div>Status</div><div>{normalizedOrder.paymentStatus || "Unknown"}</div></div>
             <div className="receipt-row"><div>Invoice</div><div>{order.invoiceNo || `INV-${String(receiptId).slice(-8)}`}</div></div>
             <div className="receipt-row"><div>GSTIN</div><div>{gstin}</div></div>
           </div>
@@ -101,8 +130,8 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
               <div key={`${line.name}-${idx}`} className="receipt-item" style={{marginTop:6}}>
                 <div>{line.qty}</div>
                 <div>
-                  <div style={{fontWeight:700}}>{line.name}</div>
-                  {line.sizeName && <div style={{fontSize:10}}>{line.sizeName}</div>}
+                  <div style={{fontWeight:700}}>{line.lineText}</div>
+                  {line.addons?.extraCheese && <div style={{fontSize:10}}>Extra Cheese</div>}
                 </div>
                 <div className="receipt-amount">{rupees(line.total)}</div>
               </div>
