@@ -16,7 +16,25 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const uploadsDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
-const upload = multer({ dest: uploadsDir });
+const allowedUploadMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]);
+const uploadStorage = multer.diskStorage({
+  destination: (_req, _file, callback) => callback(null, uploadsDir),
+  filename: (_req, file, callback) => {
+    const extension = path.extname(file.originalname || "").toLowerCase() || ".jpg";
+    callback(null, `${crypto.randomUUID()}${extension}`);
+  }
+});
+const upload = multer({
+  storage: uploadStorage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    if (!allowedUploadMimeTypes.has(file.mimetype)) {
+      callback(new Error("Please upload a JPG, PNG, WEBP, or GIF image."));
+      return;
+    }
+    callback(null, true);
+  }
+});
 const port = Number(process.env.PORT || 5000);
 const clientDist = path.join(__dirname, "../../client/dist");
 
@@ -288,7 +306,14 @@ app.get("/api/_debug/orders", async (_req, res, next) => { try { res.json(await 
 
 app.get("/api/categories", async (_req, res, next) => {
   try {
-    res.json(await store.categories());
+    const includeDeleted = _req.query.includeDeleted === "true";
+    const categories = await store.categories();
+    if (!includeDeleted) {
+      res.json(categories);
+      return;
+    }
+    const deleted = await store.deletedCategories();
+    res.json([...categories, ...deleted]);
   } catch (error) {
     next(error);
   }
@@ -308,8 +333,20 @@ app.post("/api/categories", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.patch("/api/categories/:id/restore", requireAdmin, async (req, res, next) => {
+  try {
+    res.json(await store.restoreCategory(req.params.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.delete("/api/categories/:id", requireAdmin, async (req, res, next) => {
   try {
+    if (req.query.permanent === "true") {
+      res.json(await store.permanentlyDeleteCategory(req.params.id));
+      return;
+    }
     res.json(await store.deleteCategory(req.params.id));
   } catch (error) {
     next(error);
@@ -322,7 +359,8 @@ app.get("/api/menu", async (req, res, next) => {
       await store.menuItems({
         categoryId: req.query.categoryId,
         search: req.query.search,
-        includeInactive: req.query.includeInactive === "true"
+        includeInactive: req.query.includeInactive === "true",
+        includeDeleted: req.query.includeDeleted === "true"
       })
     );
   } catch (error) {
@@ -348,16 +386,32 @@ app.post("/api/menu", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.patch("/api/menu/:id/restore", requireAdmin, async (req, res, next) => {
+  try {
+    res.json(await store.restoreMenuItem(req.params.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.delete("/api/menu/:id", requireAdmin, async (req, res, next) => {
   try {
+    if (req.query.permanent === "true") {
+      res.json(await store.permanentlyDeleteMenuItem(req.params.id));
+      return;
+    }
     res.json(await store.deleteMenuItem(req.params.id));
   } catch (error) {
     next(error);
   }
 });
 
-app.post("/api/uploads", requireAdmin, upload.single("photo"), (req, res) => {
-  res.json({ url: `/uploads/${req.file.filename}` });
+app.post("/api/uploads", requireAdmin, (req, res, next) => {
+  upload.single("photo")(req, res, (error) => {
+    if (error) return next(error);
+    if (!req.file) return res.status(400).json({ message: "Please choose an image file to upload." });
+    return res.json({ url: `/uploads/${req.file.filename}` });
+  });
 });
 
 app.get("/api/orders", requireStaff, async (_req, res, next) => {
@@ -504,7 +558,7 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
     res.json(order);
     scheduleOrderReadySms(order);
     try {
-      sendSseEvent("order:created", { id: order.id, createdAt: order.createdAt || new Date().toISOString() });
+      sendSseEvent("order:updated", { id: order._id || order.id, orderId: order.orderId, status: order.status, paymentStatus: order.paymentStatus });
     } catch (e) {}
   } catch (error) {
     next(error);
@@ -685,6 +739,12 @@ app.delete("/api/orders/:id", requireAdmin, async (req, res, next) => {
 
 app.use((error, _req, res, _next) => {
   console.error(error);
+  if (error instanceof multer.MulterError) {
+    if (error.code === "LIMIT_FILE_SIZE") {
+      return res.status(400).json({ message: "Photo must be 5MB or smaller." });
+    }
+    return res.status(400).json({ message: error.message || "Photo upload failed." });
+  }
   res.status(400).json({ message: error.message || "Something went wrong." });
 });
 

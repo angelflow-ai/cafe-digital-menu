@@ -16,7 +16,7 @@ npm run client  # Terminal 2
 
 **Access:**
 - Customer App: http://localhost:5173
-- Admin Panel: http://localhost:5173/admin (admin@theinfusionsaga.com / infusion-admin)
+- Owner Panel: http://localhost:5173/owner (admin@theinfusionsaga.com / infusion-admin)
 - API: http://localhost:4000/api
 
 ---

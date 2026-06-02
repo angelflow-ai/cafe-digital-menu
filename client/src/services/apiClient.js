@@ -12,6 +12,7 @@ function devLog(...args) {
 
 async function rawFetch(path, options = {}) {
   const url = `${API}${path}`;
+  const method = (options.method || "GET").toUpperCase();
   const opts = {
     credentials: "include",
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
@@ -31,6 +32,34 @@ async function rawFetch(path, options = {}) {
     if (!demoMode.isDemoModeEnabled()) {
       devLog("Backend unavailable, enabling demo mode");
       demoMode.setDemoMode(true);
+    }
+    if (path.startsWith("/categories")) {
+      const [pathOnly, queryString = ""] = path.split("?");
+      const query = new URLSearchParams(queryString);
+      const includeDeleted = query.get("includeDeleted") === "true";
+      const match = pathOnly.match(/^\/categories\/([^/]+)(?:\/restore)?$/);
+      if (method === "GET" && pathOnly === "/categories") {
+        return includeDeleted ? demoMode.getDemoCategoriesWithDeleted() : demoMode.getDemoCategories();
+      }
+      if (method === "POST" && pathOnly === "/categories") {
+        const body = JSON.parse(opts.body || "{}");
+        return demoMode.createDemoCategory(body);
+      }
+      if (method === "PATCH" && match && pathOnly.endsWith("/restore")) {
+        const categoryId = decodeURIComponent(match[1]);
+        const restored = demoMode.restoreDemoCategory(categoryId);
+        if (!restored) throw new Error("Category not found");
+        return restored;
+      }
+      if (method === "DELETE" && match) {
+        const categoryId = decodeURIComponent(match[1]);
+        if (query.get("permanent") === "true") {
+          return demoMode.permanentlyDeleteDemoCategory(categoryId);
+        }
+        const deleted = demoMode.deleteDemoCategory(categoryId);
+        if (!deleted) throw new Error("Category not found");
+        return deleted;
+      }
     }
     // mimic legacy demo fallbacks used by App.jsx
     if (path === "/categories") return demoMode.getDemoCategories();
@@ -75,7 +104,17 @@ function requestKey(method, path, body) {
 
 export async function api(path, options = {}) {
   const method = (options.method || "GET").toUpperCase();
-  const body = options.body ? JSON.parse(options.body) : null;
+  let body = null;
+  if (typeof options.body === "string") {
+    try {
+      body = JSON.parse(options.body);
+    } catch (_err) {
+      body = options.body;
+    }
+  } else if (options.body) {
+    const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+    body = isFormData ? null : options.body;
+  }
   const key = requestKey(method, path, body && body.orderId ? { orderId: body.orderId } : body);
 
   // prevent duplicate POST/PUT submission for identical payloads

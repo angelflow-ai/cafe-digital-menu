@@ -1,53 +1,86 @@
+function safePrice(value) {
+  return Math.round(Number(value || 0));
+}
+
 export function rupees(value) {
-  return `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+  return `Rs. ${safePrice(value).toLocaleString("en-IN")}`;
 }
 
 export function getItemQuantity(item) {
   return Number(item.quantity ?? item.qty ?? 1);
 }
 
+function getAddonTotal(item) {
+  const selectedAddons = Array.isArray(item.addons?.selectedAddons) ? item.addons.selectedAddons : [];
+  const genericTotal = selectedAddons.reduce((sum, addon) => sum + safePrice(addon.price), 0);
+  const legacyExtra = item.addons?.extraCheese ? safePrice(item.addons?.extraCheesePrice || 0) : 0;
+  return genericTotal + legacyExtra;
+}
+
 export function getBasePrice(item) {
-  const addonPrice = Number(item.addons?.extraCheesePrice || 0);
-  const rawUnit = Number(item.basePrice ?? item.originalPrice ?? item.unitPrice ?? item.baseUnitPrice ?? item.price ?? 0);
+  const addonPrice = safePrice(item.addons?.extraCheesePrice || 0);
+  const rawUnit = safePrice(item.basePrice ?? item.originalPrice ?? item.unitPrice ?? item.baseUnitPrice ?? item.price ?? 0);
 
   if (addonPrice && item.addons?.extraCheese && item.basePrice === undefined) {
     return Math.max(0, rawUnit - addonPrice);
   }
 
-  return Number(item.basePrice ?? item.originalPrice ?? rawUnit);
+  return safePrice(item.basePrice ?? item.originalPrice ?? rawUnit);
 }
 
 export function getAddonDisplay(item) {
   const quantity = getItemQuantity(item);
-  const extraCheesePrice = Number(item.addons?.extraCheesePrice || 0);
-  const selected = !!item.addons?.extraCheese && extraCheesePrice > 0;
+  const selectedAddons = Array.isArray(item.addons?.selectedAddons) ? item.addons.selectedAddons : [];
+  const genericTotal = selectedAddons.reduce((sum, addon) => sum + safePrice(addon.price), 0);
+  const legacyExtraCheesePrice = safePrice(item.addons?.extraCheesePrice || 0);
+  const hasLegacy = !!item.addons?.extraCheese && legacyExtraCheesePrice > 0;
 
-  if (!selected) return "";
-  if (quantity === 1) {
-    return ` + Extra Cheese (${rupees(extraCheesePrice)})`;
+  if (selectedAddons.length > 0) {
+    const addonNames = selectedAddons.map((addon) => addon.name).join(", ");
+    if (quantity === 1) {
+      return ` + ${addonNames} (${rupees(genericTotal)})`;
+    }
+    return ` + ${addonNames} (${quantity} x ${rupees(genericTotal)})`;
   }
 
-  return ` + Extra Cheese (${quantity} x ${rupees(extraCheesePrice)})`;
+  if (hasLegacy) {
+    if (quantity === 1) {
+      return ` + Extra Cheese (${rupees(legacyExtraCheesePrice)})`;
+    }
+    return ` + Extra Cheese (${quantity} x ${rupees(legacyExtraCheesePrice)})`;
+  }
+
+  return "";
 }
 
 export function getAddonEachText(item) {
   const quantity = getItemQuantity(item);
-  const extraCheesePrice = Number(item.addons?.extraCheesePrice || 0);
-  const selected = !!item.addons?.extraCheese && extraCheesePrice > 0;
+  const selectedAddons = Array.isArray(item.addons?.selectedAddons) ? item.addons.selectedAddons : [];
+  const genericTotal = selectedAddons.reduce((sum, addon) => sum + safePrice(addon.price), 0);
+  const legacyExtraCheesePrice = safePrice(item.addons?.extraCheesePrice || 0);
+  const hasLegacy = !!item.addons?.extraCheese && legacyExtraCheesePrice > 0;
 
-  if (!selected) return "";
-  if (quantity === 1) {
-    return `Extra Cheese (+${rupees(extraCheesePrice)})`;
+  if (selectedAddons.length > 0) {
+    const addonNames = selectedAddons.map((addon) => addon.name).join(", ");
+    if (quantity === 1) {
+      return `${addonNames} (+${rupees(genericTotal)})`;
+    }
+    return `${addonNames} (+${rupees(genericTotal)} each)`;
   }
 
-  return `Extra Cheese (+${rupees(extraCheesePrice)} each)`;
+  if (!hasLegacy) return "";
+  if (quantity === 1) {
+    return `Extra Cheese (+${rupees(legacyExtraCheesePrice)})`;
+  }
+
+  return `Extra Cheese (+${rupees(legacyExtraCheesePrice)} each)`;
 }
 
 export function getFinalItemTotal(item) {
   const quantity = getItemQuantity(item);
   const basePrice = getBasePrice(item);
-  const extraCheesePrice = Number(item.addons?.extraCheesePrice || 0);
-  return basePrice * quantity + extraCheesePrice * quantity;
+  const addonTotal = getAddonTotal(item);
+  return basePrice * quantity + addonTotal * quantity;
 }
 
 export function getOrderTotal(order) {
@@ -55,8 +88,8 @@ export function getOrderTotal(order) {
   return items.reduce((sum, item) => {
     const quantity = getItemQuantity(item);
     const basePrice = getBasePrice(item);
-    const extraCheesePrice = Number(item.addons?.extraCheesePrice || 0);
-    return sum + (basePrice + extraCheesePrice) * quantity;
+    const addonTotal = getAddonTotal(item);
+    return sum + (basePrice + addonTotal) * quantity;
   }, 0);
 }
 

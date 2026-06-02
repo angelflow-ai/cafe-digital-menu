@@ -5,8 +5,6 @@ import {
   Coffee,
   CupSoda,
   Filter,
-  ArrowDown,
-  ArrowUp,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -33,12 +31,12 @@ import inventoryStore from "./inventoryStore";
 import demoMode from "./demoMode";
 import { imageUrl } from "./utils/imageHelper";
 import { normalizeMenuItem, filterMenuItems } from "./utils/filterMenuItems";
-import { subcategoryConfig } from "./data/menuData";
+import { categories as defaultCategories, menuItems as defaultMenuItems, subcategoryConfig } from "./data/menuData";
 import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
-import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getOrderDate, isValidSalesOrder, isCompletedSale, normalizeOrder, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
+import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
 import { formatOrderItemLine, getBasePrice, getAddonEachText, getOrderTotal } from "./utils/orderDisplayFormatter";
 import { api, API, API_ROOT } from "./services/apiClient";
@@ -46,6 +44,261 @@ import orderService from "./services/orderService";
 import paymentService from "./services/paymentService";
 import authService from "./services/authService";
 import menuService from "./services/menuService";
+
+// Subcategory config persistence helpers
+const SUBCATEGORY_CONFIG_KEY = "subCategories";
+const DELETED_SUBCATEGORY_CONFIG_KEY = "subCategoriesDeleted";
+const INVENTORY_ITEMS_KEY = "inventoryItems";
+
+function readJsonStorage(key, fallback) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
+  } catch (err) {
+    return fallback;
+  }
+}
+
+function logLoadStats(context, counts) {
+  if (!import.meta.env.DEV) return;
+  const {
+    rawItems,
+    activeItems,
+    rawCategories,
+    activeCategories,
+    rawSubcategories,
+    activeSubcategories,
+    deletedCount
+  } = counts || {};
+  console.groupCollapsed(`[${context}] load stats`);
+  console.log("rawCategories:", rawCategories);
+  console.log("activeCategories:", activeCategories);
+  console.log("rawItems:", rawItems);
+  console.log("activeItems:", activeItems);
+  if (rawSubcategories !== undefined) console.log("rawSubcategories:", rawSubcategories);
+  if (activeSubcategories !== undefined) console.log("activeSubcategories:", activeSubcategories);
+  if (deletedCount !== undefined) console.log("deletedCount:", deletedCount);
+  console.groupEnd();
+}
+
+function normalizeSubcategoryList(value) {
+  if (Array.isArray(value)) return value.map((entry) => String(entry || "").trim()).filter(Boolean);
+  return [];
+}
+
+function normalizeDeletedSubcategoryMap(value) {
+  const source = value && typeof value === "object" ? value : {};
+  const result = {};
+  for (const [parentId, entries] of Object.entries(source)) {
+    const normalizedEntries = Array.isArray(entries)
+      ? entries.map((entry) => {
+          if (typeof entry === "string") return { name: entry, deletedAt: null };
+          return { name: String(entry?.name || "").trim(), deletedAt: entry?.deletedAt || null };
+        })
+      : [];
+    result[parentId] = normalizedEntries.filter((entry) => entry.name);
+  }
+  return result;
+}
+
+function loadSubcategoryConfig() {
+  try {
+    const activeStored = readJsonStorage(SUBCATEGORY_CONFIG_KEY, {});
+    const deletedStored = normalizeDeletedSubcategoryMap(readJsonStorage(DELETED_SUBCATEGORY_CONFIG_KEY, {}));
+    const defaults = typeof subcategoryConfig === "object" ? subcategoryConfig : {};
+    const merged = {};
+    for (const parentId of new Set([...Object.keys(defaults), ...Object.keys(activeStored)])) {
+      const activeValues = Array.from(new Set([...(normalizeSubcategoryList(defaults[parentId])), ...(normalizeSubcategoryList(activeStored[parentId]))]));
+      const deletedNames = new Set((deletedStored[parentId] || []).map((entry) => entry.name));
+      merged[parentId] = activeValues.filter((name) => !deletedNames.has(name));
+    }
+    return merged;
+  } catch (err) {
+    return typeof subcategoryConfig === "object" ? subcategoryConfig : {};
+  }
+}
+
+function getOrderHistoryTypeLabel(order) {
+  if (!order || typeof order !== "object") return undefined;
+  const explicitType = String(order.orderType || order.type || "").trim();
+  if (explicitType) return explicitType;
+
+  const note = String(order.notes || order.note || "").toLowerCase();
+  const paymentMethod = String(order.paymentMethod || order.method || "").toLowerCase();
+  const id = String(order.id || order._id || "").toLowerCase();
+
+  if (id.startsWith("coc-") || paymentMethod.includes("coc") || note.includes("coc")) return "COC";
+  if (note.includes("order on counter") || note.includes("ooc") || note.includes("cash on counter") || paymentMethod.includes("counter")) return "Order On Counter";
+  return undefined;
+}
+
+function getOrderHistoryFingerprint(order) {
+  if (!order || typeof order !== "object") return "";
+  const orderId = String(order.orderId || order.id || order._id || "").trim();
+  if (orderId) return `id:${orderId}`;
+
+  const customerName = String(order.customerName || order.name || "").trim().toLowerCase();
+  const phone = String(order.phone || order.customerPhone || "").trim().toLowerCase();
+  const table = String((order.tableNumber ?? order.tableNo ?? order.table) || "").trim().toLowerCase();
+  const createdAt = String(order.createdAt || order.orderDate || order.date || "").trim();
+  const itemNames = (Array.isArray(order.items) ? order.items : [])
+    .map((line) => String(line.name || line.itemName || line.productName || "").trim().toLowerCase())
+    .filter(Boolean)
+    .sort()
+    .join("|");
+
+  return `fallback:${customerName}|${phone}|${table}|${createdAt}|${itemNames}`;
+}
+
+function mergeOrderHistoryRecords(orders, cocRequests) {
+  const merged = [];
+  const seen = new Set();
+
+  const normalizedOrders = Array.isArray(orders) ? orders : [];
+  const normalizedCocRequests = (Array.isArray(cocRequests) ? cocRequests : []).map((request) => ({
+    ...request,
+    orderType: request.orderType || "COC"
+  }));
+
+  for (const order of [...normalizedOrders, ...normalizedCocRequests]) {
+    const normalized = { ...order };
+    if (!normalized.orderType) {
+      normalized.orderType = getOrderHistoryTypeLabel(normalized);
+    }
+    const fingerprint = getOrderHistoryFingerprint(normalized);
+    if (!fingerprint || seen.has(fingerprint)) continue;
+    seen.add(fingerprint);
+    merged.push(normalized);
+  }
+
+  return merged.sort((a, b) => {
+    const aTime = new Date(a.createdAt || a.updatedAt || 0).getTime();
+    const bTime = new Date(b.createdAt || b.updatedAt || 0).getTime();
+    return bTime - aTime;
+  });
+}
+
+function saveSubcategoryConfig(obj) {
+  try {
+    localStorage.setItem(SUBCATEGORY_CONFIG_KEY, JSON.stringify(obj || {}));
+    dispatchOwnerDataUpdated({ source: "subcategories" });
+  } catch (err) {
+    console.error("Failed to save subcategory config:", err);
+  }
+}
+
+function loadDeletedSubcategoryConfig() {
+  return normalizeDeletedSubcategoryMap(readJsonStorage(DELETED_SUBCATEGORY_CONFIG_KEY, {}));
+}
+
+function saveDeletedSubcategoryConfig(obj) {
+  try {
+    localStorage.setItem(DELETED_SUBCATEGORY_CONFIG_KEY, JSON.stringify(obj || {}));
+    dispatchOwnerDataUpdated({ source: "deletedSubcategories" });
+  } catch (err) {
+    console.error("Failed to save deleted subcategory config:", err);
+  }
+}
+
+function restoreDeletedSubcategory(parentId, name) {
+  const active = loadSubcategoryConfig();
+  const deleted = loadDeletedSubcategoryConfig();
+  const normalizedName = String(name || "").trim();
+  if (!parentId || !normalizedName) return;
+  active[parentId] = Array.from(new Set([...(active[parentId] || []), normalizedName]));
+  deleted[parentId] = (deleted[parentId] || []).filter((entry) => entry.name !== normalizedName);
+  if (!deleted[parentId] || deleted[parentId].length === 0) delete deleted[parentId];
+  saveSubcategoryConfig(active);
+  saveDeletedSubcategoryConfig(deleted);
+  dispatchOwnerDataUpdated({ source: "subcategoryRestored", parentId, name: normalizedName });
+}
+
+function permanentlyDeleteSubcategory(parentId, name) {
+  const deleted = loadDeletedSubcategoryConfig();
+  const normalizedName = String(name || "").trim();
+  if (!parentId || !normalizedName) return;
+  deleted[parentId] = (deleted[parentId] || []).filter((entry) => entry.name !== normalizedName);
+  if (!deleted[parentId] || deleted[parentId].length === 0) delete deleted[parentId];
+  saveDeletedSubcategoryConfig(deleted);
+  dispatchOwnerDataUpdated({ source: "subcategoryPermanentlyDeleted", parentId, name: normalizedName });
+}
+
+function normalizeLocalInventoryItem(item) {
+  const source = item && typeof item === "object" ? item : {};
+  return {
+    ...source,
+    isDeleted: source.isDeleted === true,
+    deletedAt: source.isDeleted === true ? source.deletedAt || source.lastUpdated || null : source.deletedAt || null
+  };
+}
+
+function normalizeLocalInventoryItems(items) {
+  if (!Array.isArray(items)) return null;
+  return items.map((item) => normalizeLocalInventoryItem(item));
+}
+
+function loadLocalInventoryItems() {
+  const loaded = readJsonStorage(INVENTORY_ITEMS_KEY, []);
+  const normalized = normalizeLocalInventoryItems(loaded);
+  return Array.isArray(normalized) ? normalized : [];
+}
+
+function saveLocalInventoryItems(items) {
+  const normalized = normalizeLocalInventoryItems(items);
+  if (!Array.isArray(normalized)) {
+    return loadLocalInventoryItems();
+  }
+  try {
+    localStorage.setItem(INVENTORY_ITEMS_KEY, JSON.stringify(normalized));
+    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: normalized }));
+    dispatchOwnerDataUpdated({ source: "inventory" });
+  } catch (err) {
+    console.error("Failed to save inventory items:", err);
+    return loadLocalInventoryItems();
+  }
+  return normalized;
+}
+
+function dispatchOwnerDataUpdated(detail = {}) {
+  try {
+    window.dispatchEvent(new CustomEvent("ownerDataUpdated", { detail }));
+  } catch (err) {
+    console.error("Failed to dispatch ownerDataUpdated event:", err);
+  }
+}
+
+function ensureActiveCategories(data) {
+  const categories = Array.isArray(data) && data.length ? data : defaultCategories;
+  return categories.map((category) => ({
+    ...category,
+    isDeleted: category?.isDeleted === true,
+    deletedAt: category?.deletedAt || null
+  }));
+}
+
+function normalizeOwnerCategories(data) {
+  if (!Array.isArray(data)) return [];
+  return data.map((category) => ({
+    ...category,
+    isDeleted: category?.isDeleted === true,
+    deletedAt: category?.deletedAt || null
+  }));
+}
+
+function ensureActiveMenuItems(data, categories) {
+  const items = Array.isArray(data) && data.length ? data : defaultMenuItems;
+  const allowedCategoryIds = new Set((Array.isArray(categories) && categories.length ? categories : defaultCategories).map((category) => category.id));
+  return items
+    .filter((item) => item && item?.isDeleted !== true && allowedCategoryIds.has(item.categoryId))
+    .map((item) => normalizeMenuItem(item));
+}
+
+function slugifyValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 const TEST_UPI_CONFIG = {
   upiId: import.meta.env.VITE_TEST_UPI_ID || "9929637525-2@axl",
@@ -92,7 +345,21 @@ function showToast(message, duration = 3000) {
 }
 
 function rupees(value) {
-  return `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+  return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
+}
+
+function formatOrderDateTime(createdAt) {
+  if (!createdAt) return "Date unavailable";
+  try {
+    const date = new Date(createdAt);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = date.toLocaleString("en-IN", { month: "short" });
+    const year = date.getFullYear();
+    const time = date.toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+    return `${day} ${month} ${year} • ${time}`;
+  } catch (e) {
+    return "Date unavailable";
+  }
 }
 
 function OrderLineCard({ line }) {
@@ -126,7 +393,46 @@ const serveOptionsByItemId = {
 };
 
 function getServeOptions(item) {
-  return serveOptionsByItemId[item.id] || [];
+  if (!item) return [];
+  const category = String(item.category || item.categoryId || "").toLowerCase();
+  const isHotDrinks = category === "hot-drinks" || category === "hot drinks";
+  if (!isHotDrinks) return [];
+
+  const safeServeOptions = Array.isArray(item.serveOptions) ? item.serveOptions : [];
+  const safeServingOptions = Array.isArray(item.servingOptions) ? item.servingOptions : [];
+  const safeItemServeOptions = Array.isArray(item.itemServeOptions) ? item.itemServeOptions : [];
+
+  if (safeServeOptions.length > 0) return safeServeOptions;
+  if (safeServingOptions.length > 0) return safeServingOptions;
+  if (safeItemServeOptions.length > 0) return safeItemServeOptions;
+
+  const name = String(item.name || item.itemName || "").toLowerCase();
+  const subCategory = String(item.subCategory || item.subcategory || item.subcategoryName || "").toLowerCase();
+
+  const hotCoffeeNames = [
+    "black coffee",
+    "core coffee",
+    "hot chocolate",
+    "infusion heritage hot coffee"
+  ];
+  const chaiNames = [
+    "black tea",
+    "green tea",
+    "tulsi tea",
+    "lemon tea",
+    "honey lemon tea",
+    "personal blend chai",
+    "signature infusion chai"
+  ];
+
+  if (hotCoffeeNames.includes(name) || subCategory.includes("coffee")) {
+    return ["Kulhad", "Glass", "Cup"];
+  }
+  if (chaiNames.includes(name) || subCategory.includes("chai")) {
+    return ["Kulhad", "Glass"];
+  }
+
+  return serveOptionsByItemId[item?.id] || [];
 }
 
 // centralized `api` client is provided by src/services/apiClient
@@ -147,17 +453,36 @@ function App() {
 
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
-  if (normalizedRoute === "/admin/forgot-password") return <ForgotPassword navigate={navigate} role="admin" />;
+  if (normalizedRoute === "/owner/forgot-password") return <ForgotPassword navigate={navigate} role="admin" />;
   if (normalizedRoute === "/biller/forgot-password") return <ForgotPassword navigate={navigate} role="biller" />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
-  if (normalizedRoute === "/order/admin") return <OwnerApp navigate={navigate} />;
+  if (normalizedRoute === "/order/owner") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/order" || normalizedRoute === "/order/") return <CustomerApp navigate={navigate} />;
   if (route.startsWith("/order/")) {
     const orderId = route.replace("/order/", "");
     if (!orderId) return <CustomerApp navigate={navigate} />;
     return <OrderTracking orderId={orderId} />;
   }
-  if (route.startsWith("/admin")) return <OwnerApp navigate={navigate} />;
+  // backward-compatibility: redirect old /admin URL and subpaths to /owner
+  if (route.startsWith("/admin")) {
+    const nextRoute = route.replace(/^\/admin/, "/owner");
+    if (nextRoute !== route) {
+      navigate(nextRoute);
+      return null;
+    }
+  }
+  if (route.startsWith("/owner")) {
+    const ownerTabByPath = {
+      "/owner/inventory": "inventory",
+      "/owner/categories": "categories",
+      "/owner/stock": "stock",
+      "/owner/recipes": "recipes",
+      "/owner/lowstock": "lowstock",
+      "/owner/reports": "reports",
+      "/owner/history": "history"
+    };
+    return <OwnerApp navigate={navigate} initialTab={ownerTabByPath[normalizedRoute] || "items"} />;
+  }
   if (route.startsWith("/biller")) return <BillerApp navigate={navigate} />;
   return <CustomerApp navigate={navigate} />;
 }
@@ -231,31 +556,65 @@ function CustomerApp({ navigate, counterMode = false }) {
   }
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([api("/categories"), api("/menu")])
-      .then(([categoryData, menuData]) => {
-        setCategories(categoryData);
-        setItems(menuData);
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const [categoryData, menuData] = await Promise.all([api("/categories"), api("/menu")]);
+        const safeCategories = ensureActiveCategories(categoryData);
+        const safeItems = ensureActiveMenuItems(menuData, safeCategories);
+        setCategories(safeCategories.filter((category) => category?.isDeleted !== true));
+        setItems(safeItems.filter((item) => item?.isDeleted !== true));
         setAppError(null);
-      })
-      .catch((error) => {
+        logLoadStats("CustomerApp", {
+          rawCategories: Array.isArray(categoryData) ? categoryData.length : 0,
+          activeCategories: safeCategories.length,
+          rawItems: Array.isArray(menuData) ? menuData.length : 0,
+          activeItems: safeItems.length,
+          rawSubcategories: loadSubcategoryConfig(),
+          activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+          deletedCount: 0
+        });
+      } catch (error) {
         if (!demoMode.isDemoModeEnabled()) {
           setAppError(error.message || "Unable to load menu data.");
         }
-        try {
-          setItems([
-            {
-              id: "demo-coffee",
-              name: "Demo Coffee",
-              description: "A sample coffee for UI verification.",
-              image: "/assets/images/Hot Drinks/Hot Coffee/demo.jpg",
-              sizes: [{ id: "regular", name: "Regular", label: "Regular", price: 68 }],
-              categoryId: "hot-drinks"
-            }
-          ]);
-        } catch (error) {}
-      })
-      .finally(() => setLoading(false));
+        const safeCategories = ensureActiveCategories([]);
+        const safeItems = ensureActiveMenuItems([], safeCategories);
+        setCategories(safeCategories);
+        setItems(safeItems);
+        logLoadStats("CustomerApp (fallback)", {
+          rawCategories: 0,
+          activeCategories: safeCategories.length,
+          rawItems: 0,
+          activeItems: safeItems.length,
+          rawSubcategories: loadSubcategoryConfig(),
+          activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+          deletedCount: 0
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+
+    function handleOwnerDataUpdated() {
+      fetchData();
+    }
+
+    function handleStorage(event) {
+      if (!event.key) return;
+      if (event.key === SUBCATEGORY_CONFIG_KEY || event.key === DELETED_SUBCATEGORY_CONFIG_KEY) {
+        fetchData();
+      }
+    }
+
+    window.addEventListener("ownerDataUpdated", handleOwnerDataUpdated);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("ownerDataUpdated", handleOwnerDataUpdated);
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   useEffect(() => {
@@ -274,15 +633,18 @@ function CustomerApp({ navigate, counterMode = false }) {
   }, []);
 
   const normalizedItems = useMemo(() => items.map(normalizeMenuItem), [items]);
+  const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
 
   const filteredItems = useMemo(() => {
     return normalizedItems.filter((item) => {
+      const category = categoryMap.get(item.categoryId);
+      if (!category || category.isDeleted === true || item.isDeleted === true) return false;
       const matchesCategory = activeCategory === "all" || item.categoryId === activeCategory;
       const matchesSubcategory = !selectedSubcategory || item.subcategory === selectedSubcategory;
       const matchesQuery = !query || `${item.name} ${item.description}`.toLowerCase().includes(query.toLowerCase());
       return matchesCategory && matchesSubcategory && matchesQuery;
     });
-  }, [normalizedItems, activeCategory, selectedSubcategory, query]);
+  }, [normalizedItems, activeCategory, selectedSubcategory, query, categoryMap]);
 
   const cartTotals = calculateTotals(cart);
 
@@ -400,8 +762,8 @@ function CustomerApp({ navigate, counterMode = false }) {
         />
         <BrandHeader query={query} setQuery={setQuery} />
         <CategoryChips categories={categories} active={activeCategory} setActive={handleSetActiveCategory} />
-        {subcategoryConfig[activeCategory] ? (
-          <SubcategoryChips options={subcategoryConfig[activeCategory]} active={selectedSubcategory} setActive={setSelectedSubcategory} />
+        {loadSubcategoryConfig()[activeCategory] ? (
+          <SubcategoryChips options={loadSubcategoryConfig()[activeCategory]} active={selectedSubcategory} setActive={setSelectedSubcategory} />
         ) : null}
 
         <CustomerMenu
@@ -439,9 +801,23 @@ function CustomerApp({ navigate, counterMode = false }) {
 }
 
 function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
-  const blankSize = () => ({ id: "", name: "", label: "", price: "", sortOrder: 1 });
-  const [form, setForm] = useState({ name: "", categoryId: categories[0]?.id || "", description: "", image: "", active: true, featured: false, sizes: [blankSize()] });
+  const [form, setForm] = useState({ name: "", categoryId: categories[0]?.id || "", subCategoryId: "", subCategoryName: "", description: "", image: "", active: true, price: "", serveOptions: [], addons: [] });
   const [message, setMessage] = useState("");
+  const [newServeOption, setNewServeOption] = useState("");
+  const [newAddonName, setNewAddonName] = useState("");
+  const [newAddonPrice, setNewAddonPrice] = useState("");
+  const subcategoryOptions = loadSubcategoryConfig()[form.categoryId] || [];
+  const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024;
+  const ALLOWED_PHOTO_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]);
+
+  function buildSubcategoryState(categoryId, subcategoryName = "") {
+    const options = loadSubcategoryConfig()[categoryId] || [];
+    const resolvedName = options.includes(subcategoryName) ? subcategoryName : "";
+    return {
+      subCategoryName: resolvedName,
+      subCategoryId: resolvedName ? slugifyValue(resolvedName) : ""
+    };
+  }
 
   useEffect(() => {
     if (!form.categoryId && categories[0]) setForm((current) => ({ ...current, categoryId: categories[0].id }));
@@ -449,39 +825,114 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
 
   useEffect(() => {
     if (editingItem) {
+      const subcategoryName = editingItem.subCategoryName || editingItem.subcategoryName || editingItem.subcategory || "";
+      const subcategoryId = editingItem.subCategoryId || editingItem.subcategoryId || slugifyValue(subcategoryName);
+      const firstSize = editingItem.sizes?.[0] || {};
+      const existingServeOptions = Array.isArray(editingItem.serveOptions) ? editingItem.serveOptions : [];
+      const existingAddons = Array.isArray(editingItem.addons)
+        ? editingItem.addons.map((addon) => ({
+            id: String(addon.id || addon.name || `addon-${Date.now()}`).trim(),
+            name: String(addon.name || "").trim(),
+            description: String(addon.description || "").trim(),
+            price: Number.isFinite(Number(addon.price)) ? Number(addon.price) : 0
+          }))
+          .filter((addon) => addon.name)
+        : editingItem.addons || [];
+
       setForm({
         id: editingItem.id,
         name: editingItem.name,
         categoryId: editingItem.categoryId,
+        subCategoryId: subcategoryId,
+        subCategoryName: subcategoryName,
         description: editingItem.description || "",
         image: editingItem.image || "",
         active: editingItem.active !== false,
-        featured: Boolean(editingItem.featured),
-        sizes: editingItem.sizes.map((size, index) => ({ ...size, sortOrder: size.sortOrder ?? index + 1 }))
+        price: Number.isFinite(Number(firstSize.price)) ? String(firstSize.price) : "",
+        serveOptions: existingServeOptions,
+        addons: existingAddons
       });
+      setNewServeOption("");
+      setNewAddonName("");
+      setNewAddonPrice("");
       setMessage("");
     }
   }, [editingItem]);
 
-  function updateSize(index, key, value) {
-    setForm((current) => ({ ...current, sizes: current.sizes.map((size, i) => (i === index ? { ...size, [key]: value } : size)) }));
+  function updateCategory(categoryId) {
+    setForm((current) => ({ ...current, categoryId, ...buildSubcategoryState(categoryId) }));
   }
 
-  function moveSize(index, direction) {
-    const nextIndex = index + direction;
-    if (nextIndex < 0 || nextIndex >= form.sizes.length) return;
-    const next = [...form.sizes];
-    [next[index], next[nextIndex]] = [next[nextIndex], next[index]];
-    setForm({ ...form, sizes: next.map((size, i) => ({ ...size, sortOrder: i + 1 })) });
+  function updateSubcategory(subCategoryName) {
+    setForm((current) => ({ ...current, ...buildSubcategoryState(current.categoryId, subCategoryName) }));
+  }
+
+  function addServeOption() {
+    const option = String(newServeOption || "").trim();
+    if (!option) return;
+    if (form.serveOptions.includes(option)) {
+      setMessage("Serve option already added.");
+      return;
+    }
+    setForm((current) => ({ ...current, serveOptions: [...(Array.isArray(current.serveOptions) ? current.serveOptions : []), option] }));
+    setNewServeOption("");
+    setMessage("");
+  }
+
+  function removeServeOption(option) {
+    setForm((current) => ({
+      ...current,
+      serveOptions: (Array.isArray(current.serveOptions) ? current.serveOptions : []).filter((item) => item !== option)
+    }));
+  }
+
+  function addAddon() {
+    const name = String(newAddonName || "").trim();
+    const priceValue = String(newAddonPrice || "").trim();
+    const price = Math.round(Number(priceValue));
+
+    if (!name) {
+      setMessage("Please enter add-on name.");
+      return;
+    }
+    if (priceValue === "" || !Number.isFinite(price) || price < 0) {
+      setMessage("Please enter a valid add-on price.");
+      return;
+    }
+
+    const addonId = String(name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || `addon-${Date.now()}`;
+    const newAddon = { id: addonId, name, price };
+
+    setForm((current) => ({
+      ...current,
+      addons: [...(Array.isArray(current.addons) ? current.addons : []), newAddon]
+    }));
+    setNewAddonName("");
+    setNewAddonPrice("");
+    setMessage("");
+  }
+
+  function removeAddon(addonId) {
+    setForm((current) => ({
+      ...current,
+      addons: (Array.isArray(current.addons) ? current.addons : []).filter((addon) => addon.id !== addonId)
+    }));
   }
 
   async function uploadPhoto(file) {
     if (!file) return;
+    if (!ALLOWED_PHOTO_TYPES.has(file.type)) {
+      throw new Error("Please upload a JPG, PNG, WEBP, or GIF image.");
+    }
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
+      throw new Error("Photo must be 5MB or smaller.");
+    }
+
+    setMessage("");
     const body = new FormData();
     body.append("photo", file);
-    const response = await fetch(`${API}/uploads`, { method: "POST", body, credentials: "include" });
-    if (!response.ok) throw new Error("Photo upload failed");
-    const data = await response.json();
+    const data = await menuService.uploadPhoto(body);
+    if (!data?.url) throw new Error("Upload did not return an image URL.");
     setForm((current) => ({ ...current, image: data.url }));
   }
 
@@ -489,8 +940,35 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
     event.preventDefault();
     setMessage("");
     try {
-      await api("/menu", { method: "POST", body: JSON.stringify(form) });
-      setForm({ name: "", categoryId: categories[0]?.id || "", description: "", image: "", active: true, featured: false, sizes: [blankSize()] });
+      if (String(form.price ?? "").trim() === "") {
+        throw new Error("Please enter a valid price.");
+      }
+      const numericPrice = Math.round(Number(form.price));
+      if (!Number.isFinite(numericPrice) || numericPrice < 0) {
+        throw new Error("Please enter a valid price.");
+      }
+
+      await api("/menu", {
+        method: "POST",
+        body: JSON.stringify({
+          ...form,
+          sizes: [
+            {
+              id: "regular",
+              name: "Regular",
+              label: "Regular",
+              price: numericPrice,
+              sortOrder: 1
+            }
+          ],
+          serveOptions: Array.isArray(form.serveOptions) ? form.serveOptions : [],
+          addons: Array.isArray(form.addons) ? form.addons : form.addons || []
+        })
+      });
+      setForm({ name: "", categoryId: categories[0]?.id || "", subCategoryId: "", subCategoryName: "", description: "", image: "", active: true, price: "", serveOptions: [], addons: [] });
+      setNewServeOption("");
+      setNewAddonName("");
+      setNewAddonPrice("");
       setMessage("Saved.");
       onSaved();
     } catch (err) {
@@ -506,29 +984,105 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
       </div>
       <div className="mt-4 space-y-3">
         <input required className="field bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-        <select required className="field bg-stone-50" value={form.categoryId} onChange={(event) => setForm({ ...form, categoryId: event.target.value })}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
+        <select required className="field bg-stone-50" value={form.categoryId} onChange={(event) => updateCategory(event.target.value)}>{categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select>
+        <select className="field bg-stone-50" value={form.subCategoryId || ""} onChange={(event) => updateSubcategory(subcategoryOptions.find((subcategory) => slugifyValue(subcategory) === event.target.value) || "")}>
+          <option value="">Select sub category</option>
+          {subcategoryOptions.map((subcategory) => <option key={subcategory} value={slugifyValue(subcategory)}>{subcategory}</option>)}
+        </select>
         <input className="field bg-stone-50" placeholder="Photo URL" value={form.image} onChange={(event) => setForm({ ...form, image: event.target.value })} />
         <label className="block rounded-2xl bg-stone-50 p-3 text-sm font-black text-stone-600">
           Upload photo
           <input type="file" accept="image/*" className="mt-2 block w-full text-xs" onChange={(event) => uploadPhoto(event.target.files?.[0]).catch((err) => setMessage(err.message))} />
         </label>
+        {form.image ? (
+          <div className="rounded-2xl border border-stone-200 bg-white p-3">
+            <p className="text-xs font-bold text-stone-500">Photo preview</p>
+            <img src={imageUrl(form.image)} alt="Item preview" className="mt-2 h-36 w-full rounded-xl object-cover" />
+          </div>
+        ) : null}
         <textarea className="field min-h-24 resize-none bg-stone-50" placeholder="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
         <div className="flex gap-4 text-sm font-bold">
           <label><input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} /> Active</label>
-          <label><input type="checkbox" checked={form.featured} onChange={(event) => setForm({ ...form, featured: event.target.checked })} /> Featured</label>
         </div>
-        <div className="space-y-2 rounded-2xl bg-stone-50 p-3">
-          <div className="flex items-center justify-between"><p className="font-black">Sizes and prices</p><button type="button" onClick={() => setForm({ ...form, sizes: [...form.sizes, { ...blankSize(), sortOrder: form.sizes.length + 1 }] })} className="rounded-full bg-black px-3 py-2 text-xs font-black text-white">Add size</button></div>
-          {form.sizes.map((size, index) => (
-            <div key={index} className="grid grid-cols-[1fr_0.7fr_0.8fr_auto_auto_auto] gap-2">
-              <input required placeholder="Name" className="field bg-white p-3" value={size.name} onChange={(event) => updateSize(index, "name", event.target.value)} />
-              <input required placeholder="Label" className="field bg-white p-3" value={size.label} onChange={(event) => updateSize(index, "label", event.target.value)} />
-              <input required placeholder="Price" type="number" className="field bg-white p-3" value={size.price} onChange={(event) => updateSize(index, "price", event.target.value)} />
-              <button type="button" onClick={() => moveSize(index, -1)} className="rounded-full bg-white p-3" aria-label="Move size up"><ArrowUp size={16} /></button>
-              <button type="button" onClick={() => moveSize(index, 1)} className="rounded-full bg-white p-3" aria-label="Move size down"><ArrowDown size={16} /></button>
-              <button type="button" onClick={() => setForm({ ...form, sizes: form.sizes.filter((_, i) => i !== index) })} className="rounded-full bg-white p-3"><Trash2 size={16} /></button>
+        <input
+          required
+          placeholder="Price (₹)"
+          type="number"
+          min="0"
+          step="0.01"
+          className="field w-full bg-stone-50 p-4 text-lg font-black"
+          value={form.price}
+          onChange={(event) => setForm({ ...form, price: event.target.value })}
+        />
+        <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+          <div className="text-sm font-black text-stone-700">Serve Options</div>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+            <input
+              type="text"
+              className="field bg-white"
+              placeholder="Option name (e.g. Kulhad)"
+              value={newServeOption}
+              onChange={(event) => setNewServeOption(event.target.value)}
+            />
+            <button type="button" onClick={addServeOption} className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
+              Add option
+            </button>
+          </div>
+          {Array.isArray(form.serveOptions) && form.serveOptions.length > 0 ? (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {form.serveOptions.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => removeServeOption(option)}
+                  className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-black text-stone-700 ring-1 ring-stone-200"
+                >
+                  {option}
+                  <span className="text-stone-400">×</span>
+                </button>
+              ))}
             </div>
-          ))}
+          ) : null}
+        </div>
+        <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4">
+          <div className="text-sm font-black text-stone-700">Add-ons</div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto]">
+            <input
+              type="text"
+              className="field bg-white"
+              placeholder="Add-on name"
+              value={newAddonName}
+              onChange={(event) => setNewAddonName(event.target.value)}
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="field bg-white"
+              placeholder="Price"
+              value={newAddonPrice}
+              onChange={(event) => setNewAddonPrice(event.target.value)}
+            />
+          </div>
+          <button type="button" onClick={addAddon} className="mt-3 rounded-full bg-black px-5 py-3 text-sm font-black text-white">
+            Add add-on
+          </button>
+          {Array.isArray(form.addons) && form.addons.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {form.addons.map((addon) => (
+                <div key={addon.id} className="rounded-2xl border border-stone-200 bg-white p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-black text-stone-800">{addon.name}</div>
+                      {addon.description ? <p className="text-xs text-stone-500">{addon.description}</p> : null}
+                    </div>
+                    <button type="button" onClick={() => removeAddon(addon.id)} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black text-stone-700">Remove</button>
+                  </div>
+                  <div className="mt-2 text-xs font-semibold text-stone-600">Price: ₹{addon.price}</div>
+                </div>
+              ))}
+            </div>
+          ) : null}
         </div>
         {message && <p className="text-sm font-bold text-stone-600">{message}</p>}
         <button className="w-full rounded-full bg-black px-5 py-4 font-black text-white">Save item</button>
@@ -539,27 +1093,288 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
 
 function CategoryAdmin({ categories, onSaved }) {
   const [name, setName] = useState("");
+  const [subParent, setSubParent] = useState(categories[0]?.id || "");
+  const [subName, setSubName] = useState("");
+  const [subConfig, setSubConfig] = useState(() => loadSubcategoryConfig());
+  const [deletedSubConfig, setDeletedSubConfig] = useState(() => loadDeletedSubcategoryConfig());
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  useEffect(() => {
+    if (!subParent && categories[0]) setSubParent(categories[0].id);
+  }, [categories]);
+
+  function refreshSubcategories() {
+    setSubConfig(loadSubcategoryConfig());
+    setDeletedSubConfig(loadDeletedSubcategoryConfig());
+  }
+
+  useEffect(() => {
+    function syncSubcategories() {
+      refreshSubcategories();
+    }
+
+    function handleStorage(event) {
+      if (!event.key) return;
+      if (event.key === SUBCATEGORY_CONFIG_KEY || event.key === DELETED_SUBCATEGORY_CONFIG_KEY) {
+        syncSubcategories();
+      }
+    }
+
+    window.addEventListener("ownerDataUpdated", syncSubcategories);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("ownerDataUpdated", syncSubcategories);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
   async function submit(event) {
     event.preventDefault();
-    await api("/categories", { method: "POST", body: JSON.stringify({ name, sortOrder: categories.length + 1 }) });
+    const normalizedName = String(name || "").trim();
+    if (!normalizedName) return;
+    await menuService.createCategory({ name: normalizedName, sortOrder: categories.length + 1 });
     setName("");
     onSaved();
+    dispatchOwnerDataUpdated({ source: "categoryCreated" });
   }
+
+  function submitSubcategory(event) {
+    event.preventDefault();
+    const normalizedSubName = String(subName || "").trim();
+    if (!subParent || !normalizedSubName) return;
+    const current = loadSubcategoryConfig();
+    const currentDeleted = loadDeletedSubcategoryConfig();
+    const next = { ...current };
+    next[subParent] = Array.from(new Set([...(next[subParent] || []), normalizedSubName]));
+    saveSubcategoryConfig(next);
+    const deleted = { ...currentDeleted };
+    deleted[subParent] = (deleted[subParent] || []).filter((entry) => entry.name !== normalizedSubName);
+    if (!deleted[subParent] || deleted[subParent].length === 0) delete deleted[subParent];
+    saveDeletedSubcategoryConfig(deleted);
+    setSubConfig(next);
+    setDeletedSubConfig(deleted);
+    setSubName("");
+    onSaved();
+  }
+
+  function deleteCategory(id) {
+    setConfirmDelete({ type: "category", id });
+  }
+
+  function deleteSubcategory(parentId, nameToDelete) {
+    setConfirmDelete({ type: "subcategory", parentId, name: nameToDelete });
+  }
+
+  async function confirmDeletion() {
+    if (!confirmDelete) return;
+    const action = confirmDelete;
+    try {
+    if (action.type === "category") {
+      await menuService.deleteCategory(action.id);
+      dispatchOwnerDataUpdated({ source: "categoryDeleted", id: action.id });
+      setConfirmDelete(null);
+      onSaved();
+      return;
+    }
+    if (action.type === "subcategory") {
+      const next = { ...loadSubcategoryConfig() };
+      next[action.parentId] = (next[action.parentId] || []).filter((s) => s !== action.name);
+      if (!next[action.parentId] || next[action.parentId].length === 0) delete next[action.parentId];
+      saveSubcategoryConfig(next);
+      const deleted = { ...loadDeletedSubcategoryConfig() };
+      const remaining = (deleted[action.parentId] || []).filter((entry) => entry.name !== action.name);
+      remaining.push({ name: action.name, deletedAt: new Date().toISOString() });
+      deleted[action.parentId] = remaining;
+      saveDeletedSubcategoryConfig(deleted);
+      setSubConfig(next);
+      setDeletedSubConfig(deleted);
+      setConfirmDelete(null);
+      onSaved();
+    }
+    } catch (error) {
+      console.error("Failed to delete category or subcategory:", error);
+    } finally {
+      if (action) {
+        setConfirmDelete(null);
+      }
+    }
+  }
+
+  function cancelDeletion() {
+    setConfirmDelete(null);
+  }
+
   return (
     <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
       <div className="rounded-[1.5rem] bg-white p-4">
         {categories.map((category) => (
-          <div key={category.id} className="flex items-center justify-between border-b py-3 last:border-0">
-            <span className="font-black">{category.name}</span>
-            <button onClick={async () => { await api(`/categories/${category.id}`, { method: "DELETE" }); onSaved(); }} className="rounded-full p-2 hover:bg-red-50"><Trash2 size={17} /></button>
+          <div key={category.id} className="border-b py-3 last:border-0">
+            <div className="flex items-center justify-between">
+              <span className="font-black">{category.name}</span>
+              <button type="button" onClick={() => deleteCategory(category.id)} className="rounded-full p-2 hover:bg-red-50"><Trash2 size={17} /></button>
+            </div>
+            {(subConfig[category.id] || []).length > 0 && (
+              <div className="mt-2 ml-3 space-y-2">
+                {(subConfig[category.id] || []).map((sub) => (
+                  <div key={sub} className="flex items-center justify-between text-sm text-stone-600">
+                    <span>- {sub}</span>
+                    <button type="button" onClick={() => deleteSubcategory(category.id, sub)} className="rounded-full p-1 hover:bg-red-50"><Trash2 size={14} /></button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
-      <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5">
-        <h2 className="text-xl font-black">New category</h2>
-        <input required className="field mt-4 bg-stone-50" placeholder="Category name" value={name} onChange={(event) => setName(event.target.value)} />
-        <button className="mt-3 w-full rounded-full bg-black px-5 py-4 font-black text-white">Save category</button>
-      </form>
+      <div className="space-y-4">
+        <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5">
+          <h2 className="text-xl font-black">New category</h2>
+          <input required className="field mt-4 bg-stone-50" placeholder="Category name" value={name} onChange={(event) => setName(event.target.value)} />
+          <button className="mt-3 w-full rounded-full bg-black px-5 py-4 font-black text-white">Save category</button>
+        </form>
+
+        <form onSubmit={submitSubcategory} className="rounded-[1.5rem] bg-white p-5">
+          <h2 className="text-xl font-black">New sub category</h2>
+          <select required className="field mt-4 bg-stone-50" value={subParent} onChange={(e) => setSubParent(e.target.value)}>
+            {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <input required className="field mt-3 bg-stone-50" placeholder="Sub category name" value={subName} onChange={(e) => setSubName(e.target.value)} />
+          <button className="mt-3 w-full rounded-full bg-black px-5 py-4 font-black text-white">Save sub category</button>
+        </form>
+      </div>
+      <ConfirmDialog
+        open={Boolean(confirmDelete)}
+        title={confirmDelete?.type === "category" ? "Delete category?" : `Delete subcategory \"${confirmDelete?.name}\"?`}
+        message={confirmDelete?.type === "category"
+          ? "This will move the category to Recently Deleted so it can be restored later."
+          : "This will move the subcategory to Recently Deleted so it can be restored later."}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDeletion}
+        onCancel={cancelDeletion}
+      />
+    </section>
+
+  );
+}
+
+function RecentlyDeletedPanel({ categories, deletedCategories, deletedItems, deletedSubcategories, deletedInventories = [], onRestoreCategory, onRestoreItem, onRestoreSubcategory, onRestoreInventory, onRequestPermanentDelete }) {
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const safeDeletedCategories = Array.isArray(deletedCategories) ? deletedCategories : [];
+  const safeDeletedItems = Array.isArray(deletedItems) ? deletedItems : [];
+  const safeDeletedSubcategories = deletedSubcategories && typeof deletedSubcategories === "object" ? deletedSubcategories : {};
+  const safeDeletedInventories = Array.isArray(deletedInventories) ? deletedInventories : [];
+  const categoryNameById = useMemo(() => new Map(safeCategories.map((category) => [category.id, category.name])), [safeCategories]);
+  const deletedCategoryNameById = useMemo(() => new Map(safeDeletedCategories.map((category) => [category.id, category.name])), [safeDeletedCategories]);
+  const hasItems = safeDeletedItems.length > 0;
+  const hasCategories = safeDeletedCategories.length > 0;
+  const hasSubcategories = Object.keys(safeDeletedSubcategories).length > 0;
+  const hasInventories = safeDeletedInventories.length > 0;
+
+  return (
+    <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight">Recently deleted</h2>
+            <p className="mt-1 text-sm text-stone-500">Restore items, categories, subcategories, and inventory records before they are removed permanently.</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-4">
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-black">Items</h3>
+          <div className="mt-4 space-y-3">
+            {!hasItems && <p className="text-sm text-stone-500">No deleted items.</p>}
+            {safeDeletedItems.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-stone-200 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black">{item.name}</p>
+                    <p className="text-xs text-stone-500">{categoryNameById.get(item.categoryId) || item.categoryId || "Unknown category"}</p>
+                  </div>
+                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-stone-600">Item</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={() => onRestoreItem(item.id)} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Restore</button>
+                  <button type="button" onClick={() => onRequestPermanentDelete({ type: "permanent-item", id: item.id, name: item.name })} className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700">Delete forever</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-black">Categories</h3>
+          <div className="mt-4 space-y-3">
+            {!hasCategories && <p className="text-sm text-stone-500">No deleted categories.</p>}
+            {safeDeletedCategories.map((category) => (
+              <div key={category.id} className="rounded-2xl border border-stone-200 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black">{category.name}</p>
+                    <p className="text-xs text-stone-500">Category ID: {category.id}</p>
+                  </div>
+                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-stone-600">Category</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={() => onRestoreCategory(category.id)} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Restore</button>
+                  <button type="button" onClick={() => onRequestPermanentDelete({ type: "permanent-category", id: category.id, name: category.name })} className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700">Delete forever</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-black">Subcategories</h3>
+          <div className="mt-4 space-y-3">
+            {!hasSubcategories && <p className="text-sm text-stone-500">No deleted subcategories.</p>}
+            {Object.entries(safeDeletedSubcategories).flatMap(([parentId, entries]) => (Array.isArray(entries) ? entries : []).map((entry) => ({ parentId, ...entry }))).map((entry) => (
+              <div key={`${entry.parentId}:${entry.name}`} className="rounded-2xl border border-stone-200 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black">{entry.name}</p>
+                    <p className="text-xs text-stone-500">{categoryNameById.get(entry.parentId) || deletedCategoryNameById.get(entry.parentId) || entry.parentId}</p>
+                  </div>
+                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-stone-600">Subcategory</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={() => onRestoreSubcategory(entry.parentId, entry.name)} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Restore</button>
+                  <button type="button" onClick={() => onRequestPermanentDelete({ type: "permanent-subcategory", parentId: entry.parentId, name: entry.name })} className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700">Delete forever</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <h3 className="text-lg font-black">Inventories</h3>
+          <div className="mt-4 space-y-3">
+            {!hasInventories && <p className="text-sm text-stone-500">No deleted inventory items.</p>}
+            {safeDeletedInventories.map((item) => (
+              <div key={item.id} className="rounded-2xl border border-stone-200 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-black">{item.name}</p>
+                    <p className="text-xs text-stone-500">
+                      {Number.isFinite(Number(item.quantity)) ? `${item.quantity}${item.unit ? ` ${item.unit}` : ""}` : "Stock not available"}
+                    </p>
+                    <p className="mt-1 text-xs text-stone-500">Deleted: {item.deletedAt ? new Date(item.deletedAt).toLocaleString() : "Unknown"}</p>
+                  </div>
+                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-wide text-stone-600">Inventory</span>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button type="button" onClick={() => onRestoreInventory(item.id)} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Restore</button>
+                  <button type="button" onClick={() => onRequestPermanentDelete({ type: "permanent-inventory", id: item.id, name: item.name })} className="rounded-full bg-red-50 px-4 py-2 text-xs font-black text-red-700">Delete forever</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
     </section>
   );
 }
@@ -690,9 +1505,9 @@ function CategoryAdmin({ categories, onSaved }) {
         />
         <BrandHeader query={query} setQuery={setQuery} />
         <CategoryChips categories={categories} active={activeCategory} setActive={handleSetActiveCategory} />
-        {subcategoryConfig[activeCategory] ? (
+        {loadSubcategoryConfig()[activeCategory] ? (
           <SubcategoryChips
-            options={subcategoryConfig[activeCategory]}
+            options={loadSubcategoryConfig()[activeCategory]}
             active={selectedSubcategory}
             setActive={setSelectedSubcategory}
           />
@@ -862,6 +1677,23 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
             </div>
             <p className="upi-order-summary-header" style={{ marginTop: "8px" }}>Total: {rupees(data.total)}</p>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmDialog({ open, title, message, confirmLabel = "Delete", cancelLabel = "Cancel", onConfirm, onCancel }) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[70] grid place-items-center bg-black/45 p-4 backdrop-blur-sm">
+      <div className="w-full max-w-md rounded-[1.5rem] bg-white p-6 shadow-2xl">
+        <h3 className="text-2xl font-black tracking-tight">{title}</h3>
+        <p className="mt-3 text-sm leading-6 text-stone-600">{message}</p>
+        <div className="mt-6 flex items-center justify-end gap-3">
+          <button type="button" onClick={onCancel} className="rounded-full bg-stone-100 px-5 py-3 text-sm font-black text-stone-700">{cancelLabel}</button>
+          <button type="button" onClick={onConfirm} className="rounded-full bg-red-600 px-5 py-3 text-sm font-black text-white">{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -1211,7 +2043,9 @@ function DetailModal({ item, onClose, onAdd }) {
   const serveOptions = getServeOptions(item);
   const [serveType, setServeType] = useState(serveOptions[0] || "");
   const [quantity, setQuantity] = useState(1);
-  const [extraCheese, setExtraCheese] = useState(false);
+  const [selectedAddons, setSelectedAddons] = useState([]);
+
+  const genericAddons = Array.isArray(item.addons) ? item.addons : [];
 
   // safe detection across category, subcategory and name (project uses subcategory for some items)
   const categoryStr = String(item.category || "").toLowerCase();
@@ -1220,7 +2054,11 @@ function DetailModal({ item, onClose, onAdd }) {
 
   const isBurger = categoryStr.includes("burger") || subcategoryStr.includes("burger") || nameStr.includes("burger");
   const isPizza = categoryStr.includes("pizza") || subcategoryStr.includes("pizza") || nameStr.includes("pizza");
-  const extraCheesePrice = isPizza ? 30 : isBurger ? 25 : 0;
+  const legacyExtraCheesePrice = Number(item.addons?.extraCheesePrice || 0) || (isPizza ? 30 : isBurger ? 25 : 0);
+  const availableAddons = [
+    ...genericAddons,
+    ...(isPizza || isBurger ? [{ id: "extra-cheese", name: "Extra Cheese", price: legacyExtraCheesePrice }] : [])
+  ].filter((addon, index, all) => addon && !all.some((other, otherIndex) => otherIndex < index && other.id === addon.id));
 
   useEffect(() => {
     const currentSizes = item?.sizes?.length
@@ -1229,20 +2067,29 @@ function DetailModal({ item, onClose, onAdd }) {
     setSizeId(currentSizes[0]?.id);
     setServeType(getServeOptions(item)[0] || "");
     setQuantity(1);
-    // reset addon state when modal changes and log item details for debugging
-    setExtraCheese(false);
+    setSelectedAddons([]);
     try {
       // temporary debug logs to verify incoming item data
       // eslint-disable-next-line no-console
       console.log("DetailModal item:", item?.name, item?.category, item?.subcategory);
     } catch (e) {}
-  }, [item.id, item.sizes, item.price]);
+  }, [item.id, item.sizes, item.price, item.addons, item.serveOptions, item.servingOptions, item.itemServeOptions]);
 
   const basePrice = Number((sizes.find((s) => s.id === sizeId)?.price) || item.price || 0);
-  const totalPrice = (basePrice + (extraCheese ? extraCheesePrice : 0)) * quantity;
+  const genericAddonTotal = selectedAddons.reduce((sum, addon) => sum + Number(addon.price || 0), 0);
+  const totalPrice = (basePrice + genericAddonTotal) * quantity;
+
+  function toggleAddon(addon) {
+    setSelectedAddons((current) => {
+      const exists = current.find((selected) => selected.id === addon.id);
+      if (exists) return current.filter((selected) => selected.id !== addon.id);
+      return [...current, addon];
+    });
+  }
 
   function handleAddToCart() {
-    const addons = { extraCheese: !!extraCheese, extraCheesePrice: extraCheese ? extraCheesePrice : 0 };
+    const addons = {};
+    if (selectedAddons.length) addons.selectedAddons = selectedAddons;
     onAdd(item, sizeId, quantity, serveType, { addons });
     onClose();
   }
@@ -1268,24 +2115,31 @@ function DetailModal({ item, onClose, onAdd }) {
               <span className="price-value">{rupees(totalPrice)}</span>
             </div>
 
-            {(isPizza || isBurger) && (
+            {availableAddons.length > 0 && (
               <div className="section-block">
                 <div className="section-label">Add-ons</div>
-                <button
-                  type="button"
-                  onClick={() => setExtraCheese((v) => !v)}
-                  className={`pill-button ${extraCheese ? 'selected' : ''}`}
-                  style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: extraCheese ? '#000' : 'rgba(255,255,255,0.08)', display: 'grid', placeItems: 'center', color: extraCheese ? '#fff' : '#fff' }}>🧀</div>
-                    <div style={{ textAlign: 'left' }}>
-                      <div style={{ fontWeight: 900, fontSize: 14 }}>Extra Cheese</div>
-                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.8)' }}>Add extra cheesy goodness</div>
-                    </div>
-                  </div>
-                  <div style={{ fontWeight: 900 }}>{`+ Rs. ${extraCheesePrice}`}</div>
-                </button>
+                <div className="space-y-3">
+                  {availableAddons.map((addon) => {
+                    const selected = selectedAddons.some((selectedAddon) => selectedAddon.id === addon.id);
+                    return (
+                      <button
+                        key={addon.id}
+                        type="button"
+                        onClick={() => toggleAddon(addon)}
+                        className={`rounded-3xl border px-4 py-3 text-left text-sm font-black transition ${selected ? "border-black bg-black text-white shadow-lg" : "border-stone-200 bg-white text-stone-900"}`}
+                        style={{ width: "100%" }}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div>{addon.name}</div>
+                            {addon.description ? <div className="mt-1 text-xs font-medium text-stone-500">{addon.description}</div> : null}
+                          </div>
+                          <div className="font-black">+ {rupees(addon.price)}</div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -1343,63 +2197,6 @@ function DetailModal({ item, onClose, onAdd }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function FeaturedPanel({ item, onAdd, onDetail }) {
-  const sizes = item?.sizes?.length
-    ? item.sizes
-    : [{ id: "default", name: "Regular", label: "Regular", price: item.price ?? 0 }];
-  const serveOptions = getServeOptions(item);
-  const [sizeId, setSizeId] = useState(sizes[0]?.id);
-  const [serveType, setServeType] = useState(serveOptions[0] || "");
-  useEffect(() => {
-    const currentSizes = item?.sizes?.length
-      ? item.sizes
-      : [{ id: "default", name: "Regular", label: "Regular", price: item.price ?? 0 }];
-    setSizeId(currentSizes[0]?.id);
-    setServeType(getServeOptions(item)[0] || "");
-  }, [item?.id, item?.sizes, item?.price]);
-  if (!item) return null;
-
-  return (
-    <aside className="glass-card relative hidden min-h-[620px] overflow-visible p-7 md:block">
-      <button className="absolute left-5 top-5 rounded-full p-2 hover:bg-white/40" aria-label="Back">
-        <X size={18} />
-      </button>
-      <img src={imageUrl(item.image)} alt="" className="mx-auto mt-8 aspect-square w-[112%] max-w-[440px] -translate-x-2 rounded-full object-cover drop-shadow-2xl" />
-      <div className="mt-5 flex items-start justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-black tracking-tight">{item.name}</h2>
-          <p className="mt-3 text-sm font-semibold leading-6 text-stone-700">{item.description}</p>
-        </div>
-      </div>
-      {sizes.length > 1 && <div className="mt-5"><SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} /></div>}
-      {serveOptions.length > 0 && (
-        <div className="mt-5 rounded-3xl border border-stone-200 bg-white/85 p-4 text-sm">
-          <p className="font-black text-stone-700">Choose Your Serve</p>
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {serveOptions.map((option) => (
-              <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full px-3 py-2 text-xs font-black transition ${serveType === option ? "bg-black text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>
-                {option}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-      <div className="absolute bottom-7 left-7 right-7 flex items-end justify-between">
-        <div>
-          <p className="text-sm font-semibold text-stone-600">Total Price</p>
-          <p className="mt-1 text-2xl font-black">{priceText(item, sizeId)}</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="rounded-full bg-white/45 px-5 py-4 font-black backdrop-blur" onClick={() => onDetail(item)}>Details</button>
-          <button className="flex items-center gap-3 rounded-full bg-black px-5 py-4 font-black text-white shadow-xl" onClick={() => onAdd(item, sizeId, 1, serveType)}>
-            Add to Cart <Plus className="rounded-full bg-white p-1 text-black" size={28} />
-          </button>
-        </div>
-      </div>
-    </aside>
   );
 }
 
@@ -1578,17 +2375,17 @@ function OrderSuccess({ order, onClose }) {
   );
 }
 
-function OwnerApp({ navigate }) {
+function OwnerApp({ navigate, initialTab = "items" }) {
   const [owner, setOwner] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
 
   useEffect(() => {
-    authService.me().then((data) => setOwner(data.user?.role === "admin" ? data.user.email : null)).finally(() => setLoading(false));
+    authService.me().then((data) => setOwner(data.user?.role === "admin" ? data.user.email : null)).finally(() => setAuthLoading(false));
   }, []);
 
-  if (loading) return <OwnerShell><p className="font-bold">Loading...</p></OwnerShell>;
+  if (authLoading) return <OwnerShell><p className="font-bold">Loading...</p></OwnerShell>;
   if (!owner) return <Login role="admin" onLogin={setOwner} navigate={navigate} />;
-  return <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} />;
+  return <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} initialTab={initialTab} />;
 }
 
 function BillerApp({ navigate }) {
@@ -1597,7 +2394,8 @@ function BillerApp({ navigate }) {
   const [cocRequests, setCocRequests] = useState([]);
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [lastSync, setLastSync] = useState(null);
   const [billerTab, setBillerTab] = useState("orders");
 
@@ -1611,25 +2409,52 @@ function BillerApp({ navigate }) {
       // refresh centralized orders store first so we have latest data
       try { await ordersStore.loadOrders(); } catch (e) {}
       // orders come from centralized ordersStore
+      const safeCategories = ensureActiveCategories(categoryData);
+      const safeItems = ensureActiveMenuItems(itemData, safeCategories);
       setOrders(ordersStore.getOrders() || []);
       setCocRequests(cocData || []);
-      setItems(itemData || []);
-      setCategories(categoryData || []);
+      setItems(safeItems);
+      setCategories(safeCategories);
       setLastSync(new Date().toISOString());
+      logLoadStats("BillerApp", {
+        rawCategories: Array.isArray(categoryData) ? categoryData.length : 0,
+        activeCategories: safeCategories.length,
+        rawItems: Array.isArray(itemData) ? itemData.length : 0,
+        activeItems: safeItems.length,
+        rawSubcategories: loadSubcategoryConfig(),
+        activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+        deletedCount: 0
+      });
     } catch (error) {
       console.error("Failed to load biller data:", error);
+      const safeCategories = ensureActiveCategories([]);
+      const safeItems = ensureActiveMenuItems([], safeCategories);
+      setOrders(ordersStore.getOrders() || []);
+      setCocRequests([]);
+      setItems(safeItems);
+      setCategories(safeCategories);
+      setLastSync(new Date().toISOString());
+      logLoadStats("BillerApp (fallback)", {
+        rawCategories: 0,
+        activeCategories: safeCategories.length,
+        rawItems: 0,
+        activeItems: safeItems.length,
+        rawSubcategories: loadSubcategoryConfig(),
+        activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+        deletedCount: 0
+      });
     }
   }
 
   useEffect(() => {
-    authService.me().then((data) => setBiller(data.user?.role === "biller" ? data.user.email : null)).finally(() => setLoading(false));
+    authService.me().then((data) => setBiller(data.user?.role === "biller" ? data.user.email : null)).finally(() => setAuthLoading(false));
   }, []);
 
   useEffect(() => {
     if (!biller) return;
-    setLoading(true);
+    setPageLoading(true);
     const unsub = ordersStore.subscribe((data) => setOrders(data || []));
-    Promise.all([ordersStore.loadOrders(), load()]).finally(() => setLoading(false));
+    Promise.all([ordersStore.loadOrders(), load()]).finally(() => setPageLoading(false));
     return () => unsub();
   }, [biller]);
 
@@ -1662,7 +2487,7 @@ function BillerApp({ navigate }) {
     };
   }, [biller]);
 
-  if (loading) return <OwnerShell><p className="font-bold">Loading biller data...</p></OwnerShell>;
+  if (authLoading || pageLoading) return <OwnerShell><p className="font-bold">Loading biller data...</p></OwnerShell>;
   if (!biller) return <Login role="biller" onLogin={setBiller} navigate={navigate} />;
 
   return (
@@ -1677,7 +2502,7 @@ function BillerApp({ navigate }) {
           <div className="flex flex-col items-end gap-2 relative z-10">
             <div className="flex gap-2">
               <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
-              <button onClick={() => navigate("/admin")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
+              <button onClick={() => navigate("/owner")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
             </div>
             <div>
               <button onClick={() => setBillerTab("pos")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">OOC (Order On Counter)</button>
@@ -1712,7 +2537,7 @@ function Login({ onLogin, navigate, role }) {
   }
 
   const roleLabel = role === "biller" ? "Biller" : "Owner";
-  const forgotPath = role === "biller" ? "/biller/forgot-password" : "/admin/forgot-password";
+  const forgotPath = role === "biller" ? "/biller/forgot-password" : "/owner/forgot-password";
 
   return (
     <OwnerShell>
@@ -1752,7 +2577,7 @@ function ForgotPassword({ navigate, role }) {
   const [step, setStep] = useState("request");
 
   const roleLabel = role === "biller" ? "Biller" : "Owner";
-  const returnPath = role === "biller" ? "/biller" : "/admin";
+  const returnPath = role === "biller" ? "/biller" : "/owner";
 
   async function requestOtp(event) {
     event.preventDefault();
@@ -1848,48 +2673,96 @@ function ForgotPassword({ navigate, role }) {
   );
 }
 
-function Dashboard({ owner, onLogout, navigate }) {
+function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
+  const [deletedCategories, setDeletedCategories] = useState([]);
+  const [deletedItems, setDeletedItems] = useState([]);
+  const [deletedSubcategories, setDeletedSubcategories] = useState({});
   const [orders, setOrders] = useState([]);
   const [cocRequests, setCocRequests] = useState([]);
   const [rawMaterials, setRawMaterials] = useState([]);
+  const [localInventoryItems, setLocalInventoryItems] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [reports, setReports] = useState({});
   const [lastSync, setLastSync] = useState(null);
-  const [tab, setTab] = useState("items");
+  const [tab, setTab] = useState(initialTab);
   const [initialBillerTab, setInitialBillerTab] = useState(null);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
   const [editingItem, setEditingItem] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   async function load() {
     try {
-      const [categoryData, itemData, cocData, recipeData, reportData] = await Promise.all([
+      const [categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
         menuService.getCategories(),
         menuService.getMenu({ includeInactive: true }),
+        menuService.getCategories({ includeDeleted: true }),
+        menuService.getMenu({ includeInactive: true, includeDeleted: true }),
         orderService.listCocRequests().catch(() => []),
         menuService.getRecipes().catch(() => []),
         menuService.getReports().catch(() => ({}))
       ]);
       await inventoryStore.loadInventory().catch(() => []);
-      setCategories(categoryData);
-      setItems(itemData);
+      const safeCategories = normalizeOwnerCategories(categoryData);
+      const safeItems = ensureActiveMenuItems(itemData, safeCategories);
+      const activeCategoryIds = new Set(safeCategories.map((category) => category.id));
+      setCategories(safeCategories);
+      setItems(safeItems.filter((item) => {
+        if (!item || item?.isDeleted === true) return false;
+        if (activeCategoryIds.size === 0) return false;
+        return activeCategoryIds.has(item.categoryId);
+      }));
+      setDeletedCategories((Array.isArray(deletedCategoryData) ? deletedCategoryData : []).filter((category) => category?.isDeleted === true));
+      setDeletedItems((Array.isArray(deletedItemData) ? deletedItemData : []).filter((item) => item?.isDeleted === true));
+      setDeletedSubcategories(loadDeletedSubcategoryConfig());
       // orders & inventory come from centralized stores
       setOrders(ordersStore.getOrders() || []);
       setCocRequests(cocData || []);
       setRawMaterials(inventoryStore.getInventory() || []);
       setRecipes(recipeData || []);
       setReports(reportData || {});
+      logLoadStats("OwnerDashboard", {
+        rawCategories: Array.isArray(categoryData) ? categoryData.length : 0,
+        activeCategories: safeCategories.length,
+        rawItems: Array.isArray(itemData) ? itemData.length : 0,
+        activeItems: safeItems.length,
+        rawSubcategories: loadSubcategoryConfig(),
+        activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+        deletedCount: ((deletedItemData || []).filter((item) => item?.isDeleted === true).length || 0) + ((deletedCategoryData || []).filter((category) => category?.isDeleted === true).length || 0)
+      });
     } catch (error) {
       console.error("Failed to load dashboard data:", error);
+      const safeCategories = [];
+      const safeItems = ensureActiveMenuItems([], safeCategories);
+      setCategories(safeCategories);
+      setItems(safeItems);
+      setDeletedCategories([]);
+      setDeletedItems([]);
+      setDeletedSubcategories(loadDeletedSubcategoryConfig());
+      setOrders(ordersStore.getOrders() || []);
+      setCocRequests([]);
+      setRawMaterials(inventoryStore.getInventory() || []);
+      setRecipes([]);
+      setReports({});
+      logLoadStats("OwnerDashboard (fallback)", {
+        rawCategories: 0,
+        activeCategories: safeCategories.length,
+        rawItems: 0,
+        activeItems: safeItems.length,
+        rawSubcategories: loadSubcategoryConfig(),
+        activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
+        deletedCount: 0
+      });
     }
   }
 
   useEffect(() => {
     const unsubOrders = ordersStore.subscribe((data) => { setOrders(data || []); setLastSync(new Date().toISOString()); });
     const unsubInventory = inventoryStore.subscribe((data) => setRawMaterials(data || []));
-    Promise.all([ordersStore.loadOrders(), inventoryStore.loadInventory(), load()]).catch(() => {});
+    const shouldLoadInventory = window.location.pathname.startsWith("/owner");
+    Promise.all([ordersStore.loadOrders(), shouldLoadInventory ? inventoryStore.loadInventory() : Promise.resolve([]), load()]).catch(() => {});
     
     let es = null;
     let reconnectTimeout = null;
@@ -1916,12 +2789,107 @@ function Dashboard({ owner, onLogout, navigate }) {
     };
   }, []);
 
+  useEffect(() => {
+    function handleOwnerDataUpdated() {
+      load();
+    }
+
+    function handleStorage(event) {
+      if (!event.key) return;
+      if (event.key === SUBCATEGORY_CONFIG_KEY || event.key === DELETED_SUBCATEGORY_CONFIG_KEY || event.key === INVENTORY_ITEMS_KEY) {
+        load();
+      }
+    }
+
+    window.addEventListener("ownerDataUpdated", handleOwnerDataUpdated);
+    window.addEventListener("storage", handleStorage);
+    return () => {
+      window.removeEventListener("ownerDataUpdated", handleOwnerDataUpdated);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
+
+  useEffect(() => {
+    function syncLocalInventory(event) {
+      const nextItems = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
+      setLocalInventoryItems(nextItems);
+    }
+
+    syncLocalInventory();
+    window.addEventListener("inventoryUpdated", syncLocalInventory);
+    window.addEventListener("storage", syncLocalInventory);
+    return () => {
+      window.removeEventListener("inventoryUpdated", syncLocalInventory);
+      window.removeEventListener("storage", syncLocalInventory);
+    };
+  }, []);
+
   async function logout() {
     await authService.logout();
     onLogout();
   }
 
+  async function confirmPendingDelete() {
+    if (!pendingDelete) return;
+    const action = pendingDelete;
+    setPendingDelete(null);
+    try {
+      if (action.type === "item") {
+        await menuService.deleteMenuItem(action.id);
+        dispatchOwnerDataUpdated({ source: "itemDeleted", id: action.id });
+      } else if (action.type === "category") {
+        await menuService.deleteCategory(action.id);
+        dispatchOwnerDataUpdated({ source: "categoryDeleted", id: action.id });
+      } else if (action.type === "subcategory") {
+        permanentlyDeleteSubcategory(action.parentId, action.name);
+      } else if (action.type === "permanent-item") {
+        await menuService.permanentlyDeleteMenuItem(action.id);
+        dispatchOwnerDataUpdated({ source: "itemPermanentlyDeleted", id: action.id });
+      } else if (action.type === "permanent-category") {
+        await menuService.permanentlyDeleteCategory(action.id);
+        dispatchOwnerDataUpdated({ source: "categoryPermanentlyDeleted", id: action.id });
+      } else if (action.type === "permanent-subcategory") {
+        permanentlyDeleteSubcategory(action.parentId, action.name);
+      } else if (action.type === "permanent-inventory") {
+        const nextItems = loadLocalInventoryItems().filter((item) => item.id !== action.id);
+        saveLocalInventoryItems(nextItems);
+      }
+      setEditingItem(null);
+      load();
+    } catch (error) {
+      console.error("Failed to delete item:", error);
+    }
+  }
+
+  async function restoreItem(id) {
+    await menuService.restoreMenuItem(id);
+    dispatchOwnerDataUpdated({ source: "itemRestored", id });
+    load();
+  }
+
+  async function restoreCategory(id) {
+    await menuService.restoreCategory(id);
+    dispatchOwnerDataUpdated({ source: "categoryRestored", id });
+    load();
+  }
+
+  async function restoreSubcategory(parentId, name) {
+    restoreDeletedSubcategory(parentId, name);
+    setDeletedSubcategories(loadDeletedSubcategoryConfig());
+    load();
+  }
+
+  function restoreInventoryItem(id) {
+    const nextItems = localInventoryItems.map((item) => (item.id === id ? { ...item, isDeleted: false, deletedAt: null } : item));
+    setLocalInventoryItems(saveLocalInventoryItems(nextItems));
+  }
+
+  const deletedSubcategoryCount = Object.values(deletedSubcategories || {}).reduce((total, entries) => total + (Array.isArray(entries) ? entries.length : 0), 0);
+  const deletedInventoryItems = localInventoryItems.filter((item) => item?.isDeleted === true);
+  const deletedCount = (deletedItems?.length || 0) + (deletedCategories?.length || 0) + deletedSubcategoryCount + deletedInventoryItems.length;
+
   const visibleItems = [...items]
+    .filter((item) => item?.isDeleted !== true)
     .filter((item) => !search || item.name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => (sort === "price" ? a.sizes[0].price - b.sizes[0].price : a.name.localeCompare(b.name)));
 
@@ -1931,7 +2899,7 @@ function Dashboard({ owner, onLogout, navigate }) {
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-black text-stone-500">{owner}</p>
-            <h1 className="text-4xl font-black tracking-tight">Owner Inventory Dashboard</h1>
+            <h1 className="text-4xl font-black tracking-tight">Owner Dashboard</h1>
             {lastSync && <p className="mt-1 text-xs text-stone-500">Last sync: {new Date(lastSync).toLocaleString()}</p>}
           </div>
           <div className="flex flex-col items-end gap-2">
@@ -1950,6 +2918,15 @@ function Dashboard({ owner, onLogout, navigate }) {
                 </button>
               </div>
             )}
+            <div>
+              <button
+                onClick={() => setTab("deleted")}
+                className="flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-black shadow"
+              >
+                <span>Recently Deleted</span>
+                <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black text-stone-700">{deletedCount}</span>
+              </button>
+            </div>
           </div>
         </div>
         <div className="mb-5 flex flex-wrap gap-2">
@@ -1976,19 +2953,20 @@ function Dashboard({ owner, onLogout, navigate }) {
                 <label className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2"><SlidersHorizontal size={18} /><select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent text-sm font-bold outline-none"><option value="name">Name</option><option value="price">Base price</option></select></label>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left text-sm">
-                  <thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-3">Item</th><th>Category</th><th>Sizes</th><th>Status</th><th></th></tr></thead>
+                <table className="w-full min-w-[860px] text-left text-sm">
+                  <thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-3">Item</th><th>Category</th><th>Sub Category</th><th>Sizes</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {visibleItems.map((item) => (
                       <tr key={item.id} className="border-b last:border-0">
                         <td className="py-3 font-black">{item.name}</td>
                         <td>{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId}</td>
+                        <td>{item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</td>
                         <td>{item.sizes.map((size) => `${size.label} ${rupees(size.price)}`).join(" / ")}</td>
                         <td>{item.active ? "Active" : "Hidden"}</td>
                         <td>
                           <div className="flex justify-end gap-1">
                             <button onClick={() => setEditingItem(item)} className="rounded-full p-2 hover:bg-stone-100" aria-label={`Edit ${item.name}`}><Pencil size={17} /></button>
-                            <button onClick={async () => { await menuService.deleteMenuItem(item.id); setEditingItem(null); load(); }} className="rounded-full p-2 hover:bg-red-50" aria-label={`Delete ${item.name}`}><Trash2 size={17} /></button>
+                            <button onClick={() => setPendingDelete({ type: "item", id: item.id, name: item.name })} className="rounded-full p-2 hover:bg-red-50" aria-label={`Delete ${item.name}`}><Trash2 size={17} /></button>
                           </div>
                         </td>
                       </tr>
@@ -2001,14 +2979,37 @@ function Dashboard({ owner, onLogout, navigate }) {
           </section>
         )}
         {tab === "categories" && <CategoryAdmin categories={categories} onSaved={load} />}
+        {tab === "deleted" && (
+          <RecentlyDeletedPanel
+            categories={categories}
+            deletedCategories={deletedCategories}
+            deletedItems={deletedItems}
+            deletedSubcategories={deletedSubcategories}
+            deletedInventories={deletedInventoryItems}
+            onRestoreCategory={restoreCategory}
+            onRestoreItem={restoreItem}
+            onRestoreSubcategory={restoreSubcategory}
+            onRestoreInventory={restoreInventoryItem}
+            onRequestPermanentDelete={setPendingDelete}
+          />
+        )}
         {tab === "biller" && <BillerPage orders={orders} cocRequests={cocRequests} items={items} categories={categories} onSaved={load} initialTab={initialBillerTab} />}
-        {tab === "inventory" && <InventoryAdmin rawMaterials={rawMaterials} onSaved={load} />}
+        {tab === "inventory" && <InventoryAdmin rawMaterials={rawMaterials} onSaved={load} onInventoryChanged={setLocalInventoryItems} />}
         {tab === "stock" && <AddStockPage rawMaterials={rawMaterials} onSaved={load} />}
         {tab === "recipes" && <RecipeMapping items={items} rawMaterials={rawMaterials} recipes={recipes} onSaved={load} />}
         {tab === "lowstock" && <LowStockAlerts rawMaterials={rawMaterials} />}
         {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} />}
-        {tab === "history" && <OrderHistory orders={orders} />}
+        {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(orders, cocRequests)} />}
       </div>
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={pendingDelete?.type === "item" ? `Delete ${pendingDelete?.name || "item"}?` : "Delete forever?"}
+        message={pendingDelete?.type === "item" ? "This will move the item to Recently Deleted so it can be restored later." : "This will permanently remove the selected record."}
+        confirmLabel={pendingDelete?.type === "item" ? "Delete" : "Delete forever"}
+        cancelLabel="Cancel"
+        onConfirm={confirmPendingDelete}
+        onCancel={() => setPendingDelete(null)}
+      />
     </OwnerShell>
   );
 }
@@ -2153,32 +3154,44 @@ function PendingVerification({ orders, onSaved }) {
 
   return (
     <section className="space-y-3">
-      {pending.map((order) => (
-        <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xl font-black">{order.customerName}</h2>
-              <p className="text-sm font-bold text-stone-500">Order {order.orderId || order.id || order._id} • Table {order.tableNumber} • {order.phone} • {rupees(order.total)}</p>
+      {pending.map((order) => {
+        const statusLabel = getOrderStatusLabel(order);
+        const statusClass = statusLabel === "Pending" ? "text-rose-600" : statusLabel === "Confirmed" ? "text-emerald-600" : "text-stone-700";
+        const sourceLabel = getOrderSourceLabel(order);
+
+        return (
+          <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-black">{order.customerName}</h2>
+                <p className="text-sm font-bold text-stone-500">Order {order.orderId || order.id || order._id} • Table {order.tableNumber} • {order.phone} • {rupees(order.total)}</p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {sourceLabel && (
+                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                    {sourceLabel}
+                  </span>
+                )}
+                <span className={`rounded-full px-2 py-1 text-xs font-black uppercase ${statusClass}`}>{statusLabel}</span>
+                {['payment_issue', 'rejected', 'payment_rejected'].includes(String(order.paymentStatus || '').toLowerCase()) && (
+                  <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-600">Payment Rejected</span>
+                )}
+                {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') ? (
+                  <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-600 px-4 py-2 text-sm font-black text-white">Confirm Payment & Order</button>
+                ) : (
+                  <button disabled className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Confirmed</button>
+                )}
+                {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') && (
+                  <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-200 px-4 py-2 text-sm font-black">Reject Payment</button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {['payment_issue', 'rejected', 'payment_rejected'].includes(String(order.paymentStatus || '').toLowerCase()) && (
-                <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-600">Payment Rejected</span>
-              )}
-              {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') ? (
-                <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-600 px-4 py-2 text-sm font-black text-white">Confirm Payment & Order</button>
-              ) : (
-                <button disabled className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Confirmed</button>
-              )}
-              {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') && (
-                <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-200 px-4 py-2 text-sm font-black">Reject Payment</button>
-              )}
+            <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
+              {order.items.map((line, index) => <p key={index}>{formatOrderItemLine(line)}</p>)}
             </div>
-          </div>
-          <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
-            {order.items.map((line, index) => <p key={index}>{formatOrderItemLine(line)}</p>)}
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </section>
   );
 }
@@ -2204,6 +3217,14 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
 
   function setPrintOption(orderId, key, value) {
     setPrintConfig((current) => ({ ...current, [orderId]: { ...current[orderId], [key]: value } }));
+  }
+
+  function isLiveOrderVisible(order) {
+    // Live Orders should include all active orders regardless of source or payment method.
+    // Do not filter by source, orderType, paymentMethod, isCounterOrder, or isQrOrder.
+    const status = normalizeStatus(order?.status);
+    const activeStatuses = new Set(["pending", "confirmed", "preparing", "ready"]);
+    return activeStatuses.has(status);
   }
 
   function printOrder(order, copyType = "customer") {
@@ -2254,15 +3275,15 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
               <div class="receipt-table-header"><div>QTY</div><div>DESC</div><div class="receipt-amount">AMT</div></div>
               ${Array.isArray(normalizedOrder.items) && normalizedOrder.items.length? normalizedOrder.items.map(line=>{
                 const qty = line.quantity||line.qty||1;
-                const amt = Number((line.lineTotal ?? ((line.unitPrice || 0) * qty)) || 0);
-                return `<div class="receipt-item"><div>${qty}</div><div><div style="font-weight:700">${formatOrderItemLine(line)}</div></div><div class="receipt-amount">Rs. ${amt.toFixed(2)}</div></div>`;
+                const amt = Math.round(Number((line.lineTotal ?? ((line.unitPrice || 0) * qty)) || 0));
+                return `<div class="receipt-item"><div>${qty}</div><div><div style="font-weight:700">${formatOrderItemLine(line)}</div></div><div class="receipt-amount">Rs. ${amt}</div></div>`;
               }).join('') : '<div style="padding:8px 0">No items.</div>'}
             </div>
             <div class="receipt-line"></div>
             <div>
-              <div class="receipt-row"><div>Subtotal</div><div>Rs. ${Number(normalizedOrder.subtotal || getOrderTotal(normalizedOrder) || 0).toFixed(2)}</div></div>
-              <div class="receipt-row"><div>Tax (${Math.round((normalizedOrder.gstRate||0.05)*100)}%)</div><div>Rs. ${Number(normalizedOrder.gst||0).toFixed(2)}</div></div>
-              <div class="receipt-total"><div>AMOUNT</div><div>Rs. ${Number(normalizedOrder.total||normalizedOrder.grandTotal||0).toFixed(2)}</div></div>
+              <div class="receipt-row"><div>Subtotal</div><div>Rs. ${Math.round(Number(normalizedOrder.subtotal || getOrderTotal(normalizedOrder) || 0))}</div></div>
+              <div class="receipt-row"><div>Tax (${Math.round((normalizedOrder.gstRate||0.05)*100)}%)</div><div>Rs. ${Math.round(Number(normalizedOrder.gst||0))}</div></div>
+              <div class="receipt-total"><div>AMOUNT</div><div>Rs. ${Math.round(Number(normalizedOrder.total||normalizedOrder.grandTotal||0))}</div></div>
             </div>
             <div class="receipt-qr"><div><img src="" id="qrimg" style="width:64px;height:64px;object-fit:contain"/></div></div>
           </article>
@@ -2304,14 +3325,19 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
     // allow printing directly after opening using browser print
   }
 
+  // Shared standard status options for both QR and COC orders
+  const STANDARD_ORDER_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled', 'payment_rejected'];
+
   return (
     <section className="space-y-3">
       {updateError && <div className="rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-700">Error: {updateError}</div>}
       {updateMessage && <div className="rounded-[1.5rem] bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{updateMessage}</div>}
-      {(orders || []).map((order) => {
+      {((orders || []).filter((o) => isLiveOrderVisible(o))).map((order) => {
         const safeOrder = order || {};
         const orderItems = Array.isArray(safeOrder.items) ? safeOrder.items : [];
         const orderWarnings = Array.isArray(safeOrder.warnings) ? safeOrder.warnings : [];
+        const sourceLabel = getOrderSourceLabel(safeOrder);
+        const statusValue = STANDARD_ORDER_STATUSES.includes(String(safeOrder.status || "").toLowerCase()) ? String(safeOrder.status || "").toLowerCase() : 'pending';
 
         return (
         <article key={safeOrder._id || safeOrder.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
@@ -2321,8 +3347,15 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
               <p className="text-sm font-bold text-stone-500">Order {safeOrder.orderId || safeOrder.id || safeOrder._id || "-"} • Table {safeOrder.tableNumber ?? safeOrder.table ?? "-"} • {safeOrder.phone || "-"} • {rupees(safeOrder.total || 0)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <select value={safeOrder.status || "new"} onChange={(event) => updateOrderStatus(safeOrder._id || safeOrder.id, event.target.value)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black">
-                {['new', 'preparing', 'ready', 'completed', 'cancelled'].map((status) => <option key={status} value={status}>{status}</option>)}
+              {sourceLabel && (
+                <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                  {sourceLabel}
+                </span>
+              )}
+              <select value={statusValue} onChange={(event) => updateOrderStatus(safeOrder._id || safeOrder.id, event.target.value)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black">
+                {STANDARD_ORDER_STATUSES.map((status) => (
+                  <option key={status} value={status}>{getOrderStatusLabel({ status })}</option>
+                ))}
               </select>
               <button onClick={() => openPreview(safeOrder, 'customer')} className="rounded-full bg-black px-4 py-2 text-sm font-black text-white">Print Customer Bill</button>
               <button onClick={() => openPreview(safeOrder, 'kitchen')} className="rounded-full bg-stone-800 px-4 py-2 text-sm font-black text-white">Print Kitchen Copy</button>
@@ -2419,6 +3452,7 @@ function CocAdmin({ cocRequests, onSaved }) {
       {(cocRequests || []).map((req) => {
         const safeRequest = req || {};
         const requestItems = Array.isArray(safeRequest.items) ? safeRequest.items : [];
+        const sourceLabel = getOrderSourceLabel(safeRequest);
 
         return (
         <article key={safeRequest.id || safeRequest._id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
@@ -2427,6 +3461,11 @@ function CocAdmin({ cocRequests, onSaved }) {
               <h2 className="text-xl font-black">{safeRequest.customerName || "Customer"} • Table {safeRequest.tableNumber ?? safeRequest.table ?? "-"}</h2>
               <p className="text-sm font-bold text-stone-500">{safeRequest.phone || "-"} • {rupees(safeRequest.total || 0)} • {safeRequest.paymentMethod === 'cash' ? 'Cash on Counter' : 'Online'}</p>
             </div>
+            {sourceLabel && (
+              <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                {sourceLabel}
+              </span>
+            )}
           </div>
           <div className="mt-4 border-t border-slate-200/80 pt-4">
             <div className="grid gap-3 text-sm text-stone-700">
@@ -2441,8 +3480,8 @@ function CocAdmin({ cocRequests, onSaved }) {
               <div className="flex items-center gap-2">
                 {isStaff ? (
                   <button onClick={() => approve(safeRequest.id)} className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Approve & Create Order</button>
-                ) : (
-                  <button onClick={() => { history.pushState(null, '', '/admin'); window.dispatchEvent(new PopStateEvent('popstate')); }} className="rounded-full bg-white border px-4 py-2 text-sm font-black">Owner login to approve</button>
+                  ) : (
+                  <button onClick={() => { history.pushState(null, '', '/owner'); window.dispatchEvent(new PopStateEvent('popstate')); }} className="rounded-full bg-white border px-4 py-2 text-sm font-black">Owner login to approve</button>
                 )}
               </div>
             </div>
@@ -2455,9 +3494,10 @@ function CocAdmin({ cocRequests, onSaved }) {
   );
 }
 
-function InventoryAdmin({ rawMaterials, onSaved }) {
+function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
   const [form, setForm] = useState({ id: "", name: "", quantity: "", unit: "pcs", minStock: "", purchasePrice: "", supplier: "" });
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
@@ -2469,31 +3509,35 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
     loadInventoryItems();
     
     function handleInventoryUpdated(event) {
-      const latestItems = event.detail || JSON.parse(localStorage.getItem("inventoryItems") || "[]");
+      const latestItems = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
       setInventoryItems(latestItems);
+    }
+
+    function handleStorage(event) {
+      if (event.key && event.key !== INVENTORY_ITEMS_KEY) return;
+      setInventoryItems(loadLocalInventoryItems());
     }
     
     window.addEventListener("inventoryUpdated", handleInventoryUpdated);
-    window.addEventListener("storage", () => {
-      const saved = JSON.parse(localStorage.getItem("inventoryItems") || "[]");
-      setInventoryItems(saved);
-    });
+    window.addEventListener("storage", handleStorage);
     
     return () => {
       window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
-      window.removeEventListener("storage", () => {});
+      window.removeEventListener("storage", handleStorage);
     };
   }, []);
 
   function loadInventoryItems() {
-    const saved = JSON.parse(localStorage.getItem("inventoryItems") || "[]");
+    const saved = loadLocalInventoryItems();
     setInventoryItems(saved);
+    if (onInventoryChanged) onInventoryChanged(saved);
   }
 
   function saveInventoryItems(updatedItems) {
-    localStorage.setItem("inventoryItems", JSON.stringify(updatedItems));
-    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: updatedItems }));
-    setInventoryItems(updatedItems);
+    const normalized = saveLocalInventoryItems(updatedItems);
+    setInventoryItems(normalized);
+    if (onInventoryChanged) onInventoryChanged(normalized);
+    return normalized;
   }
 
   function getStockStatus(quantity, minStock) {
@@ -2507,8 +3551,7 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
     if (!form.quantity || isNaN(Number(form.quantity))) return "Quantity must be a valid number.";
     if (!form.unit) return "Unit is required.";
     if (!form.minStock || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
-    if (!form.purchasePrice || isNaN(Number(form.purchasePrice))) return "Purchase price is required and must be a valid number.";
-    if (Number(form.purchasePrice) <= 0) return "Purchase price must be greater than 0.";
+    if (form.purchasePrice && isNaN(Number(form.purchasePrice))) return "Purchase price must be a valid number.";
     return "";
   }
 
@@ -2533,7 +3576,7 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
               quantity: Number(form.quantity),
               unit: form.unit,
               minStock: Number(form.minStock),
-              purchasePrice: Number(form.purchasePrice),
+              purchasePrice: Number(form.purchasePrice) || 0,
               supplier: form.supplier.trim(),
               lastUpdated: new Date().toISOString()
             }
@@ -2547,7 +3590,7 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
         quantity: Number(form.quantity),
         unit: form.unit,
         minStock: Number(form.minStock),
-        purchasePrice: Number(form.purchasePrice),
+        purchasePrice: Number(form.purchasePrice) || 0,
         supplier: form.supplier.trim(),
         lastUpdated: new Date().toISOString()
       };
@@ -2577,12 +3620,24 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
     setMessage("");
   }
 
-  function handleDelete(itemId) {
-    if (!window.confirm("Are you sure you want to delete this inventory item?")) return;
-    const updatedItems = inventoryItems.filter(item => item.id !== itemId);
+  function handleDelete(item) {
+    if (!item) return;
+    setPendingDelete(item);
+  }
+
+  function confirmDeletion() {
+    if (!pendingDelete) return;
+    const deletedAt = new Date().toISOString();
+    const updatedItems = inventoryItems.map((item) => (item.id === pendingDelete.id ? { ...item, isDeleted: true, deletedAt } : item));
     saveInventoryItems(updatedItems);
+    setPendingDelete(null);
     setMessage("Inventory item deleted successfully.");
     setMessageType("success");
+    if (onSaved) onSaved();
+  }
+
+  function cancelDeletion() {
+    setPendingDelete(null);
   }
 
   function handleIncreaseStock(itemId, amount = 1) {
@@ -2613,7 +3668,8 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
   }
 
   // Filter inventory items
-  const filteredItems = inventoryItems.filter(item => {
+  const activeItems = inventoryItems.filter((item) => item?.isDeleted !== true);
+  const filteredItems = activeItems.filter(item => {
     const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase());
     const status = getStockStatus(item.quantity, item.minStock);
     let matchesFilter = true;
@@ -2624,9 +3680,9 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
   });
 
   // Calculate summary
-  const lowStockCount = inventoryItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Low Stock").length;
-  const outOfStockCount = inventoryItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Out of Stock").length;
-  const totalValue = inventoryItems.reduce((sum, item) => sum + (item.quantity * (item.purchasePrice || 0)), 0);
+  const lowStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Low Stock").length;
+  const outOfStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Out of Stock").length;
+  const totalValue = activeItems.reduce((sum, item) => sum + (item.quantity * (item.purchasePrice || 0)), 0);
 
   return (
     <section className="space-y-5">
@@ -2634,7 +3690,7 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
           <p className="text-xs font-bold text-stone-500">Total Items</p>
-          <p className="mt-2 text-2xl font-black">{inventoryItems.length}</p>
+          <p className="mt-2 text-2xl font-black">{activeItems.length}</p>
         </div>
         <div className="rounded-[1.5rem] bg-orange-50 p-4 shadow-sm">
           <p className="text-xs font-bold text-orange-600">Low Stock</p>
@@ -2709,7 +3765,7 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
                             <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button>
                             <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button>
                             <button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button>
-                            <button onClick={() => handleDelete(item.id)} className="rounded-full p-2 hover:bg-red-50" title="Delete"><Trash2 size={14} /></button>
+                            <button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button>
                           </div>
                         </td>
                       </tr>
@@ -2734,33 +3790,21 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
           
           <div className="space-y-3">
             <input required className="field bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <input required type="number" className="field bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} />
+              <select required className="field bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}>
+                <option value="">Select unit</option>
+                <option value="kg">kg</option>
+                <option value="gram">gram</option>
+                <option value="liter">liter</option>
+                <option value="ml">ml</option>
+                <option value="pcs">pcs</option>
+                <option value="packet">packet</option>
+                <option value="bottle">bottle</option>
+              </select>
             </div>
-                <div className="mt-4 border-t border-slate-200/80 pt-4">
-                  <div className="grid gap-3 text-sm text-stone-700">
-                    {order.items.map((line, index) => <OrderLineCard key={index} line={line} />)}
-                  </div>
-                </div>
-                <div className="mt-4 border-t border-slate-200/80 pt-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
-                      {['payment_issue', 'rejected', 'payment_rejected'].includes(String(order.paymentStatus || '').toLowerCase()) && (
-                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-600">Payment Rejected</span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') ? (
-                        <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-600 px-4 py-2 text-sm font-black text-white">Confirm Payment & Order</button>
-                      ) : (
-                        <button disabled className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Confirmed</button>
-                      )}
-                      {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') && (
-                        <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-200 px-4 py-2 text-sm font-black">Reject Payment</button>
-                      )}
-                    </div>
-                  </div>
-            
-            <input required type="number" min="0.01" step="any" className="field bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
-            
+            <input required type="number" className="field bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
+            <input type="number" className="field bg-stone-50" placeholder="Purchase price (optional)" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
             <input className="field bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
 
             {message && (
@@ -2775,6 +3819,16 @@ function InventoryAdmin({ rawMaterials, onSaved }) {
           </div>
         </form>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pendingDelete)}
+        title={pendingDelete ? `Delete ${pendingDelete.name || "item"}?` : "Delete this?"}
+        message="Are you sure you want to delete this? This can be restored from Recently Deleted."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={confirmDeletion}
+        onCancel={cancelDeletion}
+      />
     </section>
   );
 }
@@ -2789,11 +3843,11 @@ function AddStockPage({ rawMaterials, onSaved }) {
 
   // Load local inventory items
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("inventoryItems") || "[]");
+    const saved = loadLocalInventoryItems();
     setLocalItems(saved);
     
     function handleInventoryUpdated(event) {
-      const items = event.detail || JSON.parse(localStorage.getItem("inventoryItems") || "[]");
+      const items = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
       setLocalItems(items);
     }
     
@@ -2802,10 +3856,11 @@ function AddStockPage({ rawMaterials, onSaved }) {
   }, []);
 
   // Combine backend and local inventory
-  const allItems = [...(rawMaterials || []), ...localItems];
+  const activeLocalItems = localItems.filter((item) => item?.isDeleted !== true);
+  const allItems = [...(rawMaterials || []), ...activeLocalItems];
 
   useEffect(() => {
-    if (!selectedId && allItems[0]) setSelectedId(allItems[0].id);
+    if (!allItems.find((item) => item.id === selectedId)) setSelectedId(allItems[0]?.id || "");
   }, [allItems, selectedId]);
 
   async function submit(event) {
@@ -2824,7 +3879,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
     }
 
     try {
-      const item = localItems.find(i => i.id === selectedId);
+      const item = activeLocalItems.find(i => i.id === selectedId);
       if (item) {
         // Update local inventory item
         const updatedItems = localItems.map(i =>
@@ -2832,9 +3887,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
             ? { ...i, quantity: i.quantity + Number(quantity), lastUpdated: new Date().toISOString() }
             : i
         );
-        localStorage.setItem("inventoryItems", JSON.stringify(updatedItems));
-        window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: updatedItems }));
-        setLocalItems(updatedItems);
+        setLocalItems(saveLocalInventoryItems(updatedItems));
       } else {
         // Try backend API for server-managed materials
         await (await import("./services/inventoryService")).purchaseInventory(selectedId, { quantity: Number(quantity), note });
@@ -3363,29 +4416,107 @@ function SalesAnalytics({ orders = [] }) {
 }
 
 function OrderHistory({ orders }) {
+  const [search, setSearch] = useState("");
+  const normalizedSearch = search.trim().toLowerCase();
+  const visibleOrders = useMemo(() => {
+    const allOrders = orders || [];
+    if (!normalizedSearch) return allOrders;
+
+    return allOrders.filter((order) => {
+      const orderId = String(order.orderId || order.id || "").toLowerCase();
+      const customerName = String(order.customerName || order.name || "").toLowerCase();
+      const phone = String(order.phone || order.customerPhone || "").toLowerCase();
+      const table = String(order.tableNumber ?? order.tableNo ?? order.table ?? "").toLowerCase();
+      const orderType = String(order.orderType || order.type || "").toLowerCase();
+      const itemMatch = (order.items || []).some((line) => {
+        const itemName = String(line.name || line.itemName || line.productName || "").toLowerCase();
+        return itemName.includes(normalizedSearch);
+      });
+
+      return (
+        orderId.includes(normalizedSearch) ||
+        customerName.includes(normalizedSearch) ||
+        phone.includes(normalizedSearch) ||
+        table.includes(normalizedSearch) ||
+        orderType.includes(normalizedSearch) ||
+        itemMatch
+      );
+    });
+  }, [orders, normalizedSearch]);
+
   return (
     <section className="space-y-4">
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-black">Order history</h2>
-        <p className="mt-2 text-sm text-stone-600">Review completed and pending order records.</p>
+        <div className="flex flex-col gap-3">
+          <div>
+            <h2 className="text-xl font-black">Order history</h2>
+            <p className="mt-2 text-sm text-stone-600">Review completed and pending order records.</p>
+          </div>
+          <label className="flex items-center gap-3 rounded-full bg-stone-100 px-4 py-3">
+            <Search size={18} className="text-stone-500" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search Order ID, customer, phone, table, item..."
+              className="w-full bg-transparent text-sm font-bold outline-none"
+            />
+          </label>
+        </div>
       </div>
-      {orders.map((order) => (
-        <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-xl font-black">{order.customerName}</h3>
-              <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo} • {order.phone}</p>
-            </div>
-            <p className="text-sm font-black text-stone-700">{order.status}</p>
-          </div>
-          <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
-            {(order.items || []).map((line, index) => (
-              <p key={index}>{formatOrderItemLine(line)}</p>
-            ))}
-          </div>
-        </article>
-      ))}
-      {orders.length === 0 && <p className="rounded-[1.5rem] bg-white p-6 font-bold text-stone-500">No orders yet.</p>}
+
+      {visibleOrders.length > 0 ? (
+        visibleOrders.map((order) => {
+          const statusLabel = getOrderStatusLabel(order);
+          const statusClass = statusLabel === "Pending"
+            ? "text-rose-600"
+            : statusLabel === "Confirmed"
+            ? "text-sky-600"
+            : statusLabel === "Preparing"
+            ? "text-orange-600"
+            : statusLabel === "Ready"
+            ? "text-violet-600"
+            : statusLabel === "Completed"
+            ? "text-emerald-600"
+            : statusLabel === "Cancelled"
+            ? "text-stone-700"
+            : statusLabel === "Payment Rejected"
+            ? "text-rose-600"
+            : "text-stone-700";
+          const sourceLabel = getOrderSourceLabel(order);
+
+          return (
+            <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-xl font-black">{order.customerName}</h3>
+                  <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
+                  <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} • {order.phone}</p>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className={`rounded-full px-2 py-1 text-xs font-black uppercase ${statusClass}`}>{statusLabel}</span>
+                    {sourceLabel && (
+                      <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                        {sourceLabel}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-stone-600">{formatOrderDateTime(order.createdAt)}</p>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
+                {(order.items || []).map((line, index) => (
+                  <p key={index}>{formatOrderItemLine(line)}</p>
+                ))}
+              </div>
+            </article>
+          );
+        })
+      ) : (
+        <div className="rounded-[1.5rem] bg-white p-6 font-bold text-stone-500">
+          {normalizedSearch ? "No matching orders found." : "No orders yet."}
+        </div>
+      )}
     </section>
   );
 }
@@ -3465,13 +4596,17 @@ function PosBilling({ items, categories, onSaved }) {
 }
 
 function QrOrders({ orders, onSaved }) {
+  const qrOrders = useMemo(() => {
+    return (orders || []).filter((order) => getOrderSourceLabel(order) === "QR");
+  }, [orders]);
+
   return (
     <section>
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
         <h2 className="text-xl font-black">QR orders</h2>
         <p className="mt-2 text-sm text-stone-600">Orders placed by customers through the digital menu.</p>
       </div>
-      <OrderAdmin orders={orders} onSaved={onSaved} hideWarnings={true} />
+      <OrderAdmin orders={qrOrders} onSaved={onSaved} hideWarnings={true} />
     </section>
   );
 }

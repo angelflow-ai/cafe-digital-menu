@@ -30,7 +30,11 @@ export async function loadInventory() {
       notify();
       return inventory;
     }
-    console.error("inventoryStore: failed to load inventory", err);
+    if (err && (err.status === 401 || err.status === 403)) {
+      console.warn("inventoryStore: inventory access is unauthorized", err.message || err);
+    } else {
+      console.error("inventoryStore: failed to load inventory", err);
+    }
     return inventory;
   }
 }

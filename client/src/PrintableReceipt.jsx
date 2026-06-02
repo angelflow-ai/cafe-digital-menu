@@ -5,7 +5,7 @@ import logoUrl from "./assets/infusion-saga-logo.png";
 import { formatOrderItemLine, getFinalItemTotal, getOrderTotal } from "./utils/orderDisplayFormatter";
 
 function rupees(value) {
-  return `Rs. ${Number(value || 0).toFixed(2)}`;
+  return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
 }
 
 function formatDate(value) {
@@ -131,7 +131,11 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
                 <div>{line.qty}</div>
                 <div>
                   <div style={{fontWeight:700}}>{line.lineText}</div>
-                  {line.addons?.extraCheese && <div style={{fontSize:10}}>Extra Cheese</div>}
+                  {Array.isArray(line.addons?.selectedAddons) && line.addons.selectedAddons.length > 0 ? (
+                    <div style={{fontSize:10}}>{line.addons.selectedAddons.map((addon) => addon.name).join(", ")}</div>
+                  ) : line.addons?.extraCheese ? (
+                    <div style={{fontSize:10}}>Extra Cheese</div>
+                  ) : null}
                 </div>
                 <div className="receipt-amount">{rupees(line.total)}</div>
               </div>

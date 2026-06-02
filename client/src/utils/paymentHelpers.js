@@ -1,11 +1,8 @@
 import QRCode from "qrcode";
-
-export function normalizePaymentStatus(value) {
-  return String(value || "").toLowerCase().trim().replace(/[_\s]+/g, " ");
-}
+import { normalizeStatus } from "./orderHelpers";
 
 export function getPaymentFlowState(paymentStatus) {
-  const normalizedStatus = normalizePaymentStatus(paymentStatus);
+  const normalizedStatus = normalizeStatus(paymentStatus);
   const isRejected = ["payment issue", "rejected", "payment rejected", "payment_rejected"].includes(normalizedStatus);
   return {
     normalizedStatus,

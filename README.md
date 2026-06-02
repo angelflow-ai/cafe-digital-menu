@@ -93,7 +93,7 @@ npm run client  # Terminal 2 - Frontend on port 5173
 ### 3. Access the Application
 
 - **Customer App:** http://localhost:5173
-- **Admin Panel:** http://localhost:5173/admin
+- **Owner Panel:** http://localhost:5173/owner
 - **API Base:** http://localhost:4000/api
 
 ### 4. Admin Login

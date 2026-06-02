@@ -3,6 +3,7 @@
 
 let isDemoMode = false;
 let backendTested = false;
+const DEMO_CATEGORIES_KEY = "demo-categories";
 
 // Demo inventory structure matching the real backend format
 const DEMO_INVENTORY = [
@@ -76,6 +77,64 @@ const DEMO_CATEGORIES = [
   { id: "dessert", name: "Dessert", icon: "CakeSlice" }
 ];
 
+function slugifyValue(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function normalizeDemoCategory(category, fallbackSortOrder = 0) {
+  const source = category && typeof category === "object" ? category : {};
+  const name = String(source.name || "").trim();
+  const id = String(source.id || slugifyValue(name)).trim();
+  return {
+    id,
+    name,
+    icon: String(source.icon || "Utensils"),
+    sortOrder: Number.isFinite(Number(source.sortOrder)) ? Number(source.sortOrder) : fallbackSortOrder,
+    isDeleted: source.isDeleted === true,
+    deletedAt: source.isDeleted === true ? source.deletedAt || new Date().toISOString() : null
+  };
+}
+
+function saveDemoCategories(categories) {
+  try {
+    localStorage.setItem(DEMO_CATEGORIES_KEY, JSON.stringify(categories));
+  } catch (e) {
+    console.error("Failed to save demo categories:", e);
+  }
+}
+
+function loadDemoCategoriesStore() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(DEMO_CATEGORIES_KEY) || "null");
+    if (Array.isArray(stored) && stored.length > 0) {
+      return stored
+        .map((entry, index) => normalizeDemoCategory(entry, index + 1))
+        .filter((entry) => entry.id && entry.name);
+    }
+  } catch (e) {
+    console.error("Failed to load demo categories:", e);
+  }
+  const initial = DEMO_CATEGORIES.map((entry, index) => normalizeDemoCategory({ ...entry, sortOrder: index + 1 }, index + 1));
+  saveDemoCategories(initial);
+  return initial;
+}
+
+function updateDemoCategories(updater) {
+  const current = loadDemoCategoriesStore();
+  const next = typeof updater === "function" ? updater(current) : current;
+  const normalized = Array.isArray(next)
+    ? next
+        .map((entry, index) => normalizeDemoCategory(entry, index + 1))
+        .filter((entry) => entry.id && entry.name)
+    : current;
+  saveDemoCategories(normalized);
+  return normalized;
+}
+
 export async function testBackendAvailability(apiUrl) {
   if (backendTested) {
     return isDemoMode;
@@ -115,7 +174,78 @@ export function getDemoInventory() {
 }
 
 export function getDemoCategories() {
-  return DEMO_CATEGORIES;
+  return loadDemoCategoriesStore()
+    .filter((category) => category.isDeleted !== true)
+    .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
+}
+
+export function getDemoCategoriesWithDeleted() {
+  return loadDemoCategoriesStore().sort((a, b) => {
+    const aDeleted = a.isDeleted === true;
+    const bDeleted = b.isDeleted === true;
+    if (aDeleted !== bDeleted) return aDeleted ? 1 : -1;
+    return (a.sortOrder || 0) - (b.sortOrder || 0);
+  });
+}
+
+export function createDemoCategory(payload = {}) {
+  const name = String(payload.name || "").trim();
+  if (!name) throw new Error("Category name is required");
+  const id = String(payload.id || slugifyValue(name)).trim();
+  if (!id) throw new Error("Category id is required");
+  const sortOrder = Number.isFinite(Number(payload.sortOrder)) ? Number(payload.sortOrder) : loadDemoCategoriesStore().length + 1;
+  const created = normalizeDemoCategory({
+    id,
+    name,
+    icon: payload.icon || "Utensils",
+    sortOrder,
+    isDeleted: false,
+    deletedAt: null
+  }, sortOrder);
+  updateDemoCategories((categories) => {
+    const index = categories.findIndex((item) => item.id === id);
+    if (index >= 0) {
+      const next = [...categories];
+      next[index] = { ...next[index], ...created, isDeleted: false, deletedAt: null };
+      return next;
+    }
+    return [...categories, created];
+  });
+  return created;
+}
+
+export function deleteDemoCategory(id) {
+  const normalizedId = String(id || "").trim();
+  if (!normalizedId) return null;
+  const deletedAt = new Date().toISOString();
+  let result = null;
+  updateDemoCategories((categories) => categories.map((entry) => {
+    if (entry.id !== normalizedId) return entry;
+    result = { ...entry, isDeleted: true, deletedAt };
+    return result;
+  }));
+  return result;
+}
+
+export function restoreDemoCategory(id) {
+  const normalizedId = String(id || "").trim();
+  if (!normalizedId) return null;
+  let result = null;
+  updateDemoCategories((categories) => categories.map((entry) => {
+    if (entry.id !== normalizedId) return entry;
+    result = { ...entry, isDeleted: false, deletedAt: null };
+    return result;
+  }));
+  return result;
+}
+
+export function permanentlyDeleteDemoCategory(id) {
+  const normalizedId = String(id || "").trim();
+  if (!normalizedId) return { deletedCount: 0 };
+  const before = loadDemoCategoriesStore();
+  const after = before.filter((entry) => entry.id !== normalizedId);
+  saveDemoCategories(after);
+  return { deletedCount: before.length === after.length ? 0 : 1 };
 }
 
 // Generate demo order with correct structure
@@ -182,6 +312,11 @@ export default {
   resetBackendTest,
   getDemoInventory,
   getDemoCategories,
+  getDemoCategoriesWithDeleted,
+  createDemoCategory,
+  deleteDemoCategory,
+  restoreDemoCategory,
+  permanentlyDeleteDemoCategory,
   createDemoOrder,
   loadDemoOrders,
   saveDemoOrders,

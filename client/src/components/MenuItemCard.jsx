@@ -12,11 +12,50 @@ const serveOptionsByItemId = {
 };
 
 function getServeOptions(item) {
-  return serveOptionsByItemId[item.id] || [];
+  if (!item) return [];
+  const category = String(item.category || item.categoryId || "").toLowerCase();
+  const isHotDrinks = category === "hot-drinks" || category === "hot drinks";
+  if (!isHotDrinks) return [];
+
+  const safeServeOptions = Array.isArray(item.serveOptions) ? item.serveOptions : [];
+  const safeServingOptions = Array.isArray(item.servingOptions) ? item.servingOptions : [];
+  const safeItemServeOptions = Array.isArray(item.itemServeOptions) ? item.itemServeOptions : [];
+
+  if (safeServeOptions.length > 0) return safeServeOptions;
+  if (safeServingOptions.length > 0) return safeServingOptions;
+  if (safeItemServeOptions.length > 0) return safeItemServeOptions;
+
+  const name = String(item.name || item.itemName || "").toLowerCase();
+  const subCategory = String(item.subCategory || item.subcategory || item.subcategoryName || "").toLowerCase();
+
+  const hotCoffeeNames = [
+    "black coffee",
+    "core coffee",
+    "hot chocolate",
+    "infusion heritage hot coffee"
+  ];
+  const chaiNames = [
+    "black tea",
+    "green tea",
+    "tulsi tea",
+    "lemon tea",
+    "honey lemon tea",
+    "personal blend chai",
+    "signature infusion chai"
+  ];
+
+  if (hotCoffeeNames.includes(name) || subCategory.includes("coffee")) {
+    return ["Kulhad", "Glass", "Cup"];
+  }
+  if (chaiNames.includes(name) || subCategory.includes("chai")) {
+    return ["Kulhad", "Glass"];
+  }
+
+  return serveOptionsByItemId[item?.id] || [];
 }
 
 function rupees(value) {
-  return `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
+  return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
 }
 
 function priceText(item, selectedSizeId) {

@@ -209,7 +209,7 @@ async function api(path, options = {}) {
     // Demo auth - allow access to admin/biller pages
     if (path === "/auth/me") {
       // Return demo user data based on location
-      const role = window.location.pathname.startsWith("/admin") ? "admin" : 
+      const role = window.location.pathname.startsWith("/owner") ? "admin" : 
                    window.location.pathname.startsWith("/biller") ? "biller" : "customer";
       return { user: { email: `demo-${role}@demo.local`, role } };
     }
@@ -278,17 +278,25 @@ function App() {
 
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
-  if (normalizedRoute === "/admin/forgot-password") return <ForgotPassword navigate={navigate} role="admin" />;
+  if (normalizedRoute === "/owner/forgot-password") return <ForgotPassword navigate={navigate} role="admin" />;
   if (normalizedRoute === "/biller/forgot-password") return <ForgotPassword navigate={navigate} role="biller" />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
-  if (normalizedRoute === "/order/admin") return <OwnerApp navigate={navigate} />;
+  if (normalizedRoute === "/order/owner") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/order" || normalizedRoute === "/order/") return <CustomerApp navigate={navigate} />;
   if (route.startsWith("/order/")) {
     const orderId = route.replace("/order/", "");
     if (!orderId) return <CustomerApp navigate={navigate} />;
     return <OrderTracking orderId={orderId} />;
   }
-  if (route.startsWith("/admin")) return <OwnerApp navigate={navigate} />;
+  // backward-compatibility: redirect old /admin URL and subpaths to /owner
+  if (route.startsWith("/admin")) {
+    const nextRoute = route.replace(/^\/admin/, "/owner");
+    if (nextRoute !== route) {
+      navigate(nextRoute);
+      return null;
+    }
+  }
+  if (route.startsWith("/owner")) return <OwnerApp navigate={navigate} />;
   if (route.startsWith("/biller")) return <BillerApp navigate={navigate} />;
   return <CustomerApp navigate={navigate} />;
 }
@@ -1683,7 +1691,7 @@ function BillerApp({ navigate }) {
           <div className="flex flex-col items-end gap-2 relative z-10">
             <div className="flex gap-2">
               <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
-              <button onClick={() => navigate("/admin")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
+              <button onClick={() => navigate("/owner")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
             </div>
             <div>
               <button onClick={() => setBillerTab("pos")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">OOC (Order On Counter)</button>
@@ -1719,7 +1727,7 @@ function Login({ onLogin, navigate, role }) {
   }
 
   const roleLabel = role === "biller" ? "Biller" : "Owner";
-  const forgotPath = role === "biller" ? "/biller/forgot-password" : "/admin/forgot-password";
+  const forgotPath = role === "biller" ? "/biller/forgot-password" : "/owner/forgot-password";
 
   return (
     <OwnerShell>
@@ -1759,7 +1767,7 @@ function ForgotPassword({ navigate, role }) {
   const [step, setStep] = useState("request");
 
   const roleLabel = role === "biller" ? "Biller" : "Owner";
-  const returnPath = role === "biller" ? "/biller" : "/admin";
+  const returnPath = role === "biller" ? "/biller" : "/owner";
 
   async function requestOtp(event) {
     event.preventDefault();
@@ -2516,7 +2524,7 @@ function CocAdmin({ cocRequests, onSaved }) {
                 <button onClick={() => approve(safeRequest.id)} className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Approve & Create Order</button>
               ) : (
                 <>
-                  <button onClick={() => { history.pushState(null, '', '/admin'); window.dispatchEvent(new PopStateEvent('popstate')); }} className="rounded-full bg-white border px-4 py-2 text-sm font-black">Owner login to approve</button>
+                  <button onClick={() => { history.pushState(null, '', '/owner'); window.dispatchEvent(new PopStateEvent('popstate')); }} className="rounded-full bg-white border px-4 py-2 text-sm font-black">Owner login to approve</button>
                   <span className="text-xs text-stone-500">Only staff can approve COC requests.</span>
                 </>
               )}
@@ -3497,6 +3505,7 @@ function OrderHistory({ orders }) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-black">{order.customerName}</h3>
+              <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
               <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo} • {order.phone}</p>
             </div>
             <p className="text-sm font-black text-stone-700">{order.status}</p>

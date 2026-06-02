@@ -12,12 +12,24 @@ const sizeSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const addonSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    name: { type: String, required: true },
+    description: { type: String, default: "" },
+    price: { type: Number, required: true, min: 0 }
+  },
+  { _id: false }
+);
+
 const categorySchema = new mongoose.Schema(
   {
     id: { type: String, unique: true, required: true },
     name: { type: String, required: true },
     icon: { type: String, default: "Utensils" },
-    sortOrder: { type: Number, default: 0 }
+    sortOrder: { type: Number, default: 0 },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
@@ -28,11 +40,17 @@ const menuItemSchema = new mongoose.Schema(
     name: { type: String, required: true },
     categoryId: { type: String, required: true },
     description: { type: String, default: "" },
+    subCategoryId: { type: String, default: "" },
+    subCategoryName: { type: String, default: "" },
     subcategory: { type: String, default: "" },
     image: { type: String, default: "" },
     sizes: { type: [sizeSchema], validate: [(v) => v.length > 0, "At least one size is required"] },
+    serveOptions: { type: [String], default: [] },
+    addons: { type: mongoose.Schema.Types.Mixed, default: [] },
     featured: { type: Boolean, default: false },
-    active: { type: Boolean, default: true }
+    active: { type: Boolean, default: true },
+    isDeleted: { type: Boolean, default: false },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
@@ -52,10 +70,7 @@ const orderItemSchema = new mongoose.Schema(
     unitPrice: Number,
     lineTotal: Number,
     finalLineTotal: Number,
-    addons: {
-      extraCheese: Boolean,
-      extraCheesePrice: Number
-    }
+    addons: { type: mongoose.Schema.Types.Mixed, default: {} }
   },
   { _id: false }
 );
@@ -72,8 +87,8 @@ const orderSchema = new mongoose.Schema(
     items: [orderItemSchema],
     total: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
-    paymentStatus: { type: String, enum: ["pending_verification","paid","rejected","pending","unknown"], default: undefined },
-    status: { type: String, enum: ["new", "pending", "preparing", "ready", "confirmed", "completed", "cancelled", "payment_rejected"], default: "new" },
+    paymentStatus: { type: String, enum: ["pending_verification","paid","rejected","payment_issue","payment_rejected","pending","unknown"], default: undefined },
+    status: { type: String, enum: ["new", "pending", "preparing", "ready", "confirmed", "completed", "cancelled", "payment_rejected", "payment_issue"], default: "new" },
     confirmedAt: { type: Date },
     rejectedAt: { type: Date },
     deductionStatus: { type: String, enum: ["pending", "deducted"], default: "pending" },
@@ -219,19 +234,47 @@ async function seedDatabase() {
 
 export const store = {
   async categories() {
-    if (usingMongo()) return Category.find().sort({ sortOrder: 1, name: 1 }).lean();
-    return [...memory.categories].sort((a, b) => a.sortOrder - b.sortOrder);
+    if (usingMongo()) return Category.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 }).lean();
+    return [...memory.categories].filter((item) => item.isDeleted !== true).sort((a, b) => a.sortOrder - b.sortOrder);
+  },
+  async deletedCategories() {
+    if (usingMongo()) return Category.find({ isDeleted: true }).sort({ deletedAt: -1, sortOrder: 1, name: 1 }).lean();
+    return [...memory.categories].filter((item) => item.isDeleted === true).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
   },
   async upsertCategory(payload) {
+    const clean = {
+      ...payload,
+      isDeleted: payload.isDeleted === true,
+      deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
+    };
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id: payload.id }, payload, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      return Category.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
     }
-    const index = memory.categories.findIndex((item) => item.id === payload.id);
-    if (index >= 0) memory.categories[index] = payload;
-    else memory.categories.push(payload);
-    return payload;
+    const index = memory.categories.findIndex((item) => item.id === clean.id);
+    if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...clean };
+    else memory.categories.push(clean);
+    return clean;
   },
   async deleteCategory(id) {
+    const deletedAt = new Date();
+    if (usingMongo()) {
+      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true }).lean();
+    }
+    const index = memory.categories.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.categories[index] = { ...memory.categories[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
+    return memory.categories[index];
+  },
+  async restoreCategory(id) {
+    if (usingMongo()) {
+      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true }).lean();
+    }
+    const index = memory.categories.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.categories[index] = { ...memory.categories[index], isDeleted: false, deletedAt: null };
+    return memory.categories[index];
+  },
+  async permanentlyDeleteCategory(id) {
     if (usingMongo()) return Category.deleteOne({ id });
     memory.categories = memory.categories.filter((item) => item.id !== id);
     return { deletedCount: 1 };
@@ -242,10 +285,19 @@ export const store = {
       if (query.categoryId) filter.categoryId = query.categoryId;
       if (query.search) filter.name = { $regex: query.search, $options: "i" };
       if (!query.includeInactive) filter.active = true;
+      if (!query.includeDeleted) filter.isDeleted = { $ne: true };
+      const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
+      const visibleCategoryIds = await Category.find(categoryFilter).distinct("id");
+      if (!query.includeDeleted) {
+        if (query.categoryId && !visibleCategoryIds.includes(query.categoryId)) return [];
+        filter.categoryId = query.categoryId ? query.categoryId : { $in: visibleCategoryIds };
+      }
       return MenuItem.find(filter).sort({ name: 1 }).lean();
     }
     return memory.menuItems
       .filter((item) => (query.includeInactive ? true : item.active))
+      .filter((item) => (query.includeDeleted ? true : item.isDeleted !== true))
+      .filter((item) => (query.includeDeleted ? true : (memory.categories.find((category) => category.id === item.categoryId)?.isDeleted !== true)))
       .filter((item) => (!query.categoryId ? true : item.categoryId === query.categoryId))
       .filter((item) => (!query.search ? true : item.name.toLowerCase().includes(query.search.toLowerCase())))
       .sort((a, b) => a.name.localeCompare(b.name));
@@ -253,6 +305,10 @@ export const store = {
   async menuItem(id) {
     if (usingMongo()) return MenuItem.findOne({ id }).lean();
     return memory.menuItems.find((item) => item.id === id);
+  },
+  async deletedMenuItems() {
+    if (usingMongo()) return MenuItem.find({ isDeleted: true }).sort({ deletedAt: -1, name: 1 }).lean();
+    return [...memory.menuItems].filter((item) => item.isDeleted === true).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
   },
   async upsertMenuItem(payload) {
     const clean = validateMenuItem(payload);
@@ -265,6 +321,21 @@ export const store = {
     return clean;
   },
   async deleteMenuItem(id) {
+    const deletedAt = new Date();
+    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true }).lean();
+    const index = memory.menuItems.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
+    return memory.menuItems[index];
+  },
+  async restoreMenuItem(id) {
+    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true }).lean();
+    const index = memory.menuItems.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: false, deletedAt: null };
+    return memory.menuItems[index];
+  },
+  async permanentlyDeleteMenuItem(id) {
     if (usingMongo()) return MenuItem.deleteOne({ id });
     memory.menuItems = memory.menuItems.filter((item) => item.id !== id);
     return { deletedCount: 1 };
@@ -368,9 +439,22 @@ export const store = {
   async createCocRequest(payload) {
     // build a COC request with resolved item names, prices, and total so admin sees correct details
     const order = await buildOrder(payload);
+    order.orderType = payload.orderType || payload.type || "COC";
+    order.status = payload.status || "pending";
+    order.paymentStatus = payload.paymentStatus || "pending";
+    order.orderId = order.orderId || generateOrderId();
+    order.deductionStatus = "pending";
+
     const request = { ...order, id: `coc-${Date.now()}`, createdAt: new Date().toISOString() };
     memory.cocRequests = memory.cocRequests || [];
     memory.cocRequests.push(request);
+
+    if (usingMongo()) {
+      await Order.create({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    } else {
+      memory.orders.push({ ...order, id: request.id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+    }
+
     return request;
   },
   async cocRequests() {
@@ -382,12 +466,23 @@ export const store = {
     const index = memory.cocRequests.findIndex((r) => r.id === id);
     if (index < 0) return null;
     const req = memory.cocRequests.splice(index, 1)[0];
-    // create actual order from request
+    const existingOrder = await this.orderById(req.orderId || req.id);
+    const updates = {
+      orderType: req.orderType || req.type || "COC",
+      status: "confirmed",
+      paymentStatus: req.paymentStatus || "pending"
+    };
+
+    if (existingOrder) {
+      return this.updateOrder(existingOrder._id || existingOrder.id, updates);
+    }
+
     const order = await buildOrder(req);
+    order.orderType = req.orderType || req.type || "COC";
+    order.status = "confirmed";
+    order.paymentStatus = req.paymentStatus || "pending";
     order.orderId = order.orderId || generateOrderId();
     order.deductionStatus = "pending";
-    await deductInventoryForOrder(order);
-    order.deductionStatus = "deducted";
     if (usingMongo()) {
       const created = await Order.create(order);
       return created;
@@ -464,7 +559,7 @@ function validateMenuItem(payload) {
       id: String(size.id || size.label || size.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       name: String(size.name || size.label || "").trim(),
       label: String(size.label || size.name || "").trim(),
-      price: Number(size.price),
+      price: Math.round(Number(size.price)),
       sortOrder: Number(size.sortOrder ?? index + 1)
     }))
     .filter((size) => size.name && Number.isFinite(size.price));
@@ -472,16 +567,39 @@ function validateMenuItem(payload) {
   if (!sizes.length) throw new Error("Every item needs at least one size with a price.");
   if (sizes.some((size) => size.price < 0)) throw new Error("Size prices must be zero or greater.");
 
+  const serveOptions = Array.isArray(payload.serveOptions)
+    ? payload.serveOptions.map((option) => String(option || "").trim()).filter(Boolean)
+    : [];
+  const addons = Array.isArray(payload.addons)
+    ? payload.addons
+        .map((addon) => ({
+          id: String(addon.id || addon.name || `addon-${Date.now()}`).trim(),
+          name: String(addon.name || "").trim(),
+          description: String(addon.description || "").trim(),
+          price: Math.round(Number(addon.price))
+        }))
+        .filter((addon) => addon.name && Number.isFinite(addon.price) && addon.price >= 0)
+    : payload.addons || [];
+
+  const subCategoryName = String(payload.subCategoryName || payload.subcategoryName || payload.subcategory || payload.subCategory || "").trim();
+  const subCategoryId = String(payload.subCategoryId || payload.subcategoryId || subCategoryName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
   return {
     id: String(payload.id || payload.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
     name: String(payload.name || "").trim(),
     categoryId: payload.categoryId,
     description: payload.description || "",
-    subcategory: String(payload.subcategory || payload.subCategory || "").trim(),
+    subCategoryId,
+    subCategoryName,
+    subcategory: subCategoryName,
     image: payload.image || "",
     sizes: sizes.sort((a, b) => a.sortOrder - b.sortOrder),
+    serveOptions,
+    addons,
     featured: Boolean(payload.featured),
-    active: payload.active !== false
+    active: payload.active !== false,
+    isDeleted: payload.isDeleted === true,
+    deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
   };
 }
 
@@ -494,13 +612,34 @@ async function buildOrder(payload) {
     const size = menuItem.sizes.find((candidate) => candidate.id === raw.sizeId) || menuItem.sizes[0];
     if (!size || !Number.isFinite(Number(size.price))) throw new Error(`Price missing for ${menuItem.name}`);
     const quantity = Math.max(1, Number(raw.quantity || 1));
-    const basePrice = Number(raw.basePrice ?? raw.originalPrice ?? raw.baseUnitPrice ?? size.price ?? 0);
+    const basePrice = Math.round(Number(raw.basePrice ?? raw.originalPrice ?? raw.baseUnitPrice ?? size.price ?? 0));
+    const rawSelectedAddons = Array.isArray(raw.addons)
+      ? raw.addons
+      : Array.isArray(raw.addons?.selectedAddons)
+      ? raw.addons.selectedAddons
+      : Array.isArray(raw.selectedAddons)
+      ? raw.selectedAddons
+      : Array.isArray(raw.addOns)
+      ? raw.addOns
+      : Array.isArray(raw.selectedAddon)
+      ? raw.selectedAddon
+      : Array.isArray(raw.addons?.selectedAddon)
+      ? raw.addons.selectedAddon
+      : [];
+    const selectedAddons = rawSelectedAddons
+      .filter((addon) => addon && String(addon.name || "").trim())
+      .map((addon) => ({
+        name: String(addon.name || "").trim(),
+        price: Math.round(Number(addon.price || 0))
+      }))
+      .filter((addon) => Number.isFinite(addon.price) && addon.price >= 0);
     const extraCheeseSelected = !!raw.addons?.extraCheese;
-    const extraCheesePrice = extraCheeseSelected ? Number(raw.addons?.extraCheesePrice || 0) : 0;
-    const unitPrice = basePrice + extraCheesePrice;
+    const extraCheesePrice = extraCheeseSelected ? Math.round(Number(raw.addons?.extraCheesePrice || 0)) : 0;
+    const selectedAddonTotal = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
+    const unitPrice = basePrice + extraCheesePrice + selectedAddonTotal;
     const computedLineTotal = unitPrice * quantity;
     const rawLineTotal = Number(raw.lineTotal ?? raw.finalLineTotal);
-    const lineTotal = Number.isFinite(rawLineTotal) && rawLineTotal > 0 ? rawLineTotal : computedLineTotal;
+    const lineTotal = Math.round(Number.isFinite(rawLineTotal) && rawLineTotal > 0 ? rawLineTotal : computedLineTotal);
     items.push({
       itemId: menuItem.id,
       name: raw.name || menuItem.name,
@@ -516,6 +655,7 @@ async function buildOrder(payload) {
       lineTotal,
       finalLineTotal: lineTotal,
       addons: {
+        selectedAddons,
         extraCheese: extraCheeseSelected,
         extraCheesePrice
       }
@@ -538,12 +678,13 @@ async function buildOrder(payload) {
     items,
     total,
     totalAmount: total,
-    status: payload.status || "new",
-    paymentStatus: payload.paymentStatus
+    status: normalizeSalesStatus(payload.status) || "new",
+    paymentStatus: payload.paymentStatus ? normalizeSalesStatus(payload.paymentStatus) : undefined
   };
 
   if (payload.confirmedAt) order.confirmedAt = payload.confirmedAt;
   if (payload.rejectedAt) order.rejectedAt = payload.rejectedAt;
+  if (payload.createdAt) order.createdAt = payload.createdAt;
 
   return order;
 }

@@ -16,6 +16,63 @@ export function normalizeStatus(value) {
   return String(value || "").toLowerCase().trim().replace(/[_\s]+/g, " ");
 }
 
+function toTitleCase(value) {
+  return String(value || "")
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0]?.toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+export function getOrderStatusLabel(order) {
+  const status = normalizeStatus(order?.status);
+  const paymentStatus = normalizeStatus(order?.paymentStatus);
+  const completedStatuses = new Set(["completed"]);
+  const confirmedStatuses = new Set(["confirmed", "accepted", "paid", "verified"]);
+  const pendingStatuses = new Set(["new", "pending", "waiting", "pending verification", "pending_verification"]);
+  const rejectedStatuses = new Set(["cancelled", "rejected", "payment issue", "payment rejected", "payment_rejected", "unpaid", "failed"]);
+  const activeStatuses = new Set(["pending", "confirmed", "preparing", "ready"]);
+
+  const resolveStatus = (candidate) => {
+    if (!candidate) return undefined;
+    if (completedStatuses.has(candidate)) return "Completed";
+    if (rejectedStatuses.has(candidate)) return toTitleCase(candidate);
+    if (pendingStatuses.has(candidate)) return "Pending";
+    if (activeStatuses.has(candidate)) return toTitleCase(candidate);
+    if (confirmedStatuses.has(candidate)) return "Confirmed";
+    return toTitleCase(candidate);
+  };
+
+  const labelFromStatus = resolveStatus(status);
+  if (labelFromStatus) return labelFromStatus;
+
+  const labelFromPaymentStatus = resolveStatus(paymentStatus);
+  if (labelFromPaymentStatus) return labelFromPaymentStatus;
+
+  return "Unknown";
+}
+
+export function getOrderSourceLabel(order) {
+  if (!order || typeof order !== "object") return undefined;
+
+  const explicitType = String(order.orderType || order.type || "").trim().toLowerCase();
+  const paymentMethod = String(order.paymentMethod || order.method || "").toLowerCase();
+  const id = String(order.orderId || order.id || order._id || "").toLowerCase();
+  const note = String(order.notes || order.note || "").toLowerCase();
+
+  if (explicitType) {
+    if (explicitType.includes("coc") || explicitType.includes("counter") || explicitType.includes("order on counter")) return "COC";
+    if (explicitType.includes("qr") || explicitType.includes("online")) return "QR";
+  }
+
+  if (id.startsWith("coc-")) return "COC";
+  if (paymentMethod.includes("coc") || paymentMethod.includes("counter") || note.includes("coc") || note.includes("order on counter") || note.includes("cash on counter")) return "COC";
+  if (paymentMethod.includes("upi") || paymentMethod.includes("qr") || paymentMethod.includes("online") || note.includes("qr") || note.includes("table")) return "QR";
+
+  return undefined;
+}
+
 export function normalizeOrder(order) {
   const amount = Number(order?.total ?? order?.totalAmount ?? order?.grandTotal ?? 0);
   return {
