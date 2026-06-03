@@ -157,6 +157,14 @@ export async function testBackendAvailability(apiUrl) {
 }
 
 export function setDemoMode(enabled) {
+  // Only allow enabling demo mode in development builds. In production, silently ignore attempts
+  // to enable demo mode so demo/sample data never appears automatically.
+  try {
+    if (enabled && !import.meta.env.DEV) {
+      console.warn("Demo mode can only be enabled in development.");
+      return;
+    }
+  } catch (e) {}
   isDemoMode = enabled;
 }
 

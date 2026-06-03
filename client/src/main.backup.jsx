@@ -2027,7 +2027,7 @@ function Dashboard({ owner, onLogout, navigate }) {
         {tab === "stock" && <AddStockPage rawMaterials={rawMaterials} onSaved={load} />}
         {tab === "recipes" && <RecipeMapping items={items} rawMaterials={rawMaterials} recipes={recipes} onSaved={load} />}
         {tab === "lowstock" && <LowStockAlerts rawMaterials={rawMaterials} />}
-        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} />}
+        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
         {tab === "history" && <OrderHistory orders={orders} />}
       </div>
     </OwnerShell>

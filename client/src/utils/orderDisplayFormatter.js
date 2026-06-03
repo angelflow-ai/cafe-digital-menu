@@ -93,14 +93,21 @@ export function getOrderTotal(order) {
   }, 0);
 }
 
+export function normalizeVisibleSizeLabel(item) {
+  const rawLabel = item?.sizeName || item?.size || item?.variant || "";
+  return String(rawLabel).trim().toLowerCase() === "regular" ? "" : rawLabel;
+}
+
 export function formatOrderItemLine(item) {
   const quantity = getItemQuantity(item);
   const basePrice = getBasePrice(item);
   const addonText = getAddonDisplay(item);
   const finalTotal = getFinalItemTotal(item);
-  const sizeLabel = item.sizeName || item.size || item.variant || "Regular";
+  const sizeLabel = normalizeVisibleSizeLabel(item);
   const serveText = item.serveType ? ` • ${item.serveType}` : "";
+  const sizePart = sizeLabel ? `${sizeLabel}${serveText}` : serveText;
+  const separator = sizePart ? " - " : "";
 
-  const baseLine = `${item.name || item.title || item.itemId || "Item"} - ${sizeLabel}${serveText} - ${quantity} x ${rupees(basePrice)}`;
+  const baseLine = `${item.name || item.title || item.itemId || "Item"}${separator}${sizePart} - ${quantity} x ${rupees(basePrice)}`;
   return addonText ? `${baseLine}${addonText} = ${rupees(finalTotal)}` : `${baseLine} = ${rupees(finalTotal)}`;
 }

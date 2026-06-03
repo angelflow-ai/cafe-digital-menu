@@ -37,8 +37,9 @@ import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
+import { calculateTodayTotalProfit } from "./utils/profitHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
-import { formatOrderItemLine, getBasePrice, getAddonEachText, getOrderTotal } from "./utils/orderDisplayFormatter";
+import { formatOrderItemLine, getBasePrice, getAddonDisplay, getAddonEachText, getFinalItemTotal, getOrderTotal, normalizeVisibleSizeLabel } from "./utils/orderDisplayFormatter";
 import { api, API, API_ROOT } from "./services/apiClient";
 import orderService from "./services/orderService";
 import paymentService from "./services/paymentService";
@@ -49,12 +50,42 @@ import menuService from "./services/menuService";
 const SUBCATEGORY_CONFIG_KEY = "subCategories";
 const DELETED_SUBCATEGORY_CONFIG_KEY = "subCategoriesDeleted";
 const INVENTORY_ITEMS_KEY = "inventoryItems";
+const PENDING_COC_ORDER_KEY = "infusion-pending-coc-order";
 
 function readJsonStorage(key, fallback) {
   try {
     return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
   } catch (err) {
     return fallback;
+  }
+}
+
+function readPendingCocOrder() {
+  try {
+    return JSON.parse(localStorage.getItem(PENDING_COC_ORDER_KEY) || "null");
+  } catch (error) {
+    return null;
+  }
+}
+
+function savePendingCocOrder(order) {
+  if (!order?.orderId) return;
+  try {
+    localStorage.setItem(PENDING_COC_ORDER_KEY, JSON.stringify({
+      ...order,
+      pendingApproval: true,
+      savedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+    // Ignore storage failures and keep the in-memory flow safe.
+  }
+}
+
+function clearPendingCocOrder() {
+  try {
+    localStorage.removeItem(PENDING_COC_ORDER_KEY);
+  } catch (error) {
+    // Ignore storage failures.
   }
 }
 
@@ -285,7 +316,7 @@ function normalizeOwnerCategories(data) {
 }
 
 function ensureActiveMenuItems(data, categories) {
-  const items = Array.isArray(data) && data.length ? data : defaultMenuItems;
+  const items = Array.isArray(data) && data.length ? data : (demoMode.isDemoModeEnabled() ? defaultMenuItems : []);
   const allowedCategoryIds = new Set((Array.isArray(categories) && categories.length ? categories : defaultCategories).map((category) => category.id));
   return items
     .filter((item) => item && item?.isDeleted !== true && allowedCategoryIds.has(item.categoryId))
@@ -366,10 +397,17 @@ function OrderLineCard({ line }) {
   const safeLine = line || {};
   const quantity = Number(safeLine.quantity ?? safeLine.qty ?? 1);
   const basePrice = getBasePrice(safeLine);
+  const addonText = getAddonDisplay(safeLine);
+  const finalTotal = getFinalItemTotal(safeLine);
+  const sizeLabel = normalizeVisibleSizeLabel(safeLine);
+  const serveText = safeLine.serveType ? ` • ${safeLine.serveType}` : "";
+  const itemName = safeLine.name || safeLine.title || safeLine.itemId || "Item";
+  const detailText = `${sizeLabel}${serveText} • ${quantity} x ${rupees(basePrice)}${addonText} = ${rupees(finalTotal)}`;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50/85 px-4 py-3 shadow-sm">
-      <p className="mt-2 text-sm font-bold leading-6 text-stone-900">{formatOrderItemLine(safeLine)}</p>
+    <div className="rounded-2xl border border-slate-200 bg-slate-50/95 px-4 py-3 shadow-sm ring-1 ring-slate-200">
+      <p className="text-[15px] font-black uppercase tracking-[0.02em] text-stone-950">{itemName}</p>
+      <p className="mt-1 text-sm font-semibold text-stone-700">{detailText}</p>
     </div>
   );
 }
@@ -503,6 +541,7 @@ function CustomerApp({ navigate, counterMode = false }) {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [pendingPaymentData, setPendingPaymentData] = useState(null);
   const [counterModalOpen, setCounterModalOpen] = useState(false);
+  const [cocFallbackVisible, setCocFallbackVisible] = useState(false);
 
   function handleSetActiveCategory(categoryId) {
     setActiveCategoryId(categoryId);
@@ -556,6 +595,14 @@ function CustomerApp({ navigate, counterMode = false }) {
   }
 
   useEffect(() => {
+    const pendingCocOrder = readPendingCocOrder();
+    if (pendingCocOrder?.pendingApproval && pendingCocOrder?.orderId) {
+      setOrderPlaced(preparePrintableOrder(pendingCocOrder));
+    }
+    setCocFallbackVisible(false);
+  }, []);
+
+  useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
@@ -575,21 +622,20 @@ function CustomerApp({ navigate, counterMode = false }) {
           deletedCount: 0
         });
       } catch (error) {
-        if (!demoMode.isDemoModeEnabled()) {
-          setAppError(error.message || "Unable to load menu data.");
-        }
-        const safeCategories = ensureActiveCategories([]);
-        const safeItems = ensureActiveMenuItems([], safeCategories);
-        setCategories(safeCategories);
-        setItems(safeItems);
-        logLoadStats("CustomerApp (fallback)", {
+        // For Customer app, never show demo menu automatically.
+        setAppError("Menu could not be loaded. Please try again.");
+        // Clear items/categories so demo defaults are not displayed.
+        setCategories([]);
+        setItems([]);
+        logLoadStats("CustomerApp (load-failed)", {
           rawCategories: 0,
-          activeCategories: safeCategories.length,
+          activeCategories: 0,
           rawItems: 0,
-          activeItems: safeItems.length,
+          activeItems: 0,
           rawSubcategories: loadSubcategoryConfig(),
           activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
-          deletedCount: 0
+          deletedCount: 0,
+          error: String(error && error.message ? error.message : error)
         });
       } finally {
         setLoading(false);
@@ -620,6 +666,105 @@ function CustomerApp({ navigate, counterMode = false }) {
   useEffect(() => {
     saveCartToStorage(cart);
   }, [cart]);
+
+  useEffect(() => {
+    if (!orderPlaced || orderPlaced._source !== "coc" || !orderPlaced.pendingApproval || !orderPlaced.orderId) return;
+
+    let cancelled = false;
+    let timer = null;
+    let failedAttempts = 0;
+    let fallbackTimer = null;
+
+    const clearStuckPending = () => {
+      clearPendingCocOrder();
+      setCocFallbackVisible(false);
+      setOrderPlaced(null);
+      navigate("/");
+    };
+
+    const pollApproval = async () => {
+      try {
+        const publicOrder = await orderService.getPublicOrder(orderPlaced.orderId);
+        if (cancelled) return;
+
+        failedAttempts = 0;
+        const nextStatus = normalizeStatus(publicOrder?.status || publicOrder?.orderStatus || orderPlaced.status);
+        const nextRequestStatus = normalizeStatus(publicOrder?.requestStatus || orderPlaced.requestStatus);
+        const nextApprovalStatus = normalizeStatus(publicOrder?.approvalStatus || orderPlaced.approvalStatus);
+        const nextPaymentStatus = normalizeStatus(publicOrder?.paymentStatus || orderPlaced.paymentStatus);
+        const nextOrderStatus = normalizeStatus(publicOrder?.orderStatus || publicOrder?.status || orderPlaced.orderStatus || orderPlaced.status);
+        const approvedStatuses = new Set(["approved", "confirmed", "accepted", "success", "completed"]);
+        const pendingStatuses = new Set(["pending", "waiting", "awaiting approval", "awaiting_approval", "request pending", "request_pending"]);
+        const rejectedStatuses = new Set(["cancelled", "rejected", "payment issue", "payment rejected", "payment_rejected", "payment_issue"]);
+
+        console.log("COC POLL RESULT", {
+          savedOrderId: orderPlaced.orderId,
+          status: nextStatus,
+          requestStatus: nextRequestStatus,
+          approvalStatus: nextApprovalStatus,
+          paymentStatus: nextPaymentStatus,
+          orderStatus: nextOrderStatus
+        });
+
+        const isApproved = [nextStatus, nextRequestStatus, nextApprovalStatus, nextPaymentStatus, nextOrderStatus].some((candidate) => approvedStatuses.has(candidate))
+          || [nextStatus, nextRequestStatus, nextApprovalStatus, nextPaymentStatus, nextOrderStatus].some((candidate) => candidate && candidate.includes("approved"))
+          || [nextStatus, nextRequestStatus, nextApprovalStatus, nextPaymentStatus, nextOrderStatus].some((candidate) => candidate && candidate.includes("confirmed"));
+        const isRejected = rejectedStatuses.has(nextStatus) || rejectedStatuses.has(nextRequestStatus) || rejectedStatuses.has(nextApprovalStatus) || rejectedStatuses.has(nextPaymentStatus) || rejectedStatuses.has(nextOrderStatus);
+
+        if (!publicOrder || !publicOrder.orderId) {
+          clearPendingCocOrder();
+          clearStuckPending();
+          return;
+        }
+
+        if (isApproved || isRejected) {
+          const approvedOrder = preparePrintableOrder({
+            ...orderPlaced,
+            ...publicOrder,
+            pendingApproval: false,
+            status: publicOrder?.status || orderPlaced.status || (isApproved ? "confirmed" : "cancelled"),
+            paymentStatus: publicOrder?.paymentStatus || orderPlaced.paymentStatus || (isApproved ? "paid" : "rejected")
+          });
+          setOrderPlaced((current) => current && current._source === "coc" ? approvedOrder : current);
+          clearPendingCocOrder();
+          return;
+        }
+      } catch (error) {
+        failedAttempts += 1;
+        if (failedAttempts >= 25) {
+          setCocFallbackVisible(true);
+        }
+      }
+
+      if (!cancelled) {
+        timer = setTimeout(pollApproval, 2500);
+      }
+    };
+
+    fallbackTimer = setTimeout(() => {
+      if (!cancelled) {
+        setCocFallbackVisible(true);
+      }
+    }, 60000);
+
+    timer = setTimeout(pollApproval, 1000);
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      if (fallbackTimer) clearTimeout(fallbackTimer);
+    };
+  }, [navigate, orderPlaced]);
+
+  useEffect(() => {
+    if (!orderPlaced || orderPlaced._source !== "coc" || orderPlaced.pendingApproval) return;
+
+    const timer = setTimeout(() => {
+      setOrderPlaced(null);
+      navigate("/");
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [navigate, orderPlaced]);
 
   useEffect(() => {
     function onStorage(event) {
@@ -665,7 +810,15 @@ function CustomerApp({ navigate, counterMode = false }) {
         });
         setCart([]);
         setCartOpen(false);
-        setOrderPlaced(preparePrintableOrder({ ...request, pendingApproval: true, total: cartTotals.total, items: cart }));
+        const pendingOrder = preparePrintableOrder({
+          ...request,
+          _source: "coc",
+          pendingApproval: true,
+          total: cartTotals.total,
+          items: cart
+        });
+        setOrderPlaced(pendingOrder);
+        savePendingCocOrder(pendingOrder);
         try { await ordersStore.loadOrders(); } catch (error) {}
         return;
       } catch (error) {
@@ -777,7 +930,7 @@ function CustomerApp({ navigate, counterMode = false }) {
       </section>
       {detail && <DetailModal key={detail.id} item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && <CartDrawer cart={cart} total={cartTotals.total} onClose={closeCart} onQty={handleUpdateQuantity} onCheckout={placeOrder} orderOnCounter={counterMode} />}
-      {orderPlaced && <OrderSuccess order={orderPlaced} onClose={() => setOrderPlaced(null)} />}
+      {orderPlaced && <OrderSuccess order={orderPlaced} onClose={() => setOrderPlaced(null)} showFallbackAction={cocFallbackVisible} onFallbackAction={() => { clearPendingCocOrder(); setCocFallbackVisible(false); setOrderPlaced(null); navigate("/"); }} />}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal
           data={pendingPaymentData}
@@ -1206,7 +1359,7 @@ function CategoryAdmin({ categories, onSaved }) {
 
   return (
     <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-[1.5rem] bg-white p-4">
+      <div className="order-2 rounded-[1.5rem] bg-white p-4 lg:order-none">
         {categories.map((category) => (
           <div key={category.id} className="border-b py-3 last:border-0">
             <div className="flex items-center justify-between">
@@ -1226,7 +1379,7 @@ function CategoryAdmin({ categories, onSaved }) {
           </div>
         ))}
       </div>
-      <div className="space-y-4">
+      <div className="order-1 space-y-4 lg:order-none">
         <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5">
           <h2 className="text-xl font-black">New category</h2>
           <input required className="field mt-4 bg-stone-50" placeholder="Category name" value={name} onChange={(event) => setName(event.target.value)} />
@@ -1524,7 +1677,7 @@ function RecentlyDeletedPanel({ categories, deletedCategories, deletedItems, del
       </section>
       {detail && <DetailModal key={detail.id} item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && <CartDrawer cart={cart} total={cartTotal} onClose={closeCart} onQty={handleUpdateQuantity} onCheckout={placeOrder} orderOnCounter={counterMode} />}
-      {orderPlaced && <OrderSuccess order={orderPlaced} onClose={() => setOrderPlaced(null)} />}
+      {orderPlaced && <OrderSuccess order={orderPlaced} onClose={() => setOrderPlaced(null)} showFallbackAction={cocFallbackVisible} onFallbackAction={() => { clearPendingCocOrder(); setCocFallbackVisible(false); setOrderPlaced(null); navigate("/"); }} />}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal
           data={pendingPaymentData}
@@ -1874,7 +2027,7 @@ function OrderTracking({ orderId }) {
               {order.items.map((line, idx) => (
                 <div key={idx} className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="font-black text-stone-950">{line.name}</p>
-                  <p className="mt-1 text-xs text-stone-600">{line.sizeName || line.size || ""}{line.serveType ? ` • ${line.serveType}` : ""}</p>
+                  <p className="mt-1 text-xs text-stone-600">{normalizeVisibleSizeLabel(line)}{line.serveType ? ` • ${line.serveType}` : ""}</p>
                   <p className="mt-2 text-sm text-stone-700">{formatOrderItemLine(line)}</p>
                 </div>
               ))}
@@ -2257,7 +2410,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               <img src={imageUrl(line.image)} alt="" className="h-20 w-20 rounded-2xl object-cover" />
               <div className="min-w-0 flex-1">
                 <p className="font-black">{line.name}</p>
-                <p className="text-xs font-bold text-stone-500">{line.sizeName}{line.serveType ? ` • ${line.serveType}` : ""} - {rupees(getBasePrice(line))} each</p>
+                <p className="text-xs font-bold text-stone-500">{normalizeVisibleSizeLabel(line)}{line.serveType ? ` • ${line.serveType}` : ""} - {rupees(getBasePrice(line))} each</p>
                 {line.addons?.extraCheese ? (
                   <p className="text-xs mt-1 font-semibold text-stone-600">{getAddonEachText(line)}</p>
                 ) : null}
@@ -2356,20 +2509,45 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
   );
 }
 
-function OrderSuccess({ order, onClose }) {
+function OrderSuccess({ order, onClose, showFallbackAction = false, onFallbackAction }) {
+  const isPendingApproval = Boolean(order?.pendingApproval);
+  const normalizedStatus = normalizeStatus(order?.status || order?.paymentStatus);
+  const isRejected = ["cancelled", "rejected", "payment issue", "payment rejected", "payment_rejected", "payment_issue"].includes(normalizedStatus);
+  const statusLabel = getOrderStatusLabel(order) || (isPendingApproval ? "Pending" : isRejected ? "Cancelled" : "Confirmed");
+  const title = isPendingApproval ? "Request submitted" : isRejected ? "Order cancelled" : "Order placed";
+  const subtitle = isPendingApproval
+    ? "Your cash-on-counter request is awaiting owner approval."
+    : isRejected
+      ? "Order was cancelled by biller."
+      : "Your cafe order is in the kitchen queue.";
+
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/25 p-4 backdrop-blur-sm">
       <div className="glass-card w-full max-w-xl p-6 text-center no-print">
         <Sparkles className="mx-auto text-emerald-700" size={36} />
-        <h2 className="mt-3 text-2xl font-black">{order.pendingApproval ? "Request submitted" : "Order placed"}</h2>
-        <p className="mt-2 text-sm font-semibold text-stone-600">
-          {order.pendingApproval ? "Your cash-on-counter request is awaiting owner approval." : "Your cafe order is in the kitchen queue."}
-        </p>
-        <p className="mt-4 text-3xl font-black">{rupees(order.total)}</p>
-        <p className="mt-2 text-sm uppercase tracking-[0.24em] text-stone-500">Status: {order.status || (order.pendingApproval ? "pending approval" : "new")}</p>
-        <div className="mt-6 flex justify-center">
-          <button onClick={onClose} className="rounded-full bg-black px-6 py-3 font-black text-white">Done</button>
+        <h2 className="mt-3 text-2xl font-black">{title}</h2>
+        <p className="mt-2 text-sm font-semibold text-stone-600">{subtitle}</p>
+
+        <div className="mt-5 flex justify-center">
+          <div className="coc-loading-shell rounded-[1.75rem] border border-white/60 bg-white/35 p-4 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-md">
+            {isPendingApproval && <span className="coc-loading-ring" aria-hidden="true" />}
+            <div className="relative z-10">
+              <p className="text-3xl font-black">{rupees(order.total)}</p>
+              <p className="mt-2 text-sm uppercase tracking-[0.24em] text-stone-500">Status: {statusLabel}</p>
+            </div>
+          </div>
         </div>
+        {showFallbackAction && isPendingApproval && (
+          <div className="mt-5 flex justify-center">
+            <button
+              type="button"
+              onClick={onFallbackAction}
+              className="rounded-full border border-stone-300 bg-white/80 px-5 py-3 text-sm font-black text-stone-700 shadow-sm backdrop-blur-md"
+            >
+              Cancel / Go back to menu
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -2396,16 +2574,29 @@ function BillerApp({ navigate }) {
   const [categories, setCategories] = useState([]);
   const [authLoading, setAuthLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
   const [lastSync, setLastSync] = useState(null);
   const [billerTab, setBillerTab] = useState("orders");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef(null);
 
   async function load() {
     try {
-      const [cocData, itemData, categoryData] = await Promise.all([
-          orderService.listCocRequests().catch(() => []),
-          menuService.getMenu({ includeInactive: true }).catch(() => []),
-          menuService.getCategories().catch(() => [])
-        ]);
+      setLoadError("");
+      const [cocResult, itemResult, categoryResult] = await Promise.allSettled([
+        orderService.listCocRequests(),
+        menuService.getMenu({ includeInactive: true }),
+        menuService.getCategories()
+      ]);
+
+      const cocData = cocResult.status === "fulfilled" ? cocResult.value : [];
+      const itemData = itemResult.status === "fulfilled" ? itemResult.value : [];
+      const categoryData = categoryResult.status === "fulfilled" ? categoryResult.value : [];
+
+      if (cocResult.status === "rejected" || itemResult.status === "rejected" || categoryResult.status === "rejected") {
+        setLoadError("Some biller data could not be loaded. Showing available fallback data.");
+      }
+
       // refresh centralized orders store first so we have latest data
       try { await ordersStore.loadOrders(); } catch (e) {}
       // orders come from centralized ordersStore
@@ -2447,16 +2638,90 @@ function BillerApp({ navigate }) {
   }
 
   useEffect(() => {
-    authService.me().then((data) => setBiller(data.user?.role === "biller" ? data.user.email : null)).finally(() => setAuthLoading(false));
+    let isMounted = true;
+
+    const authRequest = authService.me().then((data) => ({
+      user: data?.user || null
+    }));
+    const timeout = new Promise((resolve) => {
+      setTimeout(() => resolve({ user: null }), 7000);
+    });
+
+    Promise.race([authRequest, timeout])
+      .then((data) => {
+        if (!isMounted) return;
+        setBiller(data.user?.role === "biller" ? data.user.email : null);
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setBiller(null);
+      })
+      .finally(() => {
+        if (isMounted) setAuthLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
     if (!biller) return;
+
+    let isActive = true;
     setPageLoading(true);
-    const unsub = ordersStore.subscribe((data) => setOrders(data || []));
-    Promise.all([ordersStore.loadOrders(), load()]).finally(() => setPageLoading(false));
-    return () => unsub();
+    setLoadError("");
+
+    const unsub = ordersStore.subscribe((data) => {
+      if (isActive) setOrders(data || []);
+    });
+
+    const runLoad = async () => {
+      try {
+        const loadPromise = Promise.allSettled([ordersStore.loadOrders(), load()]);
+        const timeout = new Promise((resolve) => {
+          setTimeout(() => resolve("timeout"), 8000);
+        });
+
+        const result = await Promise.race([loadPromise, timeout]);
+        if (result === "timeout" && isActive) {
+          setLoadError("Biller data is taking longer than expected. Showing the latest available information.");
+        }
+      } catch (error) {
+        if (isActive) setLoadError("Unable to load biller data right now. Showing the latest available information.");
+      } finally {
+        if (isActive) setPageLoading(false);
+      }
+    };
+
+    runLoad();
+
+    return () => {
+      isActive = false;
+      unsub();
+    };
   }, [biller]);
+
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    function handlePointerDown(event) {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
+        setMobileNavOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileNavOpen]);
 
   useEffect(() => {
     if (!biller) return;
@@ -2493,13 +2758,28 @@ function BillerApp({ navigate }) {
   return (
     <OwnerShell>
       <div className="mx-auto max-w-7xl">
+        {loadError && (
+          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {loadError}
+          </div>
+        )}
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-sm font-black text-stone-500">Biller dashboard</p>
             <h1 className="text-4xl font-black tracking-tight">Biller page</h1>
             <p className="mt-1 text-xs text-stone-500">Live sync: {lastSync ? new Date(lastSync).toLocaleTimeString() : "waiting for updates..."}</p>
           </div>
-          <div className="flex flex-col items-end gap-2 relative z-10">
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="rounded-full bg-white p-3 text-stone-700 shadow transition hover:bg-stone-100"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={18} />
+            </button>
+          </div>
+          <div className="hidden md:flex flex-col items-end gap-2 relative z-10">
             <div className="flex gap-2">
               <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
               <button onClick={() => navigate("/owner")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
@@ -2509,6 +2789,55 @@ function BillerApp({ navigate }) {
             </div>
           </div>
         </div>
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-50 bg-stone-950/40 md:hidden" aria-hidden="true">
+            <div className="absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-[#fffaf5] p-4 shadow-2xl" ref={mobileNavRef}>
+              <div className="mb-4 flex items-center justify-between border-b border-stone-200 pb-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.25em] text-stone-500">Biller</p>
+                  <h2 className="text-xl font-black">Navigation</h2>
+                </div>
+                <button type="button" onClick={() => setMobileNavOpen(false)} className="rounded-full bg-white p-2 shadow" aria-label="Close navigation menu"><X size={18} /></button>
+              </div>
+              <div className="space-y-2 overflow-y-auto pb-4">
+                {[
+                  { key: "customer", label: "Customer app", action: () => navigate("/") },
+                  { key: "owner", label: "Owner app", action: () => navigate("/owner") },
+                  { key: "pos", label: "OOC (Order On Counter)", action: () => setBillerTab("pos") }
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => { item.action(); setMobileNavOpen(false); }}
+                    className="w-full rounded-2xl bg-white px-4 py-3 text-left text-sm font-black shadow-sm"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <div className="rounded-2xl bg-white p-3 shadow-sm">
+                  <p className="mb-2 text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Sections</p>
+                  <div className="space-y-2">
+                    {[
+                      { key: "orders", label: "Live Orders" },
+                      { key: "coc", label: "COC Requests" },
+                      { key: "qr", label: "QR Orders" },
+                      { key: "verify", label: "Pending Verification" }
+                    ].map((tabItem) => (
+                      <button
+                        key={tabItem.key}
+                        type="button"
+                        onClick={() => { setBillerTab(tabItem.key); setMobileNavOpen(false); }}
+                        className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-black ${billerTab === tabItem.key ? "bg-black text-white" : "bg-stone-100 text-stone-900"}`}
+                      >
+                        {tabItem.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         <BillerPage orders={orders} cocRequests={cocRequests} items={items} categories={categories} onSaved={load} activeTab={billerTab} onChangeTab={setBillerTab} />
       </div>
     </OwnerShell>
@@ -2516,7 +2845,7 @@ function BillerApp({ navigate }) {
 }
 
 function OwnerShell({ children }) {
-  return <main className="min-h-screen bg-[#f8efe2] p-4 text-stone-950 sm:p-6 lg:p-8">{children}</main>;
+  return <main className="min-h-screen overflow-x-hidden bg-[#f8efe2] p-4 text-stone-950 sm:p-6 lg:p-8">{children}</main>;
 }
 
 function Login({ onLogin, navigate, role }) {
@@ -2692,6 +3021,8 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [sort, setSort] = useState("name");
   const [editingItem, setEditingItem] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const mobileNavRef = useRef(null);
 
   async function load() {
     try {
@@ -2884,9 +3215,42 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     setLocalInventoryItems(saveLocalInventoryItems(nextItems));
   }
 
+  useEffect(() => {
+    if (!mobileNavOpen) return;
+
+    function handlePointerDown(event) {
+      if (mobileNavRef.current && !mobileNavRef.current.contains(event.target)) {
+        setMobileNavOpen(false);
+      }
+    }
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setMobileNavOpen(false);
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mobileNavOpen]);
+
   const deletedSubcategoryCount = Object.values(deletedSubcategories || {}).reduce((total, entries) => total + (Array.isArray(entries) ? entries.length : 0), 0);
   const deletedInventoryItems = localInventoryItems.filter((item) => item?.isDeleted === true);
   const deletedCount = (deletedItems?.length || 0) + (deletedCategories?.length || 0) + deletedSubcategoryCount + deletedInventoryItems.length;
+
+  const ownerTabs = [
+    { key: "items", label: "Items" },
+    { key: "categories", label: "Categories" },
+    { key: "inventory", label: "Inventory" },
+    { key: "stock", label: "Add Stock" },
+    { key: "recipes", label: "Recipe Mapping" },
+    { key: "lowstock", label: "Low Stock" },
+    { key: "reports", label: "Reports" },
+    { key: "history", label: "Order History" },
+    { key: "profit", label: "Total Profit" }
+  ];
 
   const visibleItems = [...items]
     .filter((item) => item?.isDeleted !== true)
@@ -2902,7 +3266,17 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             <h1 className="text-4xl font-black tracking-tight">Owner Dashboard</h1>
             {lastSync && <p className="mt-1 text-xs text-stone-500">Last sync: {new Date(lastSync).toLocaleString()}</p>}
           </div>
-          <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 md:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen(true)}
+              className="rounded-full bg-white p-3 text-stone-700 shadow transition hover:bg-stone-100"
+              aria-label="Open navigation menu"
+            >
+              <Menu size={18} />
+            </button>
+          </div>
+          <div className="hidden md:flex flex-col items-end gap-2">
             <div className="flex gap-2">
               <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
               <button onClick={() => navigate("/biller")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Biller app</button>
@@ -2929,17 +3303,54 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             </div>
           </div>
         </div>
-        <div className="mb-5 flex flex-wrap gap-2">
-          {[
-            { key: "items", label: "Items" },
-            { key: "categories", label: "Categories" },
-            { key: "inventory", label: "Inventory" },
-            { key: "stock", label: "Add Stock" },
-            { key: "recipes", label: "Recipe Mapping" },
-            { key: "lowstock", label: "Low Stock" },
-            { key: "reports", label: "Reports" },
-            { key: "history", label: "Order History" }
-          ].map((tabItem) => (
+        {mobileNavOpen && (
+          <div className="fixed inset-0 z-50 bg-stone-950/40 md:hidden" aria-hidden="true">
+            <div className="absolute inset-y-0 left-0 flex w-80 max-w-[85vw] flex-col bg-[#fffaf5] p-4 shadow-2xl" ref={mobileNavRef}>
+              <div className="mb-4 flex items-center justify-between border-b border-stone-200 pb-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.25em] text-stone-500">Owner</p>
+                  <h2 className="text-xl font-black">Navigation</h2>
+                </div>
+                <button type="button" onClick={() => setMobileNavOpen(false)} className="rounded-full bg-white p-2 shadow" aria-label="Close navigation menu"><X size={18} /></button>
+              </div>
+              <div className="space-y-2 overflow-y-auto pb-4">
+                {[
+                  { key: "customer", label: "Customer app", action: () => navigate("/") },
+                  { key: "biller", label: "Biller app", action: () => navigate("/biller") },
+                  { key: "deleted", label: `Recently Deleted (${deletedCount})`, action: () => { setTab("deleted"); setMobileNavOpen(false); } },
+                  ...(tab === "biller" ? [{ key: "ooc", label: "OOC (Order On Counter)", action: () => { setTab("biller"); setInitialBillerTab("pos"); setMobileNavOpen(false); } }] : [])
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    onClick={() => { item.action(); setMobileNavOpen(false); }}
+                    className="w-full rounded-2xl bg-white px-4 py-3 text-left text-sm font-black shadow-sm"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+                <div className="rounded-2xl bg-white p-3 shadow-sm">
+                  <p className="mb-2 text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Sections</p>
+                  <div className="space-y-2">
+                    {ownerTabs.map((tabItem) => (
+                      <button
+                        key={tabItem.key}
+                        type="button"
+                        onClick={() => { setTab(tabItem.key); setMobileNavOpen(false); }}
+                        className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : "bg-stone-100 text-stone-900"}`}
+                      >
+                        {tabItem.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <button type="button" onClick={() => { logout(); setMobileNavOpen(false); }} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-black px-4 py-3 text-sm font-black text-white shadow-sm"><LogOut size={17} /> Logout</button>
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="mb-5 hidden md:flex flex-wrap gap-2">
+          {ownerTabs.map((tabItem) => (
             <button key={tabItem.key} onClick={() => setTab(tabItem.key)} className={`rounded-full px-5 py-3 text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : "bg-white"}`}>
               {tabItem.label}
             </button>
@@ -2947,12 +3358,12 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
         </div>
         {tab === "items" && (
           <section className="grid gap-5 lg:grid-cols-[1fr_430px]">
-            <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-              <div className="mb-4 flex flex-wrap gap-3">
-                <label className="flex flex-1 items-center gap-2 rounded-full bg-stone-100 px-4 py-2"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items" className="w-full bg-transparent text-sm font-bold outline-none" /></label>
-                <label className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2"><SlidersHorizontal size={18} /><select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent text-sm font-bold outline-none"><option value="name">Name</option><option value="price">Base price</option></select></label>
+            <div className="order-2 md:order-1 rounded-[1.5rem] bg-white p-4 shadow-sm">
+              <div className="mb-4 flex flex-col gap-3 md:flex-row md:flex-wrap">
+                <label className="flex w-full items-center gap-2 rounded-full bg-stone-100 px-4 py-2 md:flex-1"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items" className="w-full bg-transparent text-sm font-bold outline-none" /></label>
+                <label className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 md:ml-auto"><SlidersHorizontal size={18} /><select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent text-sm font-bold outline-none"><option value="name">Name</option><option value="price">Base price</option></select></label>
               </div>
-              <div className="overflow-x-auto">
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[860px] text-left text-sm">
                   <thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-3">Item</th><th>Category</th><th>Sub Category</th><th>Sizes</th><th>Status</th><th></th></tr></thead>
                   <tbody>
@@ -2974,8 +3385,30 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                   </tbody>
                 </table>
               </div>
+              <div className="space-y-3 md:hidden">
+                {visibleItems.map((item) => (
+                  <article key={item.id} className="rounded-[1.5rem] bg-stone-50 p-4 shadow-sm ring-1 ring-stone-200">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-black text-stone-950">{item.name}</h3>
+                        <p className="text-sm text-stone-600">{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId} • {item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</p>
+                      </div>
+                      <span className={`rounded-full px-3 py-1 text-xs font-black ${item.active ? "bg-emerald-100 text-emerald-700" : "bg-stone-200 text-stone-700"}`}>{item.active ? "Active" : "Hidden"}</span>
+                    </div>
+                    <div className="mt-3 text-sm text-stone-700">
+                      <p className="font-semibold">{item.sizes.map((size) => `${size.label} ${rupees(size.price)}`).join(" / ")}</p>
+                    </div>
+                    <div className="mt-4 flex items-center justify-end gap-2">
+                      <button onClick={() => setEditingItem(item)} className="rounded-full bg-white px-3 py-2 text-sm font-black shadow-sm" aria-label={`Edit ${item.name}`}>Edit</button>
+                      <button onClick={() => setPendingDelete({ type: "item", id: item.id, name: item.name })} className="rounded-full bg-rose-50 px-3 py-2 text-sm font-black text-rose-700 shadow-sm" aria-label={`Delete ${item.name}`}>Delete</button>
+                    </div>
+                  </article>
+                ))}
+              </div>
             </div>
-            <ItemForm categories={categories} editingItem={editingItem} onCancelEdit={() => setEditingItem(null)} onSaved={() => { setEditingItem(null); load(); }} />
+            <div className="order-1 md:order-2">
+              <ItemForm categories={categories} editingItem={editingItem} onCancelEdit={() => setEditingItem(null)} onSaved={() => { setEditingItem(null); load(); }} />
+            </div>
           </section>
         )}
         {tab === "categories" && <CategoryAdmin categories={categories} onSaved={load} />}
@@ -2998,8 +3431,9 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
         {tab === "stock" && <AddStockPage rawMaterials={rawMaterials} onSaved={load} />}
         {tab === "recipes" && <RecipeMapping items={items} rawMaterials={rawMaterials} recipes={recipes} onSaved={load} />}
         {tab === "lowstock" && <LowStockAlerts rawMaterials={rawMaterials} />}
-        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} />}
+        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
         {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(orders, cocRequests)} />}
+        {tab === "profit" && <TotalProfitPage orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
       </div>
       <ConfirmDialog
         open={Boolean(pendingDelete)}
@@ -3014,6 +3448,41 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   );
 }
 
+function mergeBillerOrders(orders, cocRequests) {
+  const liveOrders = Array.isArray(orders) ? orders : [];
+  const pendingCocRequests = Array.isArray(cocRequests) ? cocRequests : [];
+  const seen = new Map();
+
+  liveOrders.forEach((order) => {
+    const key = order?.orderId || order?._id || order?.id;
+    if (key) seen.set(key, { ...order });
+  });
+
+  pendingCocRequests.forEach((request) => {
+    const key = request?.orderId || request?._id || request?.id;
+    if (!key) return;
+    if (!seen.has(key)) {
+      seen.set(key, {
+        ...request,
+        id: request?.id || request?._id || request?.orderId,
+        _id: request?._id || request?.id || request?.orderId,
+        orderType: request?.orderType || "COC",
+        paymentMethod: request?.paymentMethod || "cash",
+        status: normalizeStatus(request?.status || "pending"),
+        paymentStatus: normalizeStatus(request?.paymentStatus || "pending"),
+        _source: "coc",
+        pendingApproval: true
+      });
+    }
+  });
+
+  return Array.from(seen.values()).sort((left, right) => {
+    const leftTime = new Date(left?.createdAt || left?.updatedAt || 0).getTime();
+    const rightTime = new Date(right?.createdAt || right?.updatedAt || 0).getTime();
+    return rightTime - leftTime;
+  });
+}
+
 function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab = null, onChangeTab, initialTab = null }) {
   const [internalTab, setInternalTab] = useState((activeTab ?? initialTab) || "orders");
   const [seenPendingVerificationCount, setSeenPendingVerificationCount] = useState(0);
@@ -3023,9 +3492,11 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
   const billerTab = activeTab ?? internalTab;
   const firstBillerRender = useRef(true);
 
+  const liveOrders = useMemo(() => mergeBillerOrders(orders, cocRequests), [orders, cocRequests]);
+
   const pendingVerificationOrders = useMemo(() => {
-    return (orders || []).filter(isPendingVerificationOrder);
-  }, [orders]);
+    return (liveOrders || []).filter(isPendingVerificationOrder);
+  }, [liveOrders]);
 
   const pendingVerificationCount = pendingVerificationOrders.length;
   const cocRequestCount = (cocRequests || []).length;
@@ -3100,11 +3571,11 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
       </div>
 
       <div>
-        {billerTab === "orders" && <OrderAdmin orders={orders} onSaved={onSaved} hideWarnings={true} />}
+        {billerTab === "orders" && <OrderAdmin orders={liveOrders} onSaved={onSaved} hideWarnings={true} />}
         {billerTab === "coc" && <CocAdmin cocRequests={cocRequests} onSaved={onSaved} />}
         {billerTab === "pos" && <PosBilling items={items} categories={categories} onSaved={onSaved} />}
-        {billerTab === "qr" && <QrOrders orders={orders} onSaved={onSaved} hideWarnings={true} />}
-        {billerTab === "verify" && <PendingVerification orders={orders} onSaved={onSaved} />}
+        {billerTab === "qr" && <QrOrders orders={liveOrders} onSaved={onSaved} hideWarnings={true} />}
+        {billerTab === "verify" && <PendingVerification orders={liveOrders} onSaved={onSaved} />}
       </div>
     </section>
   );
@@ -3223,8 +3694,9 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
     // Live Orders should include all active orders regardless of source or payment method.
     // Do not filter by source, orderType, paymentMethod, isCounterOrder, or isQrOrder.
     const status = normalizeStatus(order?.status);
-    const activeStatuses = new Set(["pending", "confirmed", "preparing", "ready"]);
-    return activeStatuses.has(status);
+    const paymentStatus = normalizeStatus(order?.paymentStatus);
+    const activeStatuses = new Set(["pending", "confirmed", "preparing", "ready", "new"]);
+    return activeStatuses.has(status) || activeStatuses.has(paymentStatus);
   }
 
   function printOrder(order, copyType = "customer") {
@@ -3362,13 +3834,6 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
               <button onClick={() => openPreview(safeOrder, 'both')} className="rounded-full bg-stone-600 px-4 py-2 text-sm font-black text-white">Print Both</button>
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-stone-50 p-4 text-sm text-stone-700">
-            <label className="flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2">
-              <input type="checkbox" checked={(printConfig[safeOrder._id || safeOrder.id] || {}).autoPrint || false} onChange={() => setPrintOption(safeOrder._id || safeOrder.id, 'autoPrint', !((printConfig[safeOrder._id || safeOrder.id] || {}).autoPrint))} className="h-4 w-4 accent-black" />
-              Auto Print
-            </label>
-            <span className="text-xs uppercase tracking-[0.2em] text-stone-500">Print from biller panel only</span>
-          </div>
           {!hideWarnings && orderWarnings.length > 0 && (
             <div className="mt-3 rounded-[1.5rem] bg-amber-50 p-4 text-sm font-semibold text-amber-900">
               <p className="font-black">Inventory warnings</p>
@@ -3494,7 +3959,7 @@ function CocAdmin({ cocRequests, onSaved }) {
   );
 }
 
-function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
+function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChanged }) {
   const [inventoryItems, setInventoryItems] = useState([]);
   const [editingItem, setEditingItem] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
@@ -3546,12 +4011,19 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
     return "In Stock";
   }
 
-  function validateForm() {
+  function validateForm(requirePurchasePrice = false) {
     if (!form.name.trim()) return "Item name is required.";
     if (!form.quantity || isNaN(Number(form.quantity))) return "Quantity must be a valid number.";
     if (!form.unit) return "Unit is required.";
     if (!form.minStock || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
-    if (form.purchasePrice && isNaN(Number(form.purchasePrice))) return "Purchase price must be a valid number.";
+    const purchasePriceValue = form.purchasePrice === "" ? NaN : Number(form.purchasePrice);
+    if (requirePurchasePrice) {
+      if (form.purchasePrice === "" || isNaN(purchasePriceValue) || purchasePriceValue <= 0) {
+        return "Purchase Price is required.";
+      }
+    } else if (form.purchasePrice && isNaN(purchasePriceValue)) {
+      return "Purchase price must be a valid number.";
+    }
     return "";
   }
 
@@ -3559,15 +4031,17 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
     event.preventDefault();
     setMessage("");
     
-    const error = validateForm();
+    const error = validateForm(!editingItem);
     if (error) {
       setMessage(error);
       setMessageType("error");
       return;
     }
 
+    const purchasePriceValue = form.purchasePrice === "" ? null : Number(form.purchasePrice);
     let updatedItems;
     if (editingItem) {
+      const editedPrice = purchasePriceValue === null ? editingItem.purchasePrice : purchasePriceValue;
       updatedItems = inventoryItems.map(item => 
         item.id === editingItem.id
           ? {
@@ -3576,7 +4050,7 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
               quantity: Number(form.quantity),
               unit: form.unit,
               minStock: Number(form.minStock),
-              purchasePrice: Number(form.purchasePrice) || 0,
+              purchasePrice: editedPrice === null || Number.isNaN(editedPrice) ? item.purchasePrice : editedPrice,
               supplier: form.supplier.trim(),
               lastUpdated: new Date().toISOString()
             }
@@ -3590,7 +4064,7 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
         quantity: Number(form.quantity),
         unit: form.unit,
         minStock: Number(form.minStock),
-        purchasePrice: Number(form.purchasePrice) || 0,
+        purchasePrice: purchasePriceValue,
         supplier: form.supplier.trim(),
         lastUpdated: new Date().toISOString()
       };
@@ -3686,113 +4160,17 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
 
   return (
     <section className="space-y-5">
-      {/* Summary Cards */}
-      <div className="grid gap-3 sm:grid-cols-4">
-        <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-          <p className="text-xs font-bold text-stone-500">Total Items</p>
-          <p className="mt-2 text-2xl font-black">{activeItems.length}</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-orange-50 p-4 shadow-sm">
-          <p className="text-xs font-bold text-orange-600">Low Stock</p>
-          <p className="mt-2 text-2xl font-black text-orange-700">{lowStockCount}</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-red-50 p-4 shadow-sm">
-          <p className="text-xs font-bold text-red-600">Out of Stock</p>
-          <p className="mt-2 text-2xl font-black text-red-700">{outOfStockCount}</p>
-        </div>
-        <div className="rounded-[1.5rem] bg-emerald-50 p-4 shadow-sm">
-          <p className="text-xs font-bold text-emerald-600">Total Value</p>
-          <p className="mt-2 text-2xl font-black text-emerald-700">{rupees(totalValue)}</p>
-        </div>
-      </div>
-
-      {/* Main Grid */}
-      <div className="grid gap-5 lg:grid-cols-[1fr_380px]">
-        {/* Inventory Table */}
-        <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-black">Inventory items</h2>
-            <button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button>
-          </div>
-          
-          {/* Search and Filter */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row">
-            <input
-              placeholder="Search by item name..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              className="field flex-1 bg-stone-50"
-            />
-            <select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)} className="field bg-stone-50">
-              <option value="all">All items</option>
-              <option value="in">In Stock</option>
-              <option value="low">Low Stock</option>
-              <option value="out">Out of Stock</option>
-            </select>
-          </div>
-
-          {/* Inventory Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px] text-left text-sm">
-              <thead>
-                <tr className="border-b text-xs uppercase text-stone-500">
-                  <th className="py-3">Item Name</th>
-                  <th>Stock</th>
-                  <th>Min Stock</th>
-                  <th>Status</th>
-                  <th>Price</th>
-                  <th>Supplier</th>
-                  <th>Last Updated</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredItems.length > 0 ? (
-                  filteredItems.map((item) => {
-                    const status = getStockStatus(item.quantity, item.minStock);
-                    const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600";
-                    return (
-                      <tr key={item.id} className="border-b last:border-0">
-                        <td className="py-3 font-black">{item.name}</td>
-                        <td>{item.quantity} {item.unit}</td>
-                        <td>{item.minStock} {item.unit}</td>
-                        <td><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td>
-                        <td>{rupees(item.purchasePrice || 0)}</td>
-                        <td className="text-xs text-stone-500">{item.supplier || "-"}</td>
-                        <td className="text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td>
-                        <td className="text-right">
-                          <div className="flex gap-1 justify-end">
-                            <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button>
-                            <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button>
-                            <button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button>
-                            <button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found. Click "New item" to add one.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
-          <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex flex-col gap-5 lg:hidden">
+        <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
             <h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>
             {editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}
           </div>
-          
           <div className="space-y-3">
-            <input required className="field bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <input required type="number" className="field bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} />
-              <select required className="field bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}>
+            <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+            <div className="grid w-full grid-cols-1 gap-3">
+              <input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} />
+              <select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}>
                 <option value="">Select unit</option>
                 <option value="kg">kg</option>
                 <option value="gram">gram</option>
@@ -3803,21 +4181,90 @@ function InventoryAdmin({ rawMaterials, onSaved, onInventoryChanged }) {
                 <option value="bottle">bottle</option>
               </select>
             </div>
-            <input required type="number" className="field bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
-            <input type="number" className="field bg-stone-50" placeholder="Purchase price (optional)" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
-            <input className="field bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
-
-            {message && (
-              <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>
-                {message}
-              </p>
-            )}
-            
-            <button disabled={!!validateForm()} className="w-full rounded-full bg-black px-5 py-4 font-black text-white">
-              {editingItem ? "Update item" : "Add item"}
-            </button>
+            <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
+            <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
+            <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
+            {message && (<p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>)}
+            <button disabled={!!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{editingItem ? "Update item" : "Add item"}</button>
           </div>
         </form>
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-[1.5rem] bg-white p-4 shadow-sm"><p className="text-xs font-bold text-stone-500">Total Items</p><p className="mt-2 text-2xl font-black">{activeItems.length}</p></div>
+          <div className="rounded-[1.5rem] bg-orange-50 p-4 shadow-sm"><p className="text-xs font-bold text-orange-600">Low Stock</p><p className="mt-2 text-2xl font-black text-orange-700">{lowStockCount}</p></div>
+          <div className="rounded-[1.5rem] bg-red-50 p-4 shadow-sm"><p className="text-xs font-bold text-red-600">Out of Stock</p><p className="mt-2 text-2xl font-black text-red-700">{outOfStockCount}</p></div>
+          <div className="rounded-[1.5rem] bg-emerald-50 p-4 shadow-sm"><p className="text-xs font-bold text-emerald-600">Total Value</p><p className="mt-2 text-2xl font-black text-emerald-700">{rupees(totalValue)}</p></div>
+        </div>
+
+        <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-xl font-black">Inventory items</h2>
+            <button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button>
+          </div>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+            <input placeholder="Search by item name..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="field w-full flex-1 bg-stone-50" />
+            <select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)} className="field w-full bg-stone-50 sm:max-w-[220px]">
+              <option value="all">All items</option>
+              <option value="in">In Stock</option>
+              <option value="low">Low Stock</option>
+              <option value="out">Out of Stock</option>
+            </select>
+          </div>
+          <div className="space-y-3">
+            {filteredItems.length > 0 ? filteredItems.map((item) => {
+              const status = getStockStatus(item.quantity, item.minStock);
+              const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600";
+              return (
+                <article key={item.id} className="rounded-[1.25rem] border border-stone-200 bg-stone-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-base font-black">{item.name}</h3>
+                      <p className="text-sm text-stone-600">{item.quantity} {item.unit} • {rupees(item.purchasePrice || 0)}</p>
+                    </div>
+                    <span className={`rounded-full px-3 py-1 text-xs font-black ${statusClass}`}>{status}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-stone-500">Min stock: {item.minStock} {item.unit} • Supplier: {item.supplier || "-"}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">-</button>
+                    <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">+</button>
+                    <button onClick={() => handleEdit(item)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">Edit</button>
+                    <button type="button" onClick={() => handleDelete(item)} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 shadow-sm">Delete</button>
+                  </div>
+                </article>
+              );
+            }) : <p className="rounded-[1.25rem] border border-dashed border-stone-200 bg-stone-50 p-4 text-sm text-stone-500">No inventory items found. Click “New item” to add one.</p>}
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden lg:block">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="rounded-[1.5rem] bg-white p-4 shadow-sm"><p className="text-xs font-bold text-stone-500">Total Items</p><p className="mt-2 text-2xl font-black">{activeItems.length}</p></div>
+          <div className="rounded-[1.5rem] bg-orange-50 p-4 shadow-sm"><p className="text-xs font-bold text-orange-600">Low Stock</p><p className="mt-2 text-2xl font-black text-orange-700">{lowStockCount}</p></div>
+          <div className="rounded-[1.5rem] bg-red-50 p-4 shadow-sm"><p className="text-xs font-bold text-red-600">Out of Stock</p><p className="mt-2 text-2xl font-black text-red-700">{outOfStockCount}</p></div>
+          <div className="rounded-[1.5rem] bg-emerald-50 p-4 shadow-sm"><p className="text-xs font-bold text-emerald-600">Total Value</p><p className="mt-2 text-2xl font-black text-emerald-700">{rupees(totalValue)}</p></div>
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_380px]">
+          <div className="min-w-0 rounded-[1.5rem] bg-white p-4 shadow-sm">
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Inventory items</h2><button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button></div>
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row"><input placeholder="Search by item name..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="field w-full flex-1 bg-stone-50" /><select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)} className="field w-full bg-stone-50 sm:max-w-[220px]"><option value="all">All items</option><option value="in">In Stock</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select></div>
+            <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-3">Item Name</th><th>Stock</th><th>Min Stock</th><th>Status</th><th>Price</th><th>Supplier</th><th>Last Updated</th><th>Actions</th></tr></thead><tbody>{filteredItems.length > 0 ? filteredItems.map((item) => { const status = getStockStatus(item.quantity, item.minStock); const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600"; return (<tr key={item.id} className="border-b last:border-0"><td className="py-3 font-black">{item.name}</td><td>{item.quantity} {item.unit}</td><td>{item.minStock} {item.unit}</td><td><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td><td>{rupees(item.purchasePrice || 0)}</td><td className="text-xs text-stone-500">{item.supplier || "-"}</td><td className="text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td><td className="text-right"><div className="flex gap-1 justify-end"><button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button><button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button><button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button><button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button></div></td></tr>); }) : <tr><td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found. Click "New item" to add one.</td></tr>}</tbody></table></div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
+            <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>{editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}</div>
+            <div className="space-y-3">
+              <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"><input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /><select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option value="">Select unit</option><option value="kg">kg</option><option value="gram">gram</option><option value="liter">liter</option><option value="ml">ml</option><option value="pcs">pcs</option><option value="packet">packet</option><option value="bottle">bottle</option></select></div>
+              <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
+              <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
+              <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
+              {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>}
+              <button disabled={!!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{editingItem ? "Update item" : "Add item"}</button>
+            </div>
+          </form>
+        </div>
       </div>
 
       <ConfirmDialog
@@ -4110,7 +4557,7 @@ function LowStockAlerts({ rawMaterials }) {
   );
 }
 
-function ReportsPage({ reports, items, orders = [] }) {
+function ReportsPage({ reports, items, orders = [], rawMaterials = [], recipes = [] }) {
   const savedReports = reports || {};
   const savedItems = Array.isArray(items) ? items : [];
   const savedOrders = Array.isArray(orders) ? orders : [];
@@ -4145,15 +4592,21 @@ function ReportsPage({ reports, items, orders = [] }) {
   }
   
   const enrichedTopItems = topItems.map((record) => ({ ...record, name: savedItems.find((item) => item.id === record.itemId)?.name || record.itemId }));
+  const { totalSales: todaySales, inventoryCostUsed: todayInventoryCostUsed, totalProfit } = calculateTodayTotalProfit(savedOrders, rawMaterials, recipes);
+
   return (
     <section className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
+      <div className="mt-5 grid gap-5 lg:mt-0 lg:grid-cols-[1fr_360px]">
         <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
           <h2 className="text-xl font-black">Inventory & sales reports</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Total sales</p>
               <p className="mt-3 text-3xl font-black">{rupees(totalSales || 0)}</p>
+            </div>
+            <div className="rounded-[1.5rem] bg-stone-50 p-5">
+              <p className="text-sm font-semibold text-stone-500">Total Profit</p>
+              <p className={`mt-3 text-3xl font-black ${totalProfit >= 0 ? "text-emerald-700" : "text-red-600"}`}>{rupees(totalProfit || 0)}</p>
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Total orders</p>
@@ -4298,7 +4751,7 @@ function SalesAnalytics({ orders = [] }) {
   return (
     <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
       <h2 className="text-xl font-black">Sales Analysis</h2>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex gap-2 overflow-x-auto pb-1 scroll-smooth md:flex-wrap md:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {filterButtons.map((btn) => (
           <button
             key={btn.key}
@@ -4308,7 +4761,7 @@ function SalesAnalytics({ orders = [] }) {
                 setCustomError("");
               }
             }}
-            className={`rounded-full px-4 py-2 text-sm font-black transition ${
+            className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-black transition ${
               filterType === btn.key ? "bg-black text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"
             }`}
           >
@@ -4412,6 +4865,256 @@ function SalesAnalytics({ orders = [] }) {
         )}
       </div>
     </div>
+  );
+}
+
+function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [] }) {
+  const savedOrders = Array.isArray(orders) ? orders : [];
+  const [selectedFilter, setSelectedFilter] = useState("today");
+  const [customStartDate, setCustomStartDate] = useState("");
+  const [customEndDate, setCustomEndDate] = useState("");
+  const [customError, setCustomError] = useState("");
+
+  const filters = [
+    { key: "today", label: "Today" },
+    { key: "lastWeek", label: "Last Week" },
+    { key: "lastMonth", label: "Last Month" },
+    { key: "last3Months", label: "Last 3 Months" },
+    { key: "last6Months", label: "Last 6 Months" },
+    { key: "custom", label: "Custom Date" }
+  ];
+
+  function getActiveRange() {
+    const today = new Date();
+    const end = endOfDay(today);
+    if (selectedFilter === "today") {
+      return { start: startOfDay(today), end, label: "Today" };
+    }
+    if (selectedFilter === "lastWeek") {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 6);
+      return { start: startOfDay(start), end, label: "Last 7 days" };
+    }
+    if (selectedFilter === "lastMonth") {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 29);
+      return { start: startOfDay(start), end, label: "Last 30 days" };
+    }
+    if (selectedFilter === "last3Months") {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 89);
+      return { start: startOfDay(start), end, label: "Last 90 days" };
+    }
+    if (selectedFilter === "last6Months") {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 179);
+      return { start: startOfDay(start), end, label: "Last 180 days" };
+    }
+    if (selectedFilter === "custom") {
+      if (!customStartDate && !customEndDate) {
+        return null;
+      }
+
+      const start = customStartDate ? new Date(customStartDate) : null;
+      const endDate = customEndDate ? new Date(customEndDate) : null;
+
+      if ((start && Number.isNaN(start.getTime())) || (endDate && Number.isNaN(endDate.getTime()))) {
+        return null;
+      }
+
+      const effectiveStart = start || endDate;
+      const effectiveEnd = endDate || start;
+      if (!effectiveStart || !effectiveEnd || effectiveEnd < effectiveStart) {
+        return null;
+      }
+
+      return {
+        start: startOfDay(effectiveStart),
+        end: endOfDay(effectiveEnd),
+        label: `${effectiveStart.toISOString().slice(0, 10)} to ${effectiveEnd.toISOString().slice(0, 10)}`
+      };
+    }
+
+    return null;
+  }
+
+  function calculateProfitForRange(ordersToCalculate, range) {
+    if (!range || !range.start || !range.end) {
+      return { totalSales: 0, inventoryCostUsed: 0, totalProfit: 0 };
+    }
+
+    const filteredOrders = Array.isArray(ordersToCalculate)
+      ? ordersToCalculate.filter((order) => {
+          const orderDate = getOrderDate(order);
+          return orderDate !== null && orderDate >= range.start && orderDate <= range.end && isCompletedSale(order);
+        })
+      : [];
+
+    const totalSales = filteredOrders.reduce((sum, order) => sum + Number(order?.total ?? order?.totalAmount ?? order?.grandTotal ?? 0), 0);
+
+    let inventoryCostUsed = 0;
+    filteredOrders.forEach((order) => {
+      if (!Array.isArray(order.items)) return;
+      order.items.forEach((line) => {
+        const qty = Number(line.quantity ?? line.qty ?? 1) || 0;
+        const itemId = line.itemId || line.id || line.productId || line.menuItemId || "";
+        const recipe = Array.isArray(recipes) ? recipes.find((r) => r.itemId === itemId || r.id === itemId) : null;
+        if (!recipe || !Array.isArray(recipe.ingredients)) return;
+        let costPerMenuItem = 0;
+        recipe.ingredients.forEach((ingredient) => {
+          const raw = Array.isArray(rawMaterials) ? rawMaterials.find((material) => material.id === ingredient.rawMaterialId) : null;
+          const unitCost = Number(raw?.costPerUnit ?? raw?.purchasePrice ?? raw?.purchase_price ?? raw?.unitCost ?? raw?.price ?? raw?.unitPrice ?? 0) || 0;
+          const amount = Number(ingredient.amount ?? 0) || 0;
+          costPerMenuItem += amount * unitCost;
+        });
+        inventoryCostUsed += costPerMenuItem * qty;
+      });
+    });
+
+    return {
+      totalSales,
+      inventoryCostUsed,
+      totalProfit: totalSales - inventoryCostUsed
+    };
+  }
+
+  const activeRange = getActiveRange();
+  const { totalSales, inventoryCostUsed, totalProfit } = useMemo(
+    () => calculateProfitForRange(savedOrders, activeRange),
+    [savedOrders, rawMaterials, recipes, activeRange?.start?.toISOString(), activeRange?.end?.toISOString()]
+  );
+
+  function handleFilterSelect(filterKey) {
+    setSelectedFilter(filterKey);
+    setCustomError("");
+  }
+
+  function applyCustomRange() {
+    if (!customStartDate && !customEndDate) {
+      setCustomError("Please select a start or end date.");
+      return;
+    }
+
+    const start = customStartDate ? new Date(customStartDate) : null;
+    const endDate = customEndDate ? new Date(customEndDate) : null;
+
+    if ((start && Number.isNaN(start.getTime())) || (endDate && Number.isNaN(endDate.getTime()))) {
+      setCustomError("Please select valid dates.");
+      return;
+    }
+
+    const effectiveStart = start || endDate;
+    const effectiveEnd = endDate || start;
+    if (!effectiveStart || !effectiveEnd) {
+      setCustomError("Please select a valid date range.");
+      return;
+    }
+
+    if (effectiveEnd < effectiveStart) {
+      setCustomError("Start date cannot be after end date.");
+      return;
+    }
+
+    setCustomError("");
+  }
+
+  const selectedLabel = activeRange?.label || (selectedFilter === "custom" ? "Custom date" : "Date Range");
+
+  return (
+    <section className="space-y-5">
+      <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-black">{selectedLabel} Profit</h2>
+            <p className="mt-2 text-sm font-semibold text-stone-600">
+              Calculated from completed QR/COC orders using recipe-based inventory cost.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex gap-2 overflow-x-auto pb-1 scroll-smooth md:flex-wrap md:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {filters.map((button) => (
+            <button
+              key={button.key}
+              type="button"
+              onClick={() => handleFilterSelect(button.key)}
+              className={`shrink-0 whitespace-nowrap rounded-full px-4 py-3 text-sm font-black ${selectedFilter === button.key ? "bg-black text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}
+            >
+              {button.label}
+            </button>
+          ))}
+        </div>
+
+        {selectedFilter === "custom" && (
+          <div className="mt-4 flex flex-wrap gap-3 items-end">
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-stone-600 mb-1">From Date</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(event) => setCustomStartDate(event.target.value)}
+                className="px-3 py-2 border border-stone-200 rounded-lg bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="text-xs font-semibold text-stone-600 mb-1">To Date</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(event) => setCustomEndDate(event.target.value)}
+                className="px-3 py-2 border border-stone-200 rounded-lg bg-stone-50 text-sm focus:outline-none focus:ring-2 focus:ring-black"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={applyCustomRange}
+              className="rounded-full bg-black px-5 py-3 text-sm font-black text-white hover:bg-stone-800"
+            >
+              Apply
+            </button>
+            {customError && <p className="w-full text-sm text-rose-600">{customError}</p>}
+          </div>
+        )}
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="rounded-[1.5rem] bg-stone-50 p-6">
+            <p className="text-sm font-semibold text-stone-500">Total Sales</p>
+            <p className="mt-4 text-4xl font-black text-stone-900">{rupees(totalSales || 0)}</p>
+          </div>
+
+          <div className="rounded-[1.5rem] bg-orange-50 p-6">
+            <p className="text-sm font-semibold text-orange-600">Inventory Cost Used</p>
+            <p className="mt-4 text-4xl font-black text-orange-700">{rupees(inventoryCostUsed || 0)}</p>
+          </div>
+
+          <div className={`rounded-[1.5rem] p-6 shadow-sm ${totalProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}`}>
+            <p className={`text-sm font-semibold ${totalProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>Total Profit</p>
+            <p className={`mt-4 text-4xl font-black ${totalProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{rupees(totalProfit || 0)}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 rounded-[1.5rem] bg-stone-50 p-5">
+          <p className="text-sm font-bold text-stone-700">Formula</p>
+          <p className="mt-3 font-mono text-sm text-stone-600">
+            <span className="font-bold text-stone-900">Profit</span> = <span className="font-bold text-stone-900">Total Sales</span> - <span className="font-bold text-stone-900">Inventory Cost Used</span>
+          </p>
+          <p className="mt-2 font-mono text-sm text-stone-600">
+            {rupees(totalSales || 0)} - {rupees(inventoryCostUsed || 0)} = <span className={`font-bold ${totalProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{rupees(totalProfit || 0)}</span>
+          </p>
+        </div>
+
+        <div className="mt-6 rounded-[1.5rem] bg-blue-50 p-5">
+          <p className="text-sm font-bold text-blue-700">ℹ️ How Profit is Calculated</p>
+          <ul className="mt-3 space-y-2 text-sm text-blue-900">
+            <li>✓ Includes completed QR (Quick Response) and COC (Cash-On-Counter) orders in the selected date range</li>
+            <li>✓ Inventory cost is calculated using recipe mappings (how much raw material each item uses)</li>
+            <li>✓ Raw material costs are based on their unit cost stored in inventory</li>
+            <li>✓ Missing recipe mappings are treated as 0 cost (not included)</li>
+            <li>✗ Cancelled, payment-rejected, or unpaid orders are excluded</li>
+          </ul>
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -555,6 +555,7 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
   try {
     const order = await store.approveCocRequest(req.params.id);
     if (!order) return res.status(404).json({ message: "COC request not found" });
+    cacheOrder(order);
     res.json(order);
     scheduleOrderReadySms(order);
     try {

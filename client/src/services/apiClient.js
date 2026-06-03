@@ -28,9 +28,9 @@ async function rawFetch(path, options = {}) {
   try {
     response = await fetch(url, opts);
   } catch (err) {
-    // network/backend down - fallback to demoMode where appropriate
-    if (!demoMode.isDemoModeEnabled()) {
-      devLog("Backend unavailable, enabling demo mode");
+    // network/backend down - do not enable demo mode automatically in production
+    if (!demoMode.isDemoModeEnabled() && import.meta.env.DEV) {
+      devLog("Backend unavailable, enabling demo mode (dev only)");
       demoMode.setDemoMode(true);
     }
     if (path.startsWith("/categories")) {

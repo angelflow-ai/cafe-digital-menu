@@ -41,13 +41,20 @@ export function getItemLineTotal(item) {
   return baseUnitPrice * quantity + addonsTotal;
 }
 
+function normalizeVisibleSizeLabel(item) {
+  const rawLabel = item?.sizeName || item?.size || item?.variant || "";
+  return String(rawLabel).trim().toLowerCase() === "regular" ? "" : rawLabel;
+}
+
 export function getItemDisplayLines(item) {
   const quantity = getItemQuantity(item);
   const baseUnitPrice = getBaseUnitPrice(item);
-  const sizeLabel = item.sizeName || item.size || "Regular";
+  const sizeLabel = normalizeVisibleSizeLabel(item);
   const serveText = item.serveType ? ` • ${item.serveType}` : "";
+  const sizePart = sizeLabel ? `${sizeLabel}${serveText}` : serveText;
+  const separator = sizePart ? " - " : "";
   const baseLine = {
-    description: `${item.name || item.itemId || "Item"} - ${sizeLabel}${serveText} - ${quantity} x ${rupees(baseUnitPrice)} = ${rupees(baseUnitPrice * quantity)}`,
+    description: `${item.name || item.itemId || "Item"}${separator}${sizePart} - ${quantity} x ${rupees(baseUnitPrice)} = ${rupees(baseUnitPrice * quantity)}`,
     isAddon: false
   };
   return [baseLine, ...getAddonLines(item)];
