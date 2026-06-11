@@ -523,7 +523,7 @@ function showToast(message, duration = 3000) {
     setTimeout(() => { el.style.transition = 'opacity 200ms ease'; el.style.opacity = '0'; }, duration - 300);
     setTimeout(() => { try { document.body.removeChild(el); } catch (e) {} }, duration);
   } catch (e) {
-    console.log('Toast:', message);
+    if (import.meta.env.DEV) console.log('Toast:', message);
   }
 }
 
@@ -897,14 +897,16 @@ function CustomerApp({ navigate, counterMode = false }) {
         const pendingStatuses = new Set(["pending", "waiting", "awaiting approval", "awaiting_approval", "request pending", "request_pending"]);
         const rejectedStatuses = new Set(["cancelled", "rejected", "payment issue", "payment rejected", "payment_rejected", "payment_issue"]);
 
-        console.log("COC POLL RESULT", {
-          savedOrderId: orderPlaced.orderId,
-          status: nextStatus,
-          requestStatus: nextRequestStatus,
-          approvalStatus: nextApprovalStatus,
-          paymentStatus: nextPaymentStatus,
-          orderStatus: nextOrderStatus
-        });
+        if (import.meta.env.DEV) {
+          console.log("COC POLL RESULT", {
+            savedOrderId: orderPlaced.orderId,
+            status: nextStatus,
+            requestStatus: nextRequestStatus,
+            approvalStatus: nextApprovalStatus,
+            paymentStatus: nextPaymentStatus,
+            orderStatus: nextOrderStatus
+          });
+        }
 
         const isApproved = [nextStatus, nextRequestStatus, nextApprovalStatus, nextPaymentStatus, nextOrderStatus].some((candidate) => approvedStatuses.has(candidate))
           || [nextStatus, nextRequestStatus, nextApprovalStatus, nextPaymentStatus, nextOrderStatus].some((candidate) => candidate && candidate.includes("approved"))
@@ -986,10 +988,12 @@ function CustomerApp({ navigate, counterMode = false }) {
   const hasWaterBottle = Boolean(liveWaterBottleItem && isQuickAccessItemAvailable(liveWaterBottleItem, categoryMap));
   const cigaretteCount = Array.isArray(liveCigaretteItems) ? liveCigaretteItems.length : 0;
 
-  console.log("QUICK ACCESS AVAILABILITY", {
-    hasWaterBottle,
-    cigaretteCount
-  });
+  if (import.meta.env.DEV) {
+    console.log("QUICK ACCESS AVAILABILITY", {
+      hasWaterBottle,
+      cigaretteCount
+    });
+  }
   const preferredCategoryOrder = useMemo(() => ["hot-drinks", "coconut-water", "cold-drinks", "snacks", "dessert", "energy-drinks"], []);
 
   const orderedCategories = useMemo(() => {
@@ -1065,7 +1069,7 @@ function CustomerApp({ navigate, counterMode = false }) {
         if (!quantity) return;
 
         const realItem = (Array.isArray(items) ? items : []).find((candidate) => candidate.id === item.id) || item;
-        console.log("CIGARETTE addToCart REAL ITEM", realItem, "QTY", quantity);
+        if (import.meta.env.DEV) console.log("CIGARETTE addToCart REAL ITEM", realItem, "QTY", quantity);
         nextCart = addCartItem(nextCart, realItem, "default", quantity, "", { serveTypeFallback: "default" });
       });
       return nextCart;
@@ -1973,14 +1977,23 @@ function OrderTracking({ orderId }) {
 
   useEffect(() => {
     let mounted = true;
+    let attempts = 0;
     const MAX_RETRIES = 15; // 15 retries * 3000ms = 45 seconds max wait
     const RETRY_INTERVAL = 3000;
+    const markFailedAttempt = () => {
+      attempts += 1;
+      setRetryCount(attempts);
+      if (attempts >= MAX_RETRIES) {
+        setNotFound(true);
+      }
+    };
 
     async function load() {
       try {
         const data = await orderService.getPublicOrder(orderId);
         if (!mounted) return;
         setOrder(preparePrintableOrder(data));
+        attempts = 0;
         setRetryCount(0);
         setNotFound(false);
       } catch (err) {
@@ -2005,39 +2018,21 @@ function OrderTracking({ orderId }) {
           }
           
           // If still no order after localStorage check, mark as not found but retry a few more times
-          setRetryCount((prev) => {
-            const next = prev + 1;
-            if (next >= MAX_RETRIES) {
-              setNotFound(true);
-            }
-            return next;
-          });
+          markFailedAttempt();
         } else {
           // Network or other error, increment retry
-          setRetryCount((prev) => {
-            const next = prev + 1;
-            if (next >= MAX_RETRIES) {
-              setNotFound(true);
-            }
-            return next;
-          });
+          markFailedAttempt();
         }
       }
     }
 
     load();
     const timer = setInterval(() => {
-      setRetryCount((prev) => {
-        const next = prev + 1;
-        if (next >= MAX_RETRIES) {
-          setNotFound(true);
-          return next;
-        }
-        return next;
-      });
-      if (retryCount < MAX_RETRIES) {
-        load();
+      if (attempts >= MAX_RETRIES) {
+        clearInterval(timer);
+        return;
       }
+      load();
     }, RETRY_INTERVAL);
 
     return () => {
@@ -2358,11 +2353,6 @@ function DetailModal({ item, onClose, onAdd }) {
     setServeType(getServeOptions(item)[0] || "");
     setQuantity(1);
     setSelectedAddons([]);
-    try {
-      // temporary debug logs to verify incoming item data
-      // eslint-disable-next-line no-console
-      console.log("DetailModal item:", item?.name, item?.category, item?.subcategory);
-    } catch (e) {}
   }, [item.id, item.sizes, item.price, item.addons, item.serveOptions, item.servingOptions, item.itemServeOptions]);
 
   const basePrice = Number((sizes.find((s) => s.id === sizeId)?.price) || item.price || 0);
@@ -2621,15 +2611,19 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
       }))
       .filter((item) => Number(item.quantity) > 0);
 
-    console.log("CIGARETTE ITEMS FROM LIVE MENU", cigaretteItems);
-    console.log("SELECTED CIGARETTE QUANTITIES", cigaretteQuantities);
-    console.log("CIGARETTE ITEMS TO ADD", selectedItems);
+    if (import.meta.env.DEV) {
+      console.log("CIGARETTE ITEMS FROM LIVE MENU", cigaretteItems);
+      console.log("SELECTED CIGARETTE QUANTITIES", cigaretteQuantities);
+      console.log("CIGARETTE ITEMS TO ADD", selectedItems);
+    }
 
     if (!selectedItems.length) return;
 
-    selectedItems.forEach((item) => {
-      console.log("CALLING addToCart WITH", item);
-    });
+    if (import.meta.env.DEV) {
+      selectedItems.forEach((item) => {
+        console.log("CALLING addToCart WITH", item);
+      });
+    }
 
     onAdd(selectedItems);
   }
@@ -2989,8 +2983,11 @@ function BillerApp({ navigate }) {
   const [billerTab, setBillerTab] = useState("orders");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const mobileNavRef = useRef(null);
+  const loadPromiseRef = useRef(null);
 
   async function load() {
+    if (loadPromiseRef.current) return loadPromiseRef.current;
+    loadPromiseRef.current = (async () => {
     try {
       setLoadError("");
       const [cocResult, itemResult, categoryResult] = await Promise.allSettled([
@@ -3043,6 +3040,12 @@ function BillerApp({ navigate }) {
         activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
         deletedCount: 0
       });
+    }
+    })();
+    try {
+      return await loadPromiseRef.current;
+    } finally {
+      loadPromiseRef.current = null;
     }
   }
 
@@ -3136,13 +3139,20 @@ function BillerApp({ navigate }) {
     if (!biller) return;
     let es = null;
     let reconnectTimeout = null;
+    let streamLoadTimer = null;
+    let isActive = true;
     
     function setupStream() {
+      if (!isActive || es) return;
       try {
         es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
         const handleUpdate = () => {
           setLastSync(new Date().toISOString());
-          load();
+          if (streamLoadTimer) clearTimeout(streamLoadTimer);
+          streamLoadTimer = setTimeout(() => {
+            streamLoadTimer = null;
+            load();
+          }, 150);
         };
         es.addEventListener("order:created", handleUpdate);
         es.addEventListener("order:updated", handleUpdate);
@@ -3151,15 +3161,17 @@ function BillerApp({ navigate }) {
           try { es.close(); } catch (e) {}
           es = null;
           // Reconnect after 3 seconds
-          reconnectTimeout = setTimeout(() => setupStream(), 3000);
+          if (isActive) reconnectTimeout = setTimeout(() => setupStream(), 3000);
         };
       } catch (error) {
-        reconnectTimeout = setTimeout(() => setupStream(), 3000);
+        if (isActive) reconnectTimeout = setTimeout(() => setupStream(), 3000);
       }
     }
     
     setupStream();
     return () => {
+      isActive = false;
+      if (streamLoadTimer) clearTimeout(streamLoadTimer);
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       try { if (es) es.close(); } catch (e) {}
     };
@@ -3381,8 +3393,11 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [pendingDelete, setPendingDelete] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const mobileNavRef = useRef(null);
+  const loadPromiseRef = useRef(null);
 
   async function load() {
+    if (loadPromiseRef.current) return loadPromiseRef.current;
+    loadPromiseRef.current = (async () => {
     try {
       const [freshOrders, freshInventory, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
         orderService.listOrders("limit=100").catch(() => sync.getOrdersFromStorage()),
@@ -3399,8 +3414,6 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
       const safeInventory = Array.isArray(freshInventory) ? freshInventory : [];
       try { sync.saveOrders(safeOrders); } catch (error) {}
       try { sync.saveInventory(safeInventory); } catch (error) {}
-      try { window.dispatchEvent(new CustomEvent("ordersUpdated", { detail: safeOrders })); } catch (error) {}
-      try { window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: safeInventory })); } catch (error) {}
       const safeCategories = normalizeOwnerCategories(categoryData);
       const safeItems = ensureActiveMenuItems(itemData, safeCategories);
       const activeCategoryIds = new Set(safeCategories.map((category) => category.id));
@@ -3451,36 +3464,54 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
         deletedCount: 0
       });
     }
+    })();
+    try {
+      return await loadPromiseRef.current;
+    } finally {
+      loadPromiseRef.current = null;
+    }
   }
 
   useEffect(() => {
     const unsubOrders = ordersStore.subscribe(() => { setLastSync(new Date().toISOString()); });
     const unsubInventory = inventoryStore.subscribe((data) => setRawMaterials(data || []));
-    const shouldLoadInventory = window.location.pathname.startsWith("/owner");
-    Promise.all([shouldLoadInventory ? inventoryStore.loadInventory().catch(() => []) : Promise.resolve([]), load()]).catch(() => {});
+    load().catch(() => {});
     
     let es = null;
     let reconnectTimeout = null;
+    let streamLoadTimer = null;
+    let isActive = true;
     
     function setupStream() {
+      if (!isActive || es) return;
       try {
         es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
-        es.addEventListener("order:created", () => { setLastSync(new Date().toISOString()); load(); });
-        es.addEventListener("order:updated", () => { setLastSync(new Date().toISOString()); load(); });
-        es.addEventListener("coc:created", () => { setLastSync(new Date().toISOString()); load(); });
+        const handleUpdate = () => {
+          setLastSync(new Date().toISOString());
+          if (streamLoadTimer) clearTimeout(streamLoadTimer);
+          streamLoadTimer = setTimeout(() => {
+            streamLoadTimer = null;
+            load();
+          }, 150);
+        };
+        es.addEventListener("order:created", handleUpdate);
+        es.addEventListener("order:updated", handleUpdate);
+        es.addEventListener("coc:created", handleUpdate);
         es.onerror = () => {
           try { es.close(); } catch (e) {}
           es = null;
           // Reconnect after 3 seconds
-          reconnectTimeout = setTimeout(() => setupStream(), 3000);
+          if (isActive) reconnectTimeout = setTimeout(() => setupStream(), 3000);
         };
       } catch (error) {
-        reconnectTimeout = setTimeout(() => setupStream(), 3000);
+        if (isActive) reconnectTimeout = setTimeout(() => setupStream(), 3000);
       }
     }
     
     setupStream();
     return () => {
+      isActive = false;
+      if (streamLoadTimer) clearTimeout(streamLoadTimer);
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       try { if (es) es.close(); } catch (e) {}
       unsubOrders();
@@ -4655,9 +4686,10 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const inventoryStoreItems = useMemo(() => Array.isArray(rawMaterials) ? rawMaterials.map(normalizeServerInventoryItem).filter(Boolean) : [], [rawMaterials]);
   const renderedInventory = useMemo(() => mergeInventoryItems(inventoryStoreItems, inventoryItems), [inventoryStoreItems, inventoryItems]);
 
-  // Temporary diagnostics for the live inventory data path.
-  console.log("INVENTORY API COUNT", inventoryStoreItems.length);
-  console.log("INVENTORY STORE COUNT", inventoryStoreItems.length);
+  if (import.meta.env.DEV) {
+    console.log("INVENTORY API COUNT", inventoryStoreItems.length);
+    console.log("INVENTORY STORE COUNT", inventoryStoreItems.length);
+  }
 
   const activeItems = renderedInventory.filter((item) => item?.isDeleted !== true);
   const filteredItems = activeItems.filter(item => {
@@ -4675,8 +4707,10 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const outOfStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Out of Stock").length;
   const totalValue = activeItems.reduce((sum, item) => sum + (item.quantity * (item.purchasePrice || 0)), 0);
 
-  console.log("INVENTORY FILTERED COUNT", filteredItems.length);
-  console.log("INVENTORY RENDER COUNT", renderedInventory.length);
+  if (import.meta.env.DEV) {
+    console.log("INVENTORY FILTERED COUNT", filteredItems.length);
+    console.log("INVENTORY RENDER COUNT", renderedInventory.length);
+  }
 
   return (
     <section className="space-y-5">

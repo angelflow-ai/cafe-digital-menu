@@ -42,8 +42,8 @@ create-a-full-stack-restaurant-web/
 │   │   ├── main.jsx        # Main app component
 │   │   └── styles.css      # Tailwind styles
 │   ├── public/
-│   │   ├── favicon.svg     # App logo
 │   │   └── assets/         # Menu item images
+│   ├── src/assets/infusion-saga-logo.png  # App logo
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
@@ -325,4 +325,3 @@ CLIENT_ORIGIN=https://your-domain.com
 ## Notes
 
 The menu seed uses the requested categories and includes the explicitly supplied size-pricing example, `Classic Coffee - Rs. 38 / 48 / 58`. Since no full earlier price list was available in this thread, the remaining seed menu is editable in the admin panel.
-

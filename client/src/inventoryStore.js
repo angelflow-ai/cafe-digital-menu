@@ -2,10 +2,14 @@ import sync from "./sync";
 import demoMode from "./demoMode";
 import { api } from "./services/apiClient";
 
+const IS_DEV = import.meta.env.DEV;
+
 let inventory = [];
 let initialized = false;
 const listeners = new Set();
 let es = null;
+let loadPromise = null;
+let refreshTimer = null;
 
 function notify() {
   listeners.forEach((cb) => {
@@ -16,6 +20,8 @@ function notify() {
 }
 
 export async function loadInventory() {
+  if (loadPromise) return loadPromise;
+  loadPromise = (async () => {
   try {
     const res = await api("/inventory");
     inventory = res || [];
@@ -25,7 +31,7 @@ export async function loadInventory() {
   } catch (err) {
     // In demo mode, use demo inventory
     if (demoMode.isDemoModeEnabled()) {
-      console.log("inventoryStore: loading from demo mode");
+      if (IS_DEV) console.log("inventoryStore: loading from demo mode");
       inventory = demoMode.getDemoInventory();
       notify();
       return inventory;
@@ -36,6 +42,12 @@ export async function loadInventory() {
       console.error("inventoryStore: failed to load inventory", err);
     }
     return inventory;
+  }
+  })();
+  try {
+    return await loadPromise;
+  } finally {
+    loadPromise = null;
   }
 }
 
@@ -56,7 +68,7 @@ window.addEventListener("inventoryUpdated", (e) => {
     if (!payload) return;
     inventory = payload;
     notify();
-    console.log("inventoryStore: received inventoryUpdated event", inventory);
+    if (IS_DEV) console.log("inventoryStore: received inventoryUpdated event", inventory);
   } catch (err) {}
 });
 window.addEventListener("storage", (e) => {
@@ -65,10 +77,16 @@ window.addEventListener("storage", (e) => {
     if (e.key === "infusion-inventory") {
       inventory = sync.getInventoryFromStorage();
       notify();
-      console.log("inventoryStore: storage event updated inventory", inventory);
+      if (IS_DEV) console.log("inventoryStore: storage event updated inventory", inventory);
     }
   } catch (err) {}
 });
 window.addEventListener('inventoryRefresh', () => {
-  try { loadInventory().catch(() => {}); } catch (e) {}
+  try {
+    if (refreshTimer) clearTimeout(refreshTimer);
+    refreshTimer = setTimeout(() => {
+      refreshTimer = null;
+      loadInventory().catch(() => {});
+    }, 150);
+  } catch (e) {}
 });
