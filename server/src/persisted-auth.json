@@ -1,0 +1,32 @@
+[
+  {
+    "email": "owner@theinfusionsaga.com",
+    "role": "admin",
+    "passwordHash": "$2b$10$ryWhb33p8LYPeEe99gxkku85LKLKTs6ddQ2csALFtJYjGhRQ3EhUm",
+    "verified": true,
+    "verificationToken": null,
+    "verificationExpiresAt": null,
+    "passwordResetToken": null,
+    "passwordResetExpiresAt": null,
+    "passwordSetAt": "2026-06-07T10:49:25.657Z",
+    "mustChangePassword": false,
+    "isActive": true,
+    "updatedAt": "2026-06-07T10:49:25.659Z",
+    "createdAt": "2026-06-04T18:55:49.822Z"
+  },
+  {
+    "email": "biller@theinfusionsaga.com",
+    "role": "biller",
+    "passwordHash": "$2b$10$LCmWCDmfkwUKBxZcfkx9Cu3w77Qzmr/I3n4O3AcrRno7mfT4Ywtjq",
+    "verified": true,
+    "verificationToken": null,
+    "verificationExpiresAt": null,
+    "passwordResetToken": null,
+    "passwordResetExpiresAt": null,
+    "passwordSetAt": "2026-06-07T10:49:25.660Z",
+    "mustChangePassword": false,
+    "isActive": true,
+    "updatedAt": "2026-06-07T10:49:25.660Z",
+    "createdAt": "2026-06-04T18:55:49.823Z"
+  }
+]

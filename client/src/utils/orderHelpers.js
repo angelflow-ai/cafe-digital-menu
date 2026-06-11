@@ -58,17 +58,22 @@ export function getOrderSourceLabel(order) {
 
   const explicitType = String(order.orderType || order.type || "").trim().toLowerCase();
   const paymentMethod = String(order.paymentMethod || order.method || "").toLowerCase();
+  const source = String(order.source || order.createdFrom || order._source || order.orderSource || "").trim().toLowerCase();
   const id = String(order.orderId || order.id || order._id || "").toLowerCase();
   const note = String(order.notes || order.note || "").toLowerCase();
+  const isCocOrder = Boolean(order.isCOC || order.isCoc || order.coc || order.cashOnCounter || order.createdFrom === "coc");
 
-  if (explicitType) {
-    if (explicitType.includes("coc") || explicitType.includes("counter") || explicitType.includes("order on counter")) return "COC";
-    if (explicitType.includes("qr") || explicitType.includes("online")) return "QR";
-  }
+  const signals = [explicitType, source, paymentMethod, note, String(order.orderType || ""), String(order.type || ""), String(order.source || ""), String(order.createdFrom || ""), String(order._source || ""), String(order.orderSource || "")];
+  const hasOocSignal = signals.some((value) => /\booc\b|order on counter|counter order/.test(value));
+  const hasExplicitOoc = explicitType === "ooc" || source === "ooc" || source === "order on counter" || /\booc\b/.test(explicitType) || /\booc\b/.test(source);
+  const hasCocSignal = signals.some((value) => /\bcoc\b|cash on counter|cash counter|counter cash/.test(value) || (value === "cash" && !hasExplicitOoc));
+  const hasQrSignal = signals.some((value) => /qr|upi|online/.test(value));
+
+  if (hasOocSignal || hasExplicitOoc) return "OOC";
+  if (isCocOrder || hasCocSignal) return "COC";
+  if (hasQrSignal) return "QR";
 
   if (id.startsWith("coc-")) return "COC";
-  if (paymentMethod.includes("coc") || paymentMethod.includes("counter") || note.includes("coc") || note.includes("order on counter") || note.includes("cash on counter")) return "COC";
-  if (paymentMethod.includes("upi") || paymentMethod.includes("qr") || paymentMethod.includes("online") || note.includes("qr") || note.includes("table")) return "QR";
 
   return undefined;
 }
@@ -99,20 +104,11 @@ export function isCompletedSale(order) {
   if (!order) return false;
   const status = normalizeStatus(order?.status);
   const paymentStatus = normalizeStatus(order?.paymentStatus);
-  const paymentMethod = String(order?.paymentMethod || order?.method || "").toLowerCase();
 
-  const rejected = ["cancelled", "rejected", "payment_issue", "payment rejected", "failed", "unpaid", "pending verification"];
+  const rejected = ["cancelled", "rejected", "payment issue", "payment rejected", "failed", "unpaid", "pending verification"];
   if (rejected.includes(status) || rejected.includes(paymentStatus)) return false;
 
-  // Online completed payments
-  const onlineIndicators = ["online", "upi", "qr", "intent", "static_qr"];
-  const onlineCompleted = onlineIndicators.some((k) => paymentMethod.includes(k)) && ["confirmed", "verified", "paid", "completed"].includes(paymentStatus);
-
-  // Cash / COC / counter completed payments or explicitly approved orders
-  const cocIndicators = ["cash", "counter", "coc"];
-  const cocCompleted = cocIndicators.some((k) => paymentMethod.includes(k)) || ["approved", "confirmed", "completed"].includes(status);
-
-  return !!(onlineCompleted || cocCompleted);
+  return status === "completed";
 }
 
 export function getOrderDate(order) {
@@ -133,6 +129,48 @@ export function endOfDay(date) {
   const day = new Date(date);
   day.setHours(23, 59, 59, 999);
   return day;
+}
+
+export function getBillerOrderClassification(order) {
+  const status = normalizeStatus(order?.status);
+  const paymentStatus = normalizeStatus(order?.paymentStatus);
+  const paymentMethod = String(order?.paymentMethod || order?.method || "").toLowerCase();
+  const isOnlinePayment = /(upi|qr|online|UPI_INTENT_OR_STATIC_QR)/i.test(paymentMethod);
+  const isCashPayment = /cash|coc|counter/i.test(paymentMethod);
+  
+  // Determine source badge
+  const sourceBadge = getOrderSourceLabel(order) || (isOnlinePayment ? "QR" : isCashPayment ? "COC" : "QR");
+
+  const liveStatuses = new Set(["pending", "confirmed", "preparing", "ready"]);
+  const excludedStatuses = new Set(["completed", "cancelled", "rejected", "payment rejected", "payment_rejected", "payment issue", "payment_issue"]);
+
+  // PAY ONLINE FLOW: Show in Pending Verification only when:
+  // - paymentStatus = "pending verification" (NOT paid/confirmed yet)
+  // - paymentMethod is online (UPI, QR, UPI_INTENT_OR_STATIC_QR)
+  // - status = "pending" (NOT confirmed yet)
+  const isPendingVerification = paymentStatus === "pending verification" && isOnlinePayment && status === "pending";
+
+  // COC FLOW: Show in COC Requests only when:
+  // - sourceBadge = "COC" or "OOC"
+  // - pendingApproval = true OR (status = "pending" AND paymentStatus in ["pending", "unpaid", "cash_pending"])
+  // - NOT confirmed/completed/paid/excluded
+  const isCocRequest = (sourceBadge === "COC" || sourceBadge === "OOC")
+    && !excludedStatuses.has(status)
+    && !excludedStatuses.has(paymentStatus)
+    && (Boolean(order?.pendingApproval) || (status === "pending" && ["pending", "unpaid", "cash_pending"].includes(paymentStatus)));
+
+  // LIVE ORDERS: Show in Live Orders only when:
+  // - status in [pending, confirmed, preparing, ready]
+  // - NOT excluded (completed, cancelled, rejected, payment_issue, etc.)
+  // - NOT pending verification (those stay in Pending Verification tab)
+  // - NOT a COC request waiting for approval
+  const isLiveOrder = liveStatuses.has(status) 
+    && !excludedStatuses.has(status) 
+    && !excludedStatuses.has(paymentStatus) 
+    && paymentStatus !== "pending verification"
+    && !isCocRequest;
+
+  return { isLiveOrder, isCocRequest, isPendingVerification, sourceBadge };
 }
 
 export function createOrderStatusUpdatePayload({ status, paymentStatus, timestampField, timestamp = new Date().toISOString() }) {

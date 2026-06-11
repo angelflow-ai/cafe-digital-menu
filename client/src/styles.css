@@ -210,8 +210,43 @@ textarea {
 }
 
 .receipt-logo {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 6px;
+}
+
+.receipt-address,
+.receipt-center-text {
+  text-align: center;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.receipt-center-text {
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.receipt-center-text--small {
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.receipt-row--total-label {
+  font-weight: 700;
+}
+
+.receipt-table-header--compact {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.review-qr-image {
+  width: 90px;
+  height: 90px;
   object-fit: contain;
 }
 
@@ -481,18 +516,21 @@ textarea {
   max-width: 380px;
   border-radius: 36px;
   border: 1px solid rgba(255,255,255,0.22);
-  background: rgba(255,255,255,0.12);
+  background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
   overflow: hidden;
   position: relative;
+  isolation: isolate;
 }
 .detail-card::before {
   content: "";
   position: absolute;
   inset: 0;
+  border-radius: inherit;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.04) 100%);
 }
 .detail-header {
   display: flex;

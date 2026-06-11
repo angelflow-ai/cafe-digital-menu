@@ -1,8 +1,7 @@
-import React, { useEffect, useRef } from "react";
-import QRCode from "qrcode";
-import JsBarcode from "jsbarcode";
+import React from "react";
 import logoUrl from "./assets/infusion-saga-logo.png";
-import { formatOrderItemLine, getFinalItemTotal, getOrderTotal } from "./utils/orderDisplayFormatter";
+import reviewQrUrl from "./assets/review-qr.png";
+import { formatOrderItemLine, getAddonTotal, getBasePrice, getFinalItemTotal, getItemQuantity, getOrderTotal } from "./utils/orderDisplayFormatter";
 
 function rupees(value) {
   return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
@@ -20,17 +19,47 @@ function formatDate(value) {
 }
 
 function normalizeLineItem(item) {
-  const quantity = Number(item.quantity ?? 1);
+  const quantity = getItemQuantity(item);
   const lineText = formatOrderItemLine(item);
   return {
     name: item.name || item.title || item.itemId || item.id || "Item",
     qty: quantity,
     total: getFinalItemTotal(item),
+    baseTotal: getBasePrice(item) * quantity,
+    addonTotal: getAddonTotal(item) * quantity,
     sizeName: item.sizeName || item.size || "",
     serveType: item.serveType || "",
     addons: item.addons || {},
     lineText
   };
+}
+
+function getReceiptOrderType(order) {
+  const explicitType = String(order.orderType || order.type || "").toLowerCase();
+  const paymentMethod = String(order.paymentMethod || order.payment || "").toLowerCase();
+  const note = String(order.notes || order.note || "").toLowerCase();
+
+  if (explicitType.includes("coc") || explicitType.includes("counter") || note.includes("order on counter") || note.includes("cash on counter")) {
+    return "Order On Counter";
+  }
+  if (paymentMethod.includes("cash") || paymentMethod.includes("coc")) {
+    return "Cash On Counter";
+  }
+  if (paymentMethod.includes("upi") || paymentMethod.includes("qr") || paymentMethod.includes("online")) {
+    return "Paid Online";
+  }
+  return "Dine-In";
+}
+
+function getReceiptPaymentLabel(order) {
+  const method = String(order.paymentMethod || order.payment || "cash").toLowerCase();
+  if (method.includes("online") || method.includes("upi") || method.includes("qr")) return "Online";
+  if (method.includes("cash") || method.includes("coc") || method.includes("counter")) return "Cash";
+  return "Cash";
+}
+
+function getReceiptStatusLabel() {
+  return "Paid";
 }
 
 export function normalizeReceiptOrder(order = {}) {
@@ -61,99 +90,103 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
   const createdAt = normalizedOrder.createdAt;
   const items = Array.isArray(normalizedOrder.items) ? normalizedOrder.items.map(normalizeLineItem) : [];
   const subtotal = Number(normalizedOrder.subtotal || getOrderTotal(normalizedOrder) || 0);
-  const gstRate = 0.05;
-  const gstAmount = Number(normalizedOrder.gst ?? Math.round(subtotal * gstRate));
-  const total = Number(normalizedOrder.total ?? subtotal + gstAmount);
-  const paymentMethod = String(normalizedOrder.paymentMethod || "Cash").replace(/online/i, "Online").replace(/cash/i, "Cash");
+  const total = Number(normalizedOrder.total ?? subtotal);
+  const paymentMethod = getReceiptPaymentLabel(normalizedOrder);
+  const statusLabel = getReceiptStatusLabel(normalizedOrder);
+  const handledBy = String(normalizedOrder.handledBy || normalizedOrder.billerName || normalizedOrder.staffName || "-").trim() || "-";
   const copyLabel = copyType === "kitchen" ? "Kitchen Copy" : copyType === "both" ? "Customer / Kitchen Copy" : "Customer Copy";
   const orderLines = copyType === "both" ? ["Customer Copy", "Kitchen Copy"] : [copyLabel];
-
-  const qrData = normalizedOrder.qrData || receiptId;
-  const gstin = normalizedOrder.gstin || normalizedOrder.GSTIN || normalizedOrder.gstinNo || normalizedOrder.businessGstin || "08AAAPL1234C1Z1";
-  const qrImgRef = useRef(null);
-  const barcodeRef = useRef(null);
-
-  useEffect(() => {
-    let mounted = true;
-    if (typeof QRCode?.toDataURL === 'function') {
-      QRCode.toDataURL(String(qrData), { margin: 1, width: 150 })
-        .then((url) => {
-          if (!mounted) return;
-          if (qrImgRef.current) qrImgRef.current.src = url;
-        })
-        .catch(() => { /* ignore */ });
-    }
-    try {
-      if (barcodeRef.current && typeof JsBarcode === 'function') {
-        JsBarcode(barcodeRef.current, String(receiptId), { format: 'CODE128', displayValue: false, height: 36, width: 1, margin: 0 });
-      }
-    } catch (e) {
-      // ignore barcode errors
-    }
-    return () => { mounted = false; };
-  }, [qrData, receiptId]);
 
   return (
     <div className="receipt-print-area print-only">
       {orderLines.map((label) => (
         <article key={label} className="receipt" style={{ width: receiptWidth ? `${receiptWidth}px` : undefined, fontSize: fontSize ? `${fontSize}px` : undefined }}>
           <div className="receipt-header">
-            <div style={{fontWeight:700}}>{label}</div>
+            <img src={logoUrl} alt="The Infusion Saga" className="receipt-logo" />
             <div className="receipt-title">THE INFUSION SAGA</div>
-            <div style={{fontSize:11}}>A155, Ramnagariya Rd, Mahadev Nagar, Jagatpura, Jaipur, Rajasthan 302017</div>
+            <div className="receipt-address">A155, Ramnagariya Rd, Mahadev Nagar, Jagatpura, Jaipur, Rajasthan</div>
           </div>
 
           <div className="receipt-line" />
 
-          <div style={{marginTop:6}}>
-            <div className="receipt-row"><div>Date</div><div>{formatDate(createdAt)}</div></div>
+          <div className="receipt-center-text">{label}</div>
+
+          <div style={{ marginTop: 6 }}>
+            <div className="receipt-row"><div>Date/Time</div><div>{formatDate(createdAt)}</div></div>
             <div className="receipt-row"><div>Order ID</div><div>{receiptId}</div></div>
-            <div className="receipt-row"><div>Table</div><div>{normalizedOrder.tableNumber ?? (normalizedOrder.table ?? "-")}</div></div>
+            <div className="receipt-row"><div>Table No.</div><div>{normalizedOrder.tableNumber ?? (normalizedOrder.table ?? "-")}</div></div>
             <div className="receipt-row"><div>Customer</div><div>{normalizedOrder.customerName || "Guest"}</div></div>
             <div className="receipt-row"><div>Phone</div><div>{normalizedOrder.phone || "-"}</div></div>
             <div className="receipt-row"><div>Payment</div><div>{paymentMethod}</div></div>
-            <div className="receipt-row"><div>Status</div><div>{normalizedOrder.paymentStatus || "Unknown"}</div></div>
-            <div className="receipt-row"><div>Invoice</div><div>{order.invoiceNo || `INV-${String(receiptId).slice(-8)}`}</div></div>
-            <div className="receipt-row"><div>GSTIN</div><div>{gstin}</div></div>
+            <div className="receipt-row"><div>Status</div><div>{statusLabel}</div></div>
+            {handledBy && handledBy !== "-" && (
+              <div className="receipt-row"><div>Handled By</div><div>{handledBy}</div></div>
+            )}
           </div>
 
           <div className="receipt-line" />
 
           <div>
-            <div className="receipt-table-header">
+            <div className="receipt-table-header receipt-table-header--compact">
               <div>QTY</div>
-              <div>DESC</div>
-              <div className="receipt-amount">AMT</div>
+              <div>ITEM</div>
+              <div className="receipt-amount">AMOUNT</div>
             </div>
             {items.length === 0 && <div style={{padding:'8px 0'}}>No items.</div>}
-            {items.map((line, idx) => (
-              <div key={`${line.name}-${idx}`} className="receipt-item" style={{marginTop:6}}>
-                <div>{line.qty}</div>
-                <div>
-                  <div style={{fontWeight:700}}>{line.lineText}</div>
-                  {Array.isArray(line.addons?.selectedAddons) && line.addons.selectedAddons.length > 0 ? (
-                    <div style={{fontSize:10}}>{line.addons.selectedAddons.map((addon) => addon.name).join(", ")}</div>
-                  ) : line.addons?.extraCheese ? (
-                    <div style={{fontSize:10}}>Extra Cheese</div>
-                  ) : null}
+            {items.map((line, idx) => {
+              const addonEntries = [
+                ...(Array.isArray(line.addons?.selectedAddons) ? line.addons.selectedAddons.map((addon) => ({
+                  name: addon.name || "Addon",
+                  amount: Number(addon.price || 0) * line.qty
+                })) : []),
+                ...(line.addons?.extraCheese ? [{
+                  name: "Extra Cheese",
+                  amount: Number(line.addons?.extraCheesePrice || 0) * line.qty
+                }] : [])
+              ];
+              const itemLabel = [line.name, line.serveType ? `• ${line.serveType}` : ""].filter(Boolean).join(" ");
+
+              return (
+                <div key={`${line.name}-${idx}`} style={{ marginTop: 6 }}>
+                  <div className="receipt-item">
+                    <div>{line.qty}</div>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{itemLabel}</div>
+                    </div>
+                    <div className="receipt-amount">{rupees(line.baseTotal)}</div>
+                  </div>
+                  {addonEntries.map((addon, addonIndex) => (
+                    <div key={`${line.name}-${idx}-addon-${addonIndex}`} className="receipt-item receipt-item-addon">
+                      <div />
+                      <div style={{ fontSize: 10 }}>{addon.name}</div>
+                      <div className="receipt-amount">+ {rupees(addon.amount)}</div>
+                    </div>
+                  ))}
                 </div>
-                <div className="receipt-amount">{rupees(line.total)}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="receipt-line" />
 
-          <div style={{marginTop:6}}>
-            <div className="receipt-row"><div>Subtotal</div><div>{rupees(subtotal)}</div></div>
-            <div className="receipt-row"><div>Tax ({Math.round(gstRate*100)}%)</div><div>{rupees(gstAmount)}</div></div>
-            <div className="receipt-total" style={{marginTop:8}}>
-              <div>AMOUNT</div>
+          <div style={{ marginTop: 6 }}>
+            <div className="receipt-row receipt-row--total-label"><div>Subtotal</div><div>{rupees(subtotal)}</div></div>
+            <div className="receipt-total" style={{ marginTop: 8 }}>
+              <div>TOTAL</div>
               <div>{rupees(total)}</div>
             </div>
           </div>
 
-          <div className="receipt-qr"><img ref={qrImgRef} alt="Order QR" /></div>
+          <div className="receipt-line" />
+
+          <div className="receipt-center-text">Thank You For Visiting ☕</div>
+          <div className="receipt-center-text receipt-center-text--small">We Hope To Serve You Again Soon</div>
+          <div className="receipt-line" />
+          <div className="receipt-center-text">Scan To Review Us ⭐⭐⭐⭐⭐</div>
+          <div className="receipt-qr"><img src={reviewQrUrl} alt="Google Review QR" className="review-qr-image" /></div>
+          <div className="receipt-line" />
+          <div className="receipt-center-text">Follow Us On Instagram</div>
+          <div className="receipt-center-text receipt-center-text--small">@theinfusionsaga</div>
 
         </article>
       ))}

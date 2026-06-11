@@ -1,10 +1,26 @@
 import demoMode from "../demoMode";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API = API_URL.replace(/\/$/, "") + "/api";
 const API_ROOT = API_URL.replace(/\/$/, "");
 
 const inFlight = new Map();
+const LOGIN_RETRY_DELAY_MS = 700;
+const DEFAULT_RETRY_DELAY_MS = 200;
+
+function isLoginRequest(path) {
+  return path === "/auth/owner/login" || path === "/auth/biller/login";
+}
+
+function getNetworkErrorMessage(error) {
+  if (error?.name === "AbortError") {
+    return "The backend is taking too long to respond. Please wait a moment and try again.";
+  }
+  if (error?.message && /failed to fetch|network|load failed/i.test(error.message)) {
+    return "The backend is not reachable right now. Please wait a moment and try again.";
+  }
+  return error?.message || "The login request failed.";
+}
 
 function devLog(...args) {
   if (import.meta.env.DEV) console.warn(...args);
@@ -13,10 +29,14 @@ function devLog(...args) {
 async function rawFetch(path, options = {}) {
   const url = `${API}${path}`;
   const method = (options.method || "GET").toUpperCase();
+  const timeoutMs = options.timeout || (isLoginRequest(path) ? 8000 : 15000);
+  const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
   const opts = {
     credentials: "include",
     headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-    ...options
+    ...options,
+    signal: controller ? controller.signal : options.signal
   };
   // If body is FormData let browser set Content-Type (don't force json)
   try {
@@ -28,11 +48,11 @@ async function rawFetch(path, options = {}) {
   try {
     response = await fetch(url, opts);
   } catch (err) {
-    // network/backend down - do not enable demo mode automatically in production
-    if (!demoMode.isDemoModeEnabled() && import.meta.env.DEV) {
-      devLog("Backend unavailable, enabling demo mode (dev only)");
-      demoMode.setDemoMode(true);
-    }
+    if (timeoutId) clearTimeout(timeoutId);
+    const loginError = isLoginRequest(path) ? new Error(getNetworkErrorMessage(err)) : err;
+    // network/backend down - do not enable demo mode automatically (even in dev)
+    // Always require real backend connection for customer menu
+    if (isLoginRequest(path)) throw loginError;
     if (path.startsWith("/categories")) {
       const [pathOnly, queryString = ""] = path.split("?");
       const query = new URLSearchParams(queryString);
@@ -61,30 +81,10 @@ async function rawFetch(path, options = {}) {
         return deleted;
       }
     }
-    // mimic legacy demo fallbacks used by App.jsx
-    if (path === "/categories") return demoMode.getDemoCategories();
-    if (path === "/menu" || path === "/menu?includeInactive=true") return demoMode.getDemoInventory();
-    if (path === "/inventory") return demoMode.getDemoInventory();
-    if (path === "/auth/me") return { user: { email: `demo-customer@demo.local`, role: "customer" } };
-    if (path === "/auth/logout") return { success: true };
-    if (path === "/orders") {
-      if (opts.method === "POST") {
-        const body = JSON.parse(opts.body || "{}");
-        const order = demoMode.createDemoOrder(body, body.items || []);
-        demoMode.addDemoOrder(order);
-        return order;
-      }
-      return demoMode.loadDemoOrders();
-    }
-    if (path.includes("/orders/public/")) {
-      const orderId = path.split("/").pop();
-      const orders = demoMode.loadDemoOrders();
-      const order = orders.find(o => o.orderId === orderId || o.id === orderId || o._id === orderId);
-      if (order) return order;
-      throw new Error("Order not found");
-    }
-    if (path.includes("/orders/stream")) throw new Error("EventSource not available in demo mode");
-    throw err;
+    // Do not fallback to demo data for customer app - show real error instead
+    throw loginError;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 
   if (!response.ok) {
@@ -125,17 +125,18 @@ export async function api(path, options = {}) {
 
   const promise = (async () => {
     let attempts = 0;
-    const maxAttempts = options.retry === false ? 1 : 3;
+    const maxAttempts = options.retry === false ? 1 : isLoginRequest(path) ? 4 : 3;
+    const baseDelay = isLoginRequest(path) ? LOGIN_RETRY_DELAY_MS : DEFAULT_RETRY_DELAY_MS;
     while (attempts < maxAttempts) {
       attempts += 1;
       try {
         const res = await rawFetch(path, options);
         return res;
       } catch (err) {
-        // retry on network or 5xx
         const status = err.status || 0;
-        if (attempts >= maxAttempts || (status && status < 500)) throw err;
-        await new Promise(r => setTimeout(r, 200 * attempts));
+        const isRetryableNetworkError = !status || status >= 500 || /failed to fetch|network|timed out|aborted/i.test(err.message || "");
+        if (attempts >= maxAttempts || (!isRetryableNetworkError && status < 500)) throw err;
+        await new Promise((resolve) => setTimeout(resolve, baseDelay * attempts));
       }
     }
   })();

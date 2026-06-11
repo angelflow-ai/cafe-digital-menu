@@ -46,7 +46,7 @@ function preparePrintableOrder(order) {
   };
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API = API_URL.replace(/\/$/, "") + "/api";
 const API_ROOT = API_URL.replace(/\/$/, "");
 console.log("API URL:", API);
@@ -1538,7 +1538,7 @@ function OrderSuccess({ order, onClose }) {
         <Sparkles className="mx-auto text-emerald-700" size={36} />
         <h2 className="mt-3 text-2xl font-black">{order.pendingApproval ? "Request submitted" : "Order placed"}</h2>
         <p className="mt-2 text-sm font-semibold text-stone-600">
-          {order.pendingApproval ? "Your cash-on-counter request is awaiting owner approval." : "Your cafe order is in the kitchen queue."}
+          {order.pendingApproval ? "Visit the counter and pay cash payment to the biller." : "Your cafe order is in the kitchen queue."}
         </p>
         <p className="mt-4 text-3xl font-black">{rupees(order.total)}</p>
         <p className="mt-2 text-sm uppercase tracking-[0.24em] text-stone-500">Status: {order.status || (order.pendingApproval ? "pending approval" : "new")}</p>

@@ -9,7 +9,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import Twilio from "twilio";
 import nodemailer from "nodemailer";
-import { connectDatabase, isCompletedSale, store } from "./db.js";
+import bcrypt from "bcryptjs";
+import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store } from "./db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -160,46 +161,43 @@ app.use(
   })
 );
 
-const users = {
-  admin: {
-    role: "admin",
-    email: String(process.env.ADMIN_EMAIL || "owner@theinfusionsaga.com").trim().toLowerCase(),
-    password: String(process.env.ADMIN_PASSWORD || "infusion-owner"),
-    verified: true
-  },
-  biller: {
-    role: "biller",
-    email: String(process.env.BILLER_EMAIL || "biller@theinfusionsaga.com").trim().toLowerCase(),
-    password: String(process.env.BILLER_PASSWORD || "infusion-biller"),
-    verified: true
-  }
-};
+function hashPassword(password) {
+  return bcrypt.hashSync(String(password || ""), 10);
+}
 
-const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS ? nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT || 587),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-}) : null;
+function verifyPassword(password, storedPassword) {
+  if (!storedPassword) return false;
+  if (storedPassword.startsWith("$2")) return bcrypt.compareSync(String(password || ""), storedPassword);
+  return String(password || "") === String(storedPassword);
+}
 
-const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_USER || users.admin.email;
+
+const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 465),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    })
+  : null;
+
+const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "theinfusionsaga@theinfusionsaga.com";
 const passwordResetOtps = new Map();
 
-function findUserByEmail(email) {
-  if (!email) return null;
-  const normalized = String(email).trim().toLowerCase();
-  return Object.values(users).find((user) => user.email === normalized) || null;
+async function findUserByEmail(email) {
+  return findStaffAccountByEmail(email);
 }
 
 async function sendEmail({ to, subject, text, html }) {
   if (!emailTransporter) {
-    console.log("Email transporter not configured. OTP details:", { to, subject, text });
-    return null;
+    throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, and EMAIL_FROM before sending auth emails.");
   }
-  return emailTransporter.sendMail({ from: emailFrom, to, subject, text, html });
+
+  await emailTransporter.sendMail({ from: emailFrom, to, subject, text, html });
+  return { sent: true };
 }
 
 function requireAdmin(req, res, next) {
@@ -220,6 +218,19 @@ function slugify(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getRoleLabel(role) {
+  return role === "biller" ? "biller" : "admin";
+}
+
+function isAllowedEmailForRole(email, role) {
+  const allowed = getConfiguredStaffEmails(role);
+  return allowed.length === 0 || allowed.includes(normalizeEmail(email));
+}
+
 app.get("/api/health", (_req, res) => res.json({ ok: true }));
 
 function createLoginResponse(user, req, res) {
@@ -234,20 +245,32 @@ function createLoginResponse(user, req, res) {
   return res.json({ success: true, token, user: { role: user.role, email: user.email } });
 }
 
-function loginHandler(req, res, roleOverride = null) {
+async function loginHandler(req, res, roleOverride = null) {
   const { email, password, role } = req.body;
-  const requestRole = roleOverride || role;
-  const user = requestRole ? users[requestRole] : findUserByEmail(email);
-  console.log("Login request", { email, role: requestRole });
-  if (!user || String(email).trim().toLowerCase() !== user.email || user.password !== password) {
+  const requestRole = getRoleLabel(roleOverride || role);
+  const normalizedEmail = normalizeEmail(email);
+
+  if (!normalizedEmail) {
+    return res.status(400).json({ message: "Email is required." });
+  }
+
+  const user = await findStaffAccountByEmail(normalizedEmail);
+  if (!user || user.role !== requestRole || !isAllowedEmailForRole(normalizedEmail, requestRole)) {
     return res.status(401).json({ message: "Invalid email or password." });
   }
-  return createLoginResponse(user, req, res);
+
+  if (!verifyPassword(password, user.passwordHash)) {
+    return res.status(401).json({ message: "Invalid email or password." });
+  }
+  if (!user.verified) {
+    return res.status(403).json({ message: "Please verify your email before signing in." });
+  }
+  return createLoginResponse({ ...user, password: user.passwordHash, role: user.role }, req, res);
 }
 
-app.post("/api/auth/login", (req, res) => loginHandler(req, res));
-app.post("/api/auth/owner/login", (req, res) => loginHandler(req, res, "admin"));
-app.post("/api/auth/biller/login", (req, res) => loginHandler(req, res, "biller"));
+app.post("/api/auth/login", async (req, res) => loginHandler(req, res));
+app.post("/api/auth/owner/login", async (req, res) => loginHandler(req, res, "admin"));
+app.post("/api/auth/biller/login", async (req, res) => loginHandler(req, res, "biller"));
 
 app.post("/api/auth/logout", (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
@@ -257,32 +280,108 @@ app.get("/api/auth/me", (req, res) => {
   res.json({ user: req.session?.user || null });
 });
 
-app.post("/api/auth/forgot-password", async (req, res) => {
-  const { email, role } = req.body;
-  const user = role ? users[role] : findUserByEmail(email);
-  if (!user || String(email).trim().toLowerCase() !== user.email) {
-    return res.status(404).json({ message: "Email not found for this role." });
+app.get("/api/auth/check-email", async (req, res) => {
+  const email = normalizeEmail(req.query.email);
+  const user = await findStaffAccountByEmail(email);
+  if (!user) {
+    return res.status(404).json({ allowed: false, message: "This email is not registered for Owner or Biller access." });
   }
-  if (!emailTransporter) {
-    return res.status(500).json({ message: "Email service not configured." });
-  }
-
-  const otp = String(crypto.randomInt(100000, 999999)).padStart(6, "0");
-  const expiresAt = Date.now() + 15 * 60 * 1000;
-  passwordResetOtps.set(user.email, { otp, role: user.role, expiresAt });
-
-  await sendEmail({
-    to: user.email,
-    subject: "Your password reset OTP",
-    text: `Your password reset OTP is ${otp}. It expires in 15 minutes.`
-  });
-
-  return res.json({ success: true, message: "OTP sent to your registered email." });
+  return res.json({ allowed: true, role: user.role, email: user.email });
 });
 
-app.post("/api/auth/verify-otp", (req, res) => {
+app.post("/api/auth/set-password", async (req, res) => {
+  const { email, password, confirmPassword, role } = req.body;
+  const normalizedEmail = normalizeEmail(email);
+  const requestRole = getRoleLabel(role);
+  const user = await findStaffAccountByEmail(normalizedEmail);
+
+  if (!user || user.role !== requestRole || !isAllowedEmailForRole(normalizedEmail, requestRole)) {
+    return res.status(404).json({ message: "This email is not registered for this access." });
+  }
+  if (String(password || "").length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters long." });
+  }
+  if (String(password || "") !== String(confirmPassword || "")) {
+    return res.status(400).json({ message: "Passwords do not match." });
+  }
+
+  const verificationToken = String(crypto.randomInt(100000, 999999)).padStart(6, "0");
+  const verificationExpiresAt = Date.now() + 24 * 60 * 60 * 1000;
+  await setStaffPassword(user.email, hashPassword(password), {
+    verified: false,
+    verificationToken,
+    verificationExpiresAt,
+    mustChangePassword: false
+  });
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "Your The Infusion Saga login password is set",
+      text: `Your login password has been set successfully.\nEmail: ${user.email}\nVerification code: ${verificationToken}\nUse /api/auth/verify-email?email=${encodeURIComponent(user.email)}&token=${verificationToken} to activate your account.\nDo not share this code with anyone.`
+    });
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+    return res.status(500).json({ success: false, message: "Failed to send verification email." });
+  }
+
+  return res.json({
+    success: true,
+    message: "Password set successfully. Login details sent to your email."
+  });
+});
+
+app.post("/api/auth/forgot-password", async (req, res) => {
+  const { email, role } = req.body;
+  const normalizedEmail = normalizeEmail(email);
+  const requestRole = getRoleLabel(role);
+  const user = await findStaffAccountByEmail(normalizedEmail);
+
+  if (!user || user.role !== requestRole || !isAllowedEmailForRole(normalizedEmail, requestRole)) {
+    return res.status(404).json({ message: "This email is not registered for this access." });
+  }
+
+  const temporaryPassword = `Infusion-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const resetOtp = String(crypto.randomInt(100000, 999999)).padStart(6, "0");
+  const resetExpiresAt = Date.now() + 15 * 60 * 1000;
+  passwordResetOtps.set(user.email, { otp: resetOtp, role: user.role, expiresAt: resetExpiresAt });
+  await setStaffPassword(user.email, hashPassword(temporaryPassword), {
+    verified: true,
+    mustChangePassword: true,
+    passwordResetToken: resetOtp,
+    passwordResetExpiresAt: new Date(resetExpiresAt)
+  });
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "Your The Infusion Saga password reset",
+      text: `A password reset request was received for ${user.email}.\nReset code: ${resetOtp}\nThis code expires in 15 minutes.\nUse the code on the reset page to choose a new password.`
+    });
+  } catch (error) {
+    console.error("Failed to send forgot-password email:", error);
+    return res.status(500).json({ success: false, message: "Failed to send password reset email." });
+  }
+
+  return res.json({
+    success: true,
+    message: "Password reset instructions sent to your email."
+  });
+});
+
+app.post("/api/auth/verify-email", async (req, res) => {
+  const { email, token } = req.body;
+  const user = await findStaffAccountByEmail(email);
+  if (!user || !user.verificationToken || user.verificationToken !== String(token) || !user.verificationExpiresAt || new Date(user.verificationExpiresAt).getTime() < Date.now()) {
+    return res.status(400).json({ message: "Verification link is invalid or expired." });
+  }
+  await setStaffPassword(user.email, user.passwordHash, { verified: true, verificationToken: null, verificationExpiresAt: null });
+  return res.json({ success: true, message: "Email verified successfully. You can now sign in." });
+});
+
+app.post("/api/auth/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
-  const user = findUserByEmail(email);
+  const user = await findStaffAccountByEmail(email);
   const record = passwordResetOtps.get(user?.email);
   if (!user || !record || record.otp !== String(otp) || record.expiresAt < Date.now()) {
     return res.status(400).json({ message: "OTP is invalid or expired." });
@@ -290,15 +389,30 @@ app.post("/api/auth/verify-otp", (req, res) => {
   return res.json({ success: true, message: "OTP verified." });
 });
 
-app.post("/api/auth/reset-password", (req, res) => {
+app.post("/api/auth/reset-password", async (req, res) => {
   const { email, otp, password } = req.body;
-  const user = findUserByEmail(email);
-  const record = passwordResetOtps.get(user?.email);
-  if (!user || !record || record.otp !== String(otp) || record.expiresAt < Date.now()) {
-    return res.status(400).json({ message: "OTP is invalid or expired." });
+  const user = await findStaffAccountByEmail(email);
+  const record = passwordResetOtps.get(user?.email) || (user ? {
+    otp: user.passwordResetToken,
+    expiresAt: user.passwordResetExpiresAt ? new Date(user.passwordResetExpiresAt).getTime() : 0
+  } : null);
+  if (!user || !record || record.otp !== String(otp) || !record.expiresAt || record.expiresAt < Date.now()) {
+    return res.status(400).json({ message: "Reset code is invalid or expired." });
   }
-  user.password = String(password || "");
+  await setStaffPassword(user.email, hashPassword(password), { verified: true, mustChangePassword: false, passwordResetToken: null, passwordResetExpiresAt: null });
   passwordResetOtps.delete(user.email);
+
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: "Your The Infusion Saga password has been reset",
+      text: `Your password was reset successfully for ${user.email}.\nYou can sign in with your new password now.`
+    });
+  } catch (error) {
+    console.error("Failed to send reset-password confirmation email:", error);
+    return res.status(500).json({ ok: false, message: "Password updated, but failed to send the confirmation email." });
+  }
+
   return res.json({ ok: true, message: "Password updated successfully." });
 });
 
@@ -414,9 +528,15 @@ app.post("/api/uploads", requireAdmin, (req, res, next) => {
   });
 });
 
-app.get("/api/orders", requireStaff, async (_req, res, next) => {
+app.get("/api/orders", requireStaff, async (req, res, next) => {
   try {
-    res.json(await store.orders());
+    const requestedLimit = Number(req.query.limit || 100);
+    const safeLimit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 500) : 100;
+    const statuses = typeof req.query.status === "string" && req.query.status.trim()
+      ? req.query.status.split(",").map((value) => String(value).trim()).filter(Boolean)
+      : [];
+
+    res.json(await store.orders({ limit: safeLimit, status: statuses.join(",") }));
   } catch (error) {
     next(error);
   }
@@ -554,7 +674,7 @@ app.get("/api/coc-requests", requireStaff, async (_req, res, next) => {
 app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
   try {
     const order = await store.approveCocRequest(req.params.id);
-    if (!order) return res.status(404).json({ message: "COC request not found" });
+    if (!order) return res.status(404).json({ message: "COC request not found. Refresh the list and try again." });
     cacheOrder(order);
     res.json(order);
     scheduleOrderReadySms(order);
@@ -608,8 +728,11 @@ app.post("/api/inventory/:id/purchase", requireAdmin, async (req, res, next) => 
     const amount = Number(quantity || 0);
     if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: "Invalid purchase quantity." });
     const actualUnit = String(unit || material.unit).trim().toLowerCase();
-    await store.adjustRawMaterialStock(req.params.id, amount, note || "Stock purchase", req.params.id);
-    res.json(await store.rawMaterial(req.params.id));
+    const result = await store.adjustRawMaterialStock(req.params.id, amount, note || "Stock purchase", req.params.id);
+    res.json({
+      material: result.material || (await store.rawMaterial(req.params.id)),
+      isLowStock: result.isLowStock || false
+    });
   } catch (error) {
     next(error);
   }
@@ -692,9 +815,11 @@ app.get("/api/reports/monthly", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.get("/api/orders/history", requireAdmin, async (_req, res, next) => {
+app.get("/api/orders/history", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.orders());
+    const requestedLimit = Number(req.query.limit || 100);
+    const safeLimit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 500) : 100;
+    res.json(await store.orders({ limit: safeLimit }));
   } catch (error) {
     next(error);
   }
@@ -754,7 +879,13 @@ if (fs.existsSync(clientDist)) {
   app.get(/^\/(?!api).*/, (_req, res) => res.sendFile(path.join(clientDist, "index.html")));
 }
 
-await connectDatabase();
+try {
+  await connectDatabase();
+} catch (error) {
+  console.error(error.message || error);
+  process.exit(1);
+}
+
 const server = app.listen(port, () => {
   console.log(`The Infusion Saga API listening on http://localhost:${port}`);
 });

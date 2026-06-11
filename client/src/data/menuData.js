@@ -12,6 +12,12 @@ export const categories = [
     "sortOrder": 10
   },
   {
+    "id": "coconut-water",
+    "name": "Coconut Water",
+    "icon": "Droplet",
+    "sortOrder": 15
+  },
+  {
     "id": "snacks",
     "name": "Snacks",
     "icon": "Sandwich",
@@ -22,6 +28,18 @@ export const categories = [
     "name": "Dessert",
     "icon": "CakeSlice",
     "sortOrder": 30
+  },
+  {
+    "id": "water-bottles",
+    "name": "Water Bottles",
+    "icon": "Droplet",
+    "sortOrder": 32
+  },
+  {
+    "id": "cigarettes",
+    "name": "Cigarettes",
+    "icon": "Smoking",
+    "sortOrder": 35
   }
 ];
 
@@ -43,7 +61,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "black-tea",
@@ -62,7 +81,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "green-tea",
@@ -81,7 +101,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "tulsi-tea",
@@ -100,7 +121,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "lemon-tea",
@@ -119,7 +141,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "honey-lemon-tea",
@@ -138,7 +161,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 48
+    "price": 48,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "signature-infusion-chai",
@@ -157,7 +181,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 28
+    "price": 28,
+    "serveTypes": ["Kulhad", "Glass"]
   },
   {
     "id": "infusion-heritage-coffee",
@@ -176,7 +201,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 118
+    "price": 118,
+    "serveTypes": ["Kulhad", "Glass", "Cup"]
   },
   {
     "id": "hot-chocolate",
@@ -195,7 +221,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 98
+    "price": 98,
+    "serveTypes": ["Kulhad", "Glass", "Cup"]
   },
   {
     "id": "core-coffee",
@@ -214,7 +241,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 68
+    "price": 68,
+    "serveTypes": ["Kulhad", "Glass", "Cup"]
   },
   {
     "id": "black-coffee",
@@ -233,7 +261,8 @@ export const menuItems = [
     ],
     "active": true,
     "category": "hot-drinks",
-    "price": 58
+    "price": 58,
+    "serveTypes": ["Kulhad", "Glass", "Cup"]
   },
   {
     "id": "infusion-signature-ice-tea",
@@ -825,6 +854,62 @@ export const menuItems = [
     "price": 138
   },
   {
+    "id": "prab-protein-milk-shake-double-chocolate",
+    "name": "Prab Protein Milk-shake (Double Chocolate)",
+    "categoryId": "cold-drinks",
+    "subcategory": "Milk Shakes",
+    "description": "",
+    "image": "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 85
+      }
+    ],
+    "active": true,
+    "category": "cold-drinks",
+    "price": 85
+  },
+  {
+    "id": "prab-protein-milk-shake-coffee",
+    "name": "Prab Protein Milk-shake (Coffee)",
+    "categoryId": "cold-drinks",
+    "subcategory": "Milk Shakes",
+    "description": "",
+    "image": "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 125
+      }
+    ],
+    "active": true,
+    "category": "cold-drinks",
+    "price": 125
+  },
+  {
+    "id": "storia-coconut-water",
+    "name": "Storia Coconut Water",
+    "categoryId": "coconut-water",
+    "description": "",
+    "image": "/assets/images/Cold Drinks/Ice Tea/Watermelon Ice Tea.jpg",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 60
+      }
+    ],
+    "active": true,
+    "category": "coconut-water",
+    "price": 60
+  },
+  {
     "id": "infusion-heritage-melt",
     "name": "Infusion Heritage Melt",
     "categoryId": "snacks",
@@ -1124,7 +1209,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 188
+    "price": 188,
+    "addons": {
+      "extraCheesePrice": 25
+    }
   },
   {
     "id": "paneer-bliss-burger",
@@ -1143,7 +1231,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 158
+    "price": 158,
+    "addons": {
+      "extraCheesePrice": 25
+    }
   },
   {
     "id": "cheese-indulgence-burger",
@@ -1162,7 +1253,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 128
+    "price": 128,
+    "addons": {
+      "extraCheesePrice": 25
+    }
   },
   {
     "id": "veg-essence-burger",
@@ -1181,7 +1275,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 98
+    "price": 98,
+    "addons": {
+      "extraCheesePrice": 25
+    }
   },
   {
     "id": "spiced-aloo-burger",
@@ -1200,7 +1297,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 78
+    "price": 78,
+    "addons": {
+      "extraCheesePrice": 25
+    }
   },
   {
     "id": "infusion-wok-hakka",
@@ -1390,7 +1490,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 318
+    "price": 318,
+    "addons": {
+      "extraCheesePrice": 30
+    }
   },
   {
     "id": "garden-harvest-pizza",
@@ -1409,7 +1512,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 278
+    "price": 278,
+    "addons": {
+      "extraCheesePrice": 30
+    }
   },
   {
     "id": "margherita-delight",
@@ -1428,7 +1534,10 @@ export const menuItems = [
     ],
     "active": true,
     "category": "snacks",
-    "price": 248
+    "price": 248,
+    "addons": {
+      "extraCheesePrice": 30
+    }
   },
   {
     "id": "kurkure-delight-momos",
@@ -1558,11 +1667,211 @@ export const menuItems = [
     "active": true,
     "category": "dessert",
     "price": 108
+  },
+  {
+    "id": "water-bottle",
+    "name": "Water Bottle",
+    "categoryId": "water-bottles",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 30
+      }
+    ],
+    "active": true,
+    "category": "water-bottles",
+    "price": 30
+  },
+  {
+    "id": "big-advance",
+    "name": "Big Advance",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "big-gold-flake",
+    "name": "Big Gold Flake",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "connect",
+    "name": "Connect",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 25
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 25
+  },
+  {
+    "id": "ultra-mild",
+    "name": "Ultra Mild",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "mild-classic",
+    "name": "Mild Classic",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "fine-touch",
+    "name": "Fine Touch",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 25
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 25
+  },
+  {
+    "id": "marlboro-red",
+    "name": "Marlboro Red",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "double-brust",
+    "name": "Double Brust",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "ice-brust",
+    "name": "Ice Brust",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
+  },
+  {
+    "id": "classic-regular",
+    "name": "Classic Regular",
+    "categoryId": "cigarettes",
+    "description": "",
+    "image": "",
+    "sizes": [
+      {
+        "id": "one",
+        "name": "Regular",
+        "label": "Regular",
+        "price": 28
+      }
+    ],
+    "active": true,
+    "category": "cigarettes",
+    "price": 28
   }
 ];
 
 export const subcategoryConfig = {
   "hot-drinks": ["Chai", "Coffee"],
   "cold-drinks": ["Ice Tea", "Cold Coffee", "Mojito", "Ice Slush", "Milk Shakes"],
-  snacks: ["Sandwich", "Pasta", "Garlic Bread", "French Fries", "Burger", "Noodles", "Maggi", "Pizza", "Dumplings"]
+  "coconut-water": [],
+  snacks: ["Sandwich", "Pasta", "Garlic Bread", "French Fries", "Burger", "Noodles", "Maggi", "Pizza", "Dumplings"],
+  cigarettes: []
 };

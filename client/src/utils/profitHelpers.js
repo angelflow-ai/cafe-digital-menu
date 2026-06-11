@@ -27,7 +27,17 @@ export function calculateTodayTotalProfit(orders = [], inventoryItems = [], reci
       if (!recipe || !Array.isArray(recipe.ingredients) || recipe.ingredients.length === 0) return;
       let costPerMenuItem = 0;
       recipe.ingredients.forEach((ing) => {
-        const raw = Array.isArray(inventoryItems) ? inventoryItems.find((m) => m.id === ing.rawMaterialId) : null;
+        const raw = Array.isArray(inventoryItems)
+          ? inventoryItems.find((m) =>
+              m.id === ing.rawMaterialId ||
+              m.id === ing.inventoryId ||
+              m.id === ing.ingredientId ||
+              m.name === ing.rawMaterialId ||
+              m.name === ing.inventoryId ||
+              m.name === ing.ingredientId ||
+              m.name === ing.name
+            )
+          : null;
         const unitCost = getUnitCost(raw);
         const amt = Number(ing.amount ?? 0) || 0;
         costPerMenuItem += amt * unitCost;

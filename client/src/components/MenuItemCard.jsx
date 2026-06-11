@@ -2,20 +2,15 @@ import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { imageUrl } from "../utils/imageHelper";
 
-const serveOptionsByItemId = {
-  "infusion-heritage-coffee": ["Kulhad", "Glass", "Cup"],
-  "personal-blend-chai": ["Kulhad", "Glass"],
-  "signature-infusion-chai": ["Kulhad", "Glass"],
-  "hot-chocolate": ["Kulhad", "Glass", "Cup"],
-  "core-coffee": ["Kulhad", "Glass", "Cup"],
-  "black-coffee": ["Kulhad", "Glass", "Cup"]
-};
-
 function getServeOptions(item) {
   if (!item) return [];
   const category = String(item.category || item.categoryId || "").toLowerCase();
   const isHotDrinks = category === "hot-drinks" || category === "hot drinks";
   if (!isHotDrinks) return [];
+
+  // Prioritize serveTypes field
+  const safeServeTypes = Array.isArray(item.serveTypes) ? item.serveTypes : [];
+  if (safeServeTypes.length > 0) return safeServeTypes;
 
   const safeServeOptions = Array.isArray(item.serveOptions) ? item.serveOptions : [];
   const safeServingOptions = Array.isArray(item.servingOptions) ? item.servingOptions : [];
@@ -51,11 +46,11 @@ function getServeOptions(item) {
     return ["Kulhad", "Glass"];
   }
 
-  return serveOptionsByItemId[item?.id] || [];
+  return [];
 }
 
 function rupees(value) {
-  return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
+  return `Rs. ${Number(value || 0).toLocaleString("en-IN")}`;
 }
 
 function priceText(item, selectedSizeId) {
@@ -67,13 +62,22 @@ function priceText(item, selectedSizeId) {
   return min === max ? rupees(min) : `${rupees(min)} - ${rupees(max)}`;
 }
 
+function isCigaretteItem(item) {
+  const category = String(item?.category || item?.categoryId || "").toLowerCase();
+  const name = String(item?.name || "").toLowerCase();
+  return category.includes("cigarette") || name.includes("cigarette");
+}
+
 export default function MenuItemCard({ item, onDetail, onAdd }) {
   const sizes = item?.sizes?.length
     ? item.sizes
     : [{ id: "default", name: "Regular", label: "Regular", price: item.price ?? 0 }];
   const [sizeId, setSizeId] = useState(sizes[0]?.id);
   const serveOptions = getServeOptions(item);
+  const displaySizes = sizes.filter(size => (size.label || size.name || "").toLowerCase() !== "regular");
   const [serveType, setServeType] = useState(serveOptions[0] || "");
+  const imageSrc = imageUrl(item?.image);
+  const showCigaretteFallback = isCigaretteItem(item) && !imageSrc;
 
   useEffect(() => {
     const currentSizes = item?.sizes?.length
@@ -83,44 +87,85 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
     setServeType(getServeOptions(item)[0] || "");
   }, [item.id, item.sizes, item.price]);
 
+  const hasServeOptions = serveOptions.length > 0;
+
   return (
-    <article className="glass-card group flex min-h-[300px] flex-col justify-between p-3">
-      <button onClick={onDetail} className="text-left">
-        <div className="relative mx-auto -mt-2 aspect-square w-[92%]">
-          <img src={imageUrl(item.image)} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" />
-        </div>
-        <h3 className="mt-2 text-base font-black leading-tight">{item.name}</h3>
-        <p className="mt-1 line-clamp-2 min-h-9 text-xs font-semibold text-stone-600">{item.description}</p>
-      </button>
-      <div className="mt-3 space-y-3">
-        {sizes.length > 1 && <SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} compact />}
-        {serveOptions.length > 0 && (
-          <div className="rounded-3xl border border-stone-200 bg-white/85 p-3 text-sm">
-            <p className="font-black text-stone-700">Choose Your Serve</p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {serveOptions.map((option) => (
-                <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full px-3 py-2 text-xs font-black transition ${serveType === option ? "bg-black text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>
-                  {option}
-                </button>
-              ))}
+    <article className={hasServeOptions ? "glass-card group flex h-full min-h-[320px] flex-col justify-between p-3" : "glass-card group flex h-full min-h-[320px] flex-col p-3"}>
+      {hasServeOptions ? (
+        <>
+          <button onClick={onDetail} className="text-left">
+            <div className="relative mx-auto mt-1 aspect-square w-[92%] max-w-[112px] shrink-0">
+              {showCigaretteFallback ? (
+                <div className="grid h-full w-full place-items-center rounded-full bg-rose-100 text-4xl text-rose-700 shadow-sm ring-1 ring-rose-200">🚬</div>
+              ) : (
+                <img src={imageSrc} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" />
+              )}
+            </div>
+            <h3 className="mt-3 min-h-[2.75rem] text-center text-base font-black leading-tight">{item.name}</h3>
+          </button>
+          <div className="mt-3 flex flex-1 flex-col gap-3">
+            {displaySizes.length > 1 && <SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} compact />}
+            {serveOptions.length === 1 ? (
+              <div className="rounded-3xl border border-stone-200 bg-white/85 p-3 text-sm">
+                <p className="font-black text-stone-700">Serve Option</p>
+                <p className="mt-2 text-stone-600">{serveOptions[0]}</p>
+              </div>
+            ) : serveOptions.length > 1 ? (
+              <div className="rounded-3xl border border-stone-200 bg-white/85 p-3 text-sm">
+                <p className="font-black text-stone-700">Choose Your Serve</p>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {serveOptions.map((option) => (
+                    <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full px-3 py-2 text-xs font-black transition ${serveType === option ? "bg-black text-white" : "bg-stone-100 text-stone-700 hover:bg-stone-200"}`}>
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="mt-auto flex items-center justify-between gap-2">
+              <span className="text-sm font-black">{priceText(item, sizeId)}</span>
+              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={() => onAdd(item, sizeId, 1, serveType)} aria-label={`Add ${item.name}`}>
+                <Plus size={20} />
+              </button>
             </div>
           </div>
-        )}
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-black">{priceText(item, sizeId)}</span>
-          <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={() => onAdd(item, sizeId, 1, serveType)} aria-label={`Add ${item.name}`}>
-            <Plus size={20} />
-          </button>
-        </div>
-      </div>
+        </>
+      ) : (
+        <>
+          <div className="flex flex-1 flex-col justify-center">
+            <button onClick={onDetail} className="text-left flex flex-col items-center justify-center">
+              <div className="relative mx-auto aspect-square w-[92%] max-w-[112px] shrink-0">
+                {showCigaretteFallback ? (
+                  <div className="grid h-full w-full place-items-center rounded-full bg-rose-100 text-4xl text-rose-700 shadow-sm ring-1 ring-rose-200">🚬</div>
+                ) : (
+                  <img src={imageSrc} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" />
+                )}
+              </div>
+              <h3 className="mt-3 min-h-[2.75rem] text-center text-base font-black leading-tight">{item.name}</h3>
+            </button>
+          </div>
+          <div className="mt-3 flex flex-col gap-3">
+            {displaySizes.length > 1 && <SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} compact />}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-black">{priceText(item, sizeId)}</span>
+              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={() => onAdd(item, sizeId, 1, serveType)} aria-label={`Add ${item.name}`}>
+                <Plus size={20} />
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </article>
   );
 }
 
 function SizeSelector({ sizes, value, setValue }) {
+  const displaySizes = sizes.filter(size => (size.label || size.name || "").toLowerCase() !== "regular");
+  if (displaySizes.length === 0) return null;
+  
   return (
-    <div className="grid gap-1 rounded-full bg-white/45 p-1" style={{ gridTemplateColumns: `repeat(${sizes.length}, minmax(0, 1fr))` }}>
-      {sizes.map((size) => (
+    <div className="grid gap-1 rounded-full bg-white/45 p-1" style={{ gridTemplateColumns: `repeat(${displaySizes.length}, minmax(0, 1fr))` }}>
+      {displaySizes.map((size) => (
         <button key={size.id} onClick={() => setValue(size.id)} className={`rounded-full px-2 py-2 text-xs font-black transition ${value === size.id ? "bg-black text-white" : "text-stone-700 hover:bg-white/55"}`}>
           {size.label}
         </button>

@@ -21,7 +21,17 @@ export async function patchOrder(orderId, payload) {
 }
 
 export async function listOrders(query = "") {
-  return api(`/orders${query ? `?${query}` : ""}`);
+  const searchParams = new URLSearchParams(query || "");
+  if (!searchParams.has("limit")) searchParams.set("limit", "100");
+  const queryString = searchParams.toString();
+  return api(`/orders${queryString ? `?${queryString}` : ""}`);
+}
+
+export async function listOrderHistory(query = "") {
+  const searchParams = new URLSearchParams(query || "");
+  if (!searchParams.has("limit")) searchParams.set("limit", "100");
+  const queryString = searchParams.toString();
+  return api(`/orders/history${queryString ? `?${queryString}` : ""}`);
 }
 
 export async function listCocRequests() {
@@ -43,6 +53,7 @@ export default {
   retryPublicOrder,
   patchOrder,
   listOrders,
+  listOrderHistory,
   listCocRequests,
   patchCocRequest,
   ordersStreamUrl,

@@ -1,5 +1,5 @@
 // Image fallback and URL helper logic
-const API_ROOT = (import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_ROOT = (import.meta.env.VITE_API_URL || "http://localhost:4000").replace(/\/$/, "");
 
 export function imageUrl(value) {
   if (!value) return "";

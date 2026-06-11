@@ -10,7 +10,7 @@ export function getItemQuantity(item) {
   return Number(item.quantity ?? item.qty ?? 1);
 }
 
-function getAddonTotal(item) {
+export function getAddonTotal(item) {
   const selectedAddons = Array.isArray(item.addons?.selectedAddons) ? item.addons.selectedAddons : [];
   const genericTotal = selectedAddons.reduce((sum, addon) => sum + safePrice(addon.price), 0);
   const legacyExtra = item.addons?.extraCheese ? safePrice(item.addons?.extraCheesePrice || 0) : 0;
@@ -94,8 +94,8 @@ export function getOrderTotal(order) {
 }
 
 export function normalizeVisibleSizeLabel(item) {
-  const rawLabel = item?.sizeName || item?.size || item?.variant || "";
-  return String(rawLabel).trim().toLowerCase() === "regular" ? "" : rawLabel;
+  const rawLabel = String(item?.sizeName || item?.size || item?.variant || "").trim();
+  return rawLabel.toLowerCase() === "regular" ? "" : rawLabel;
 }
 
 export function formatOrderItemLine(item) {
@@ -104,10 +104,12 @@ export function formatOrderItemLine(item) {
   const addonText = getAddonDisplay(item);
   const finalTotal = getFinalItemTotal(item);
   const sizeLabel = normalizeVisibleSizeLabel(item);
-  const serveText = item.serveType ? ` • ${item.serveType}` : "";
-  const sizePart = sizeLabel ? `${sizeLabel}${serveText}` : serveText;
-  const separator = sizePart ? " - " : "";
+  const serveText = String(item?.serveType || "").trim();
+  const servePart = serveText ? ` • ${serveText}` : "";
+  const sizePart = sizeLabel ? `${sizeLabel}` : "";
+  const descriptor = [sizePart, servePart].filter(Boolean).join("");
+  const separator = descriptor ? " - " : "";
 
-  const baseLine = `${item.name || item.title || item.itemId || "Item"}${separator}${sizePart} - ${quantity} x ${rupees(basePrice)}`;
+  const baseLine = `${item.name || item.title || item.itemId || "Item"}${separator}${descriptor} - ${quantity} x ${rupees(basePrice)}`;
   return addonText ? `${baseLine}${addonText} = ${rupees(finalTotal)}` : `${baseLine} = ${rupees(finalTotal)}`;
 }
