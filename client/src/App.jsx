@@ -27,6 +27,7 @@ import QRCode from "qrcode";
 import PrintableReceipt, { normalizeReceiptOrder } from "./PrintableReceipt";
 import logoUrl from "./assets/infusion-saga-logo.png";
 import ordersStore from "./ordersStore";
+import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
 import inventoryStore from "./inventoryStore";
 import demoMode from "./demoMode";
@@ -2336,7 +2337,7 @@ function DetailModal({ item, onClose, onAdd }) {
   const genericAddons = Array.isArray(item.addons) ? item.addons : [];
 
   // safe detection across category, subcategory and name (project uses subcategory for some items)
-  const categoryStr = String(item.category || "").toLowerCase();
+  const categoryStr = String(item.category || item.categoryId || "").toLowerCase();
   const subcategoryStr = String(item.subcategory || "").toLowerCase();
   const nameStr = String(item.name || "").toLowerCase();
 
@@ -2396,7 +2397,7 @@ function DetailModal({ item, onClose, onAdd }) {
 
           <div className="detail-image-wrap">
             {showCigaretteFallback ? (
-              <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-rose-100 text-[3rem] text-rose-700 shadow-sm ring-1 ring-rose-200">🚬</div>
+              <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">🚬</div>
             ) : (
               <img src={imageUrl(item.image)} alt={item.name} className="detail-image" />
             )}
@@ -3286,18 +3287,18 @@ function Login({ onLogin, navigate, role }) {
 
   return (
     <OwnerShell>
-      <div className="mx-auto grid min-h-[calc(100vh-4rem)] max-w-5xl place-items-center">
-        <form onSubmit={submit} className="w-full max-w-md rounded-[2rem] bg-white p-6 shadow-glass">
+      <div className="mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center py-4 sm:min-h-[calc(100vh-4rem)] sm:py-0">
+        <form onSubmit={submit} className="w-full max-w-[22rem] rounded-[1.5rem] bg-white p-5 shadow-glass sm:max-w-md sm:rounded-[2rem] sm:p-6">
           <button type="button" onClick={() => navigate("/")} className="mb-5 text-sm font-black text-stone-500">Back to cafe</button>
-          <h1 className="text-3xl font-black">{roleLabel} login</h1>
+          <h1 className="text-2xl font-black sm:text-3xl">{roleLabel} login</h1>
           <p className="mt-2 text-sm font-semibold text-stone-600">Use your registered {roleLabel.toLowerCase()} email and password to sign in.</p>
-          <div className="mt-6 space-y-3">
-            <input className="field bg-stone-50" type="email" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} required />
-            <input className="field bg-stone-50" type="password" placeholder="Password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+          <div className="mt-5 space-y-3 sm:mt-6">
+            <input className="field min-w-0 bg-stone-50 text-base" type="email" placeholder="Email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="username" autoCapitalize="none" spellCheck={false} required />
+            <input className="field min-w-0 bg-stone-50 text-base" type="password" placeholder="Password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:opacity-70"
+              className="w-full rounded-full bg-black px-5 py-3.5 font-black text-white disabled:cursor-not-allowed disabled:opacity-70 sm:py-4"
             >
               {isSubmitting ? "Signing in..." : "Sign in"}
             </button>
@@ -4080,34 +4081,65 @@ function PendingVerification({ orders, onSaved }) {
       {pending.map((order) => {
         const sourceLabel = getBillerOrderClassification(order).sourceBadge;
         const orderItems = Array.isArray(order?.items) ? order.items : [];
+        const paymentLabel = String(order?.paymentMethod || order?.method || "").toLowerCase().includes("cash") ? "Cash on Counter" : "Online";
 
         return (
-          <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-xl font-black">{order.customerName}</h2>
-                <p className="text-sm font-bold text-stone-500">Order {order.orderId || order.id || order._id} • Table {order.tableNumber} • {order.phone} • {rupees(order.total)}</p>
+          <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="text-lg font-black sm:text-xl">
+                  <span className="sm:hidden">{order.customerName || "Customer"} • Table {order.tableNumber ?? order.table ?? "-"}</span>
+                  <span className="hidden sm:inline">{order.customerName}</span>
+                </h2>
+                <p className="text-sm font-bold leading-5 text-stone-500">
+                  <span className="sm:hidden">{order.phone || "-"} • {rupees(order.total)} • {paymentLabel}</span>
+                  <span className="hidden sm:inline">Order {order.orderId || order.id || order._id} • Table {order.tableNumber} • {order.phone} • {rupees(order.total)}</span>
+                </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
+              {sourceLabel && (
+                <span className="w-fit rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700 sm:hidden">
+                  {sourceLabel}
+                </span>
+              )}
+              <div className="hidden w-full grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-wrap">
                 {sourceLabel && (
-                  <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                  <span className="w-fit rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
                     {sourceLabel}
                   </span>
                 )}
                 {['payment_issue', 'rejected', 'payment_rejected'].includes(String(order.paymentStatus || '').toLowerCase()) && (
-                  <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-600">Payment Rejected</span>
+                  <span className="w-fit rounded-full bg-rose-100 px-3 py-1 text-xs font-black text-rose-600">Payment Rejected</span>
                 )}
                 {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') ? (
-                  <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-600 px-4 py-2 text-sm font-black text-white">Confirm Payment & Order</button>
+                  <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="col-span-2 rounded-full bg-emerald-700 px-3 py-2 text-xs font-black leading-tight text-white sm:col-span-1 sm:px-4 sm:text-sm">Confirm Payment & Order</button>
                 ) : (
-                  <button disabled className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Confirmed</button>
+                  <button disabled className="col-span-2 rounded-full bg-emerald-700 px-3 py-2 text-xs font-black text-white sm:col-span-1 sm:px-4 sm:text-sm">Confirmed</button>
                 )}
                 {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') && (
-                  <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="rounded-full bg-rose-200 px-4 py-2 text-sm font-black">Reject Payment</button>
+                  <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="col-span-2 rounded-full bg-rose-200 px-3 py-2 text-xs font-black sm:col-span-1 sm:px-4 sm:text-sm">Reject Payment</button>
                 )}
               </div>
             </div>
-            <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
+            <div className="mt-4 border-t border-slate-200/80 pt-4 sm:hidden">
+              <div className="grid gap-3 text-sm text-stone-700">
+                {orderItems.map((line, index) => (
+                  <OrderLineCard key={index} line={line} order={order} />
+                ))}
+              </div>
+            </div>
+            <div className="mt-4 border-t border-slate-200/80 pt-4 sm:hidden">
+              <div className="flex items-center gap-2">
+                {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') ? (
+                  <button onClick={() => confirmPayment(order)} disabled={processing[order._id || order.id]} className="flex-1 rounded-full bg-emerald-700 px-3 py-2 text-xs font-black leading-tight text-white">Confirm Payment & Order</button>
+                ) : (
+                  <button disabled className="flex-1 rounded-full bg-emerald-700 px-3 py-2 text-xs font-black text-white">Confirmed</button>
+                )}
+                {(!confirmedMap[order._id || order.id] && order.status !== 'confirmed') && (
+                  <button onClick={() => rejectPayment(order)} disabled={processing[order._id || order.id]} className="flex-1 rounded-full bg-rose-200 px-3 py-2 text-xs font-black">Reject Payment</button>
+                )}
+              </div>
+            </div>
+            <div className="mt-3 hidden gap-2 text-sm font-semibold text-stone-700 sm:grid">
               {orderItems.map((line, index) => <p key={index}>{formatOrderItemLine(line)}</p>)}
             </div>
           </article>
@@ -4775,19 +4807,32 @@ function AddStockPage({ rawMaterials, onSaved }) {
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [recentTransactions, setRecentTransactions] = useState([]);
 
-  // Load local inventory items
+  // Load local inventory items and recent transactions
   useEffect(() => {
     const saved = loadLocalInventoryItems();
     setLocalItems(saved);
+    
+    // Load transactions
+    stockTransactionsStore.loadTransactions();
+    setRecentTransactions(stockTransactionsStore.getRecentTransactions(20));
     
     function handleInventoryUpdated(event) {
       const items = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
       setLocalItems(items);
     }
     
+    // Subscribe to transaction updates
+    const unsubscribe = stockTransactionsStore.subscribe((transactions) => {
+      setRecentTransactions(transactions.slice(0, 20));
+    });
+    
     window.addEventListener("inventoryUpdated", handleInventoryUpdated);
-    return () => window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
+    return () => {
+      window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
+      unsubscribe();
+    };
   }, []);
 
   // Combine backend and local inventory
@@ -4828,6 +4873,19 @@ function AddStockPage({ rawMaterials, onSaved }) {
         await (await import("./services/inventoryService")).purchaseInventory(selectedId, { quantity: Number(quantity), note });
       }
       
+      // Create stock transaction record
+      const selectedItem = allItems.find(i => i.id === selectedId);
+      if (selectedItem) {
+        stockTransactionsStore.addTransaction(
+          selectedItem.name,
+          Number(quantity),
+          selectedItem.unit || "pcs",
+          note
+        );
+        // Dispatch event for immediate UI update
+        window.dispatchEvent(new CustomEvent("stockTransactionAdded"));
+      }
+      
       setQuantity("");
       setNote("");
       setMessage("Stock updated successfully.");
@@ -4841,18 +4899,52 @@ function AddStockPage({ rawMaterials, onSaved }) {
 
   return (
     <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
+      {/* Left Panel: Recent Stock Transactions */}
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-black">Add stock</h2>
-        <p className="mt-2 text-sm text-stone-600">Use this page to add fresh stock for raw materials, ingredients, and supplies. Quickly increase inventory quantities.</p>
+        <div>
+          <h2 className="text-xl font-black">Recent Stock Transactions</h2>
+          <p className="mt-1 text-sm text-stone-600">Latest inventory stock additions</p>
+        </div>
         
-        {allItems.length === 0 && (
-          <div className="mt-6 rounded-3xl bg-stone-50 p-4 text-center">
-            <p className="text-sm font-bold text-stone-600">No inventory items found. Create items in the Inventory tab first.</p>
-          </div>
-        )}
+        <div className="mt-5 space-y-3">
+          {recentTransactions.length > 0 ? (
+            recentTransactions.map((transaction) => {
+              const date = new Date(transaction.timestamp);
+              const formattedDate = date.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+              const formattedTime = date.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+              
+              return (
+                <div key={transaction.id} className="rounded-2xl bg-stone-50 p-4 border border-stone-200">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-black text-stone-900">{transaction.itemName}</p>
+                      <p className="mt-2 text-sm font-bold text-emerald-700">+{transaction.quantityAdded} {transaction.unit}</p>
+                      <p className="mt-1 text-xs text-stone-500">{formattedDate} • {formattedTime}</p>
+                      {transaction.note && (
+                        <p className="mt-2 text-xs text-stone-600 italic">{transaction.note}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="rounded-2xl bg-stone-50 p-4 border border-stone-200 text-center">
+              <p className="text-sm font-bold text-stone-500">No stock transactions recorded yet.</p>
+              <p className="mt-1 text-xs text-stone-400">Transactions will appear here when you add stock.</p>
+            </div>
+          )}
+        </div>
       </div>
       
-      {allItems.length > 0 && (
+      {/* Right Panel: Quick Add Stock Form */}
+      {allItems.length === 0 ? (
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <div className="rounded-3xl bg-stone-50 p-4 text-center">
+            <p className="text-sm font-bold text-stone-600">No inventory items found. Create items in the Inventory tab first.</p>
+          </div>
+        </div>
+      ) : (
         <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
           <h3 className="font-black mb-3">Quick add stock</h3>
           <div className="space-y-4">
@@ -5726,7 +5818,7 @@ function OrderHistory({ orders }) {
               <h2 className="text-xl font-black">Order history</h2>
               <p className="mt-2 text-sm text-stone-600">Review completed and pending order records.</p>
             </div>
-            <div className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black text-stone-700">
+            <div className="hidden rounded-full bg-stone-100 px-4 py-2 text-sm font-black text-stone-700 sm:block">
               Total Orders: {visibleOrders.length}
             </div>
           </div>
@@ -5740,7 +5832,7 @@ function OrderHistory({ orders }) {
             />
           </label>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 scroll-smooth sm:w-auto sm:flex-wrap sm:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {quickFilters.map((filterKey) => {
               const filterLabel = filterKey === "all" ? "All"
                 : filterKey === "completed" ? "Completed"
@@ -5753,7 +5845,7 @@ function OrderHistory({ orders }) {
                 <button
                   key={filterKey}
                   onClick={() => setActiveFilter(filterKey)}
-                  className={`rounded-full px-4 py-2 text-sm font-black transition-colors ${
+                  className={`shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-black transition-colors ${
                     activeFilter === filterKey
                       ? "bg-black text-white"
                       : "bg-stone-100 text-stone-700 hover:bg-stone-200"
@@ -5765,10 +5857,10 @@ function OrderHistory({ orders }) {
             })}
             </div>
             <div className="flex flex-col items-start gap-2 sm:items-end">
-              <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
+              <div className="flex w-full flex-nowrap items-center justify-between gap-1 sm:w-auto sm:flex-wrap sm:justify-end sm:gap-2">
                 <button
                   onClick={() => setActiveFilter("today")}
-                  className={`rounded-full px-4 py-2 text-sm font-black transition-colors ${
+                  className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-black transition-colors sm:px-4 sm:text-sm ${
                     activeFilter === "today"
                       ? "bg-black text-white"
                       : "bg-stone-100 text-stone-700 hover:bg-stone-200"
@@ -5778,7 +5870,7 @@ function OrderHistory({ orders }) {
                 </button>
                 <button
                   onClick={() => setActiveFilter("customDate")}
-                  className={`rounded-full px-4 py-2 text-sm font-black transition-colors ${
+                  className={`shrink-0 rounded-full px-3 py-2 text-[11px] font-black transition-colors sm:px-4 sm:text-sm ${
                     activeFilter === "customDate"
                       ? "bg-black text-white"
                       : "bg-stone-100 text-stone-700 hover:bg-stone-200"
@@ -5786,6 +5878,9 @@ function OrderHistory({ orders }) {
                 >
                   Customize Date
                 </button>
+                <div className="shrink-0 whitespace-nowrap rounded-full bg-stone-100 px-2.5 py-2 text-[11px] font-black text-stone-700 sm:hidden">
+                  Total Orders: {visibleOrders.length}
+                </div>
               </div>
               {activeFilter === "customDate" && (
                 <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
@@ -5830,27 +5925,27 @@ function OrderHistory({ orders }) {
 
           return (
             <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-xl font-black">{order.customerName}</h3>
-                    <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-black text-stone-700">
+              <div className="flex flex-nowrap items-start justify-between gap-2 sm:gap-3">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <h3 className="text-lg font-black sm:text-xl">{order.customerName}</h3>
+                    <span className="rounded-full bg-stone-100 px-2 py-1 text-[10px] font-black text-stone-700 sm:px-3 sm:text-sm">
                       {rupees(order.total ?? order.totalAmount ?? order.grandTotal ?? getOrderTotal(order))}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
                   <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} • {order.phone}</p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className={`rounded-full px-2 py-1 text-xs font-black uppercase ${statusClass}`}>{statusLabel}</span>
+                <div className="shrink-0 flex flex-col items-end gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
+                    <span className={`rounded-full px-1.5 py-1 text-[10px] font-black uppercase sm:px-2 sm:text-xs ${statusClass}`}>{statusLabel}</span>
                     {sourceLabel && (
-                      <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                      <span className="rounded-full bg-stone-100 px-1.5 py-1 text-[10px] font-black uppercase tracking-[0.04em] text-stone-700 sm:px-2 sm:text-[11px]">
                         {sourceLabel}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-stone-600">{formatOrderDateTime(order.createdAt)}</p>
+                  <p className="text-[10px] text-stone-600 sm:text-xs">{formatOrderDateTime(order.createdAt)}</p>
                 </div>
               </div>
               <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
