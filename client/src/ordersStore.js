@@ -19,7 +19,7 @@ function notify() {
 
 export async function loadOrders() {
   try {
-    const res = await api("/orders?limit=100&status=new,pending,pending_verification,confirmed,preparing,ready");
+    const res = await api("/orders?limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected");
     orders = res || [];
     notify();
     try { sync.saveOrders(orders); } catch (e) {}

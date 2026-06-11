@@ -41,7 +41,7 @@ import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCa
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateTodayTotalProfit } from "./utils/profitHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
-import { mergeCocRequestEntries as mergeCocRequestEntriesFromHelper, resolveCocRequestId } from "./utils/cocRequestUtils";
+import { getCocRequestIdentityKeys, isCocTerminalState, mergeCocRequestEntries as mergeCocRequestEntriesFromHelper, resolveCocRequestId } from "./utils/cocRequestUtils";
 import { formatOrderItemLine, getBasePrice, getAddonDisplay, getAddonEachText, getFinalItemTotal, getOrderTotal, normalizeVisibleSizeLabel } from "./utils/orderDisplayFormatter";
 import { api, API, API_ROOT } from "./services/apiClient";
 import orderService from "./services/orderService";
@@ -3000,13 +3000,13 @@ function BillerApp({ navigate }) {
 
       const cocData = cocResult.status === "fulfilled" ? cocResult.value : [];
       const itemData = itemResult.status === "fulfilled" ? itemResult.value : [];
-      const categoryData = categoryResult.status === "fulfilled" ? categoryResult.value : [];
+      const categoryData = categoryResult.status === "fulfilled" ? categoryResult.value : defaultCategories;
 
-      if (cocResult.status === "rejected" || itemResult.status === "rejected" || categoryResult.status === "rejected") {
-        setLoadError("Some biller data could not be loaded. Showing available fallback data.");
+      if (cocResult.status === "rejected") {
+        setLoadError("COC requests could not be loaded. Live orders are still available.");
       }
 
-      const freshOrders = await orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready").catch(() => sync.getOrdersFromStorage());
+      const freshOrders = await orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected").catch(() => sync.getOrdersFromStorage());
       const safeCategories = ensureActiveCategories(categoryData);
       const safeItems = ensureActiveMenuItems(itemData, safeCategories);
       setOrders(Array.isArray(freshOrders) ? freshOrders : []);
@@ -3027,7 +3027,7 @@ function BillerApp({ navigate }) {
       console.error("Failed to load biller data:", error);
       const safeCategories = ensureActiveCategories([]);
       const safeItems = ensureActiveMenuItems([], safeCategories);
-      const freshOrders = await orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready").catch(() => sync.getOrdersFromStorage());
+      const freshOrders = await orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected").catch(() => sync.getOrdersFromStorage());
       setOrders(Array.isArray(freshOrders) ? freshOrders : []);
       setCocRequests([]);
       setItems(safeItems);
@@ -3888,6 +3888,12 @@ function mergeBillerOrders(orders, cocRequests) {
   });
   const pendingCocRequests = Array.isArray(cocRequests) ? cocRequests : [];
   const seen = new Map();
+  const blockedCocKeys = new Set();
+
+  (Array.isArray(orders) ? orders : []).forEach((order) => {
+    if (!isCocTerminalState(order)) return;
+    getCocRequestIdentityKeys(order).forEach((key) => blockedCocKeys.add(key));
+  });
 
   liveOrders.forEach((order) => {
     const key = order?.orderId || order?.id || order?._id;
@@ -3895,6 +3901,8 @@ function mergeBillerOrders(orders, cocRequests) {
   });
 
   pendingCocRequests.forEach((request) => {
+    if (isCocTerminalState(request)) return;
+    if (getCocRequestIdentityKeys(request).some((key) => blockedCocKeys.has(key))) return;
     if (!getBillerOrderClassification(request).isCocRequest) return;
     const key = resolveCocRequestId(request);
     if (!key) return;
@@ -5713,9 +5721,14 @@ function OrderHistory({ orders }) {
     <section className="space-y-4">
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
         <div className="flex flex-col gap-3">
-          <div>
-            <h2 className="text-xl font-black">Order history</h2>
-            <p className="mt-2 text-sm text-stone-600">Review completed and pending order records.</p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-black">Order history</h2>
+              <p className="mt-2 text-sm text-stone-600">Review completed and pending order records.</p>
+            </div>
+            <div className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black text-stone-700">
+              Total Orders: {visibleOrders.length}
+            </div>
           </div>
           <label className="flex items-center gap-3 rounded-full bg-stone-100 px-4 py-3">
             <Search size={18} className="text-stone-500" />
@@ -5819,7 +5832,12 @@ function OrderHistory({ orders }) {
             <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-xl font-black">{order.customerName}</h3>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-xl font-black">{order.customerName}</h3>
+                    <span className="rounded-full bg-stone-100 px-3 py-1 text-sm font-black text-stone-700">
+                      {rupees(order.total ?? order.totalAmount ?? order.grandTotal ?? getOrderTotal(order))}
+                    </span>
+                  </div>
                   <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
                   <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} • {order.phone}</p>
                 </div>

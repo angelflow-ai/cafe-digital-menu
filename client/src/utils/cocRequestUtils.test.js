@@ -70,3 +70,79 @@ test('does not keep approved OOC orders in the COC Requests list once approval i
 
   assert.equal(isCocApprovalCandidate(approvedOrder), false);
 });
+
+test('does not keep cancelled COC orders in the COC Requests list', () => {
+  const cancelledOrder = {
+    id: 'order-1',
+    orderId: 'ORD-1',
+    orderType: 'COC',
+    source: 'coc',
+    paymentMethod: 'cash',
+    status: 'cancelled',
+    paymentStatus: 'pending',
+    pendingApproval: true,
+    items: []
+  };
+  const staleRequest = {
+    id: 'coc-1',
+    requestId: 'coc-1',
+    orderId: 'ORD-1',
+    orderType: 'COC',
+    paymentMethod: 'cash',
+    status: 'pending',
+    paymentStatus: 'pending',
+    pendingApproval: true,
+    items: []
+  };
+
+  assert.equal(isCocApprovalCandidate(cancelledOrder), false);
+  assert.equal(mergeCocRequestEntries([cancelledOrder], [staleRequest]).length, 0);
+});
+
+test('keeps payment rejected COC orders in the COC Requests list for retry handling', () => {
+  const rejectedOrder = {
+    id: 'order-1',
+    orderId: 'ORD-1',
+    orderType: 'COC',
+    source: 'coc',
+    paymentMethod: 'cash',
+    status: 'payment_rejected',
+    paymentStatus: 'payment_rejected',
+    pendingApproval: true,
+    items: []
+  };
+  const staleRequest = {
+    id: 'coc-1',
+    requestId: 'coc-1',
+    orderId: 'ORD-1',
+    orderType: 'COC',
+    paymentMethod: 'cash',
+    status: 'pending',
+    paymentStatus: 'pending',
+    pendingApproval: true,
+    items: []
+  };
+
+  assert.equal(isCocApprovalCandidate(rejectedOrder), true);
+  assert.equal(mergeCocRequestEntries([rejectedOrder], [staleRequest]).length, 1);
+});
+
+test('keeps live COC orders marked payment rejected in the COC Requests list', () => {
+  const rejectedLiveOrder = {
+    id: 'order-1',
+    orderId: 'ORD-1',
+    orderType: 'COC',
+    source: 'coc',
+    paymentMethod: 'cash',
+    status: 'payment_rejected',
+    paymentStatus: 'pending',
+    pendingApproval: false,
+    requestStatus: 'approved',
+    items: []
+  };
+
+  assert.equal(isCocApprovalCandidate(rejectedLiveOrder), true);
+  const merged = mergeCocRequestEntries([rejectedLiveOrder], []);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].orderId, 'ORD-1');
+});

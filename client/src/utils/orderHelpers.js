@@ -142,22 +142,25 @@ export function getBillerOrderClassification(order) {
   const sourceBadge = getOrderSourceLabel(order) || (isOnlinePayment ? "QR" : isCashPayment ? "COC" : "QR");
 
   const liveStatuses = new Set(["pending", "confirmed", "preparing", "ready"]);
-  const excludedStatuses = new Set(["completed", "cancelled", "rejected", "payment rejected", "payment_rejected", "payment issue", "payment_issue"]);
+  const finalStatuses = new Set(["completed", "cancelled"]);
+  const rejectedPaymentStatuses = new Set(["rejected", "payment rejected", "payment issue"]);
+  const hasRejectedPayment = rejectedPaymentStatuses.has(status) || rejectedPaymentStatuses.has(paymentStatus);
 
   // PAY ONLINE FLOW: Show in Pending Verification only when:
   // - paymentStatus = "pending verification" (NOT paid/confirmed yet)
   // - paymentMethod is online (UPI, QR, UPI_INTENT_OR_STATIC_QR)
   // - status = "pending" (NOT confirmed yet)
-  const isPendingVerification = paymentStatus === "pending verification" && isOnlinePayment && status === "pending";
+  const isPendingVerification = isOnlinePayment && !finalStatuses.has(status) && !finalStatuses.has(paymentStatus)
+    && ((paymentStatus === "pending verification" && status === "pending") || hasRejectedPayment);
 
   // COC FLOW: Show in COC Requests only when:
   // - sourceBadge = "COC" or "OOC"
   // - pendingApproval = true OR (status = "pending" AND paymentStatus in ["pending", "unpaid", "cash_pending"])
   // - NOT confirmed/completed/paid/excluded
   const isCocRequest = (sourceBadge === "COC" || sourceBadge === "OOC")
-    && !excludedStatuses.has(status)
-    && !excludedStatuses.has(paymentStatus)
-    && (Boolean(order?.pendingApproval) || (status === "pending" && ["pending", "unpaid", "cash_pending"].includes(paymentStatus)));
+    && !finalStatuses.has(status)
+    && !finalStatuses.has(paymentStatus)
+    && (hasRejectedPayment || Boolean(order?.pendingApproval) || (status === "pending" && ["pending", "unpaid", "cash_pending"].includes(paymentStatus)));
 
   // LIVE ORDERS: Show in Live Orders only when:
   // - status in [pending, confirmed, preparing, ready]
@@ -165,8 +168,9 @@ export function getBillerOrderClassification(order) {
   // - NOT pending verification (those stay in Pending Verification tab)
   // - NOT a COC request waiting for approval
   const isLiveOrder = liveStatuses.has(status) 
-    && !excludedStatuses.has(status) 
-    && !excludedStatuses.has(paymentStatus) 
+    && !finalStatuses.has(status) 
+    && !finalStatuses.has(paymentStatus)
+    && !hasRejectedPayment
     && paymentStatus !== "pending verification"
     && !isCocRequest;
 
