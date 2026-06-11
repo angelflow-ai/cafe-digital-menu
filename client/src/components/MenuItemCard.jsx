@@ -124,7 +124,7 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
             ) : null}
             <div className="mt-auto flex items-center justify-between gap-2">
               <span className="text-sm font-black">{priceText(item, sizeId)}</span>
-              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={() => onAdd(item, sizeId, 1, serveType)} aria-label={`Add ${item.name}`}>
+              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={onDetail} aria-label={`Open ${item.name}`}>
                 <Plus size={20} />
               </button>
             </div>
@@ -148,7 +148,7 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
             {displaySizes.length > 1 && <SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} compact />}
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-black">{priceText(item, sizeId)}</span>
-              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={() => onAdd(item, sizeId, 1, serveType)} aria-label={`Add ${item.name}`}>
+              <button className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-black text-white shadow-lg" onClick={onDetail} aria-label={`Open ${item.name}`}>
                 <Plus size={20} />
               </button>
             </div>

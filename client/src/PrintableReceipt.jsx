@@ -1,6 +1,6 @@
 import React from "react";
 import logoUrl from "./assets/infusion-saga-logo.png";
-import reviewQrUrl from "./assets/review-qr.png";
+import reviewQrUrl from "./assets/review-qr.jpeg";
 import { formatOrderItemLine, getAddonTotal, getBasePrice, getFinalItemTotal, getItemQuantity, getOrderTotal } from "./utils/orderDisplayFormatter";
 
 function rupees(value) {
