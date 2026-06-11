@@ -13,7 +13,6 @@
     "test:order-flow": "node scripts/verify-order-flow.mjs"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^10.0.3"
   }
 }
-

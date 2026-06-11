@@ -2853,7 +2853,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               <p className="text-sm font-black">Table no.</p>
               <div className="grid grid-cols-3 gap-3">
                 {tables.map((number) => (
-                  <label key={number} className={`flex cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${tableNumber === String(number) ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                  <label key={number} className={`flex cursor-pointer items-center justify-center gap-3 rounded-3xl border px-4 py-3 text-center text-sm font-semibold transition ${tableNumber === String(number) ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
                     <input
                       type="radio"
                       name="tableNumber"
