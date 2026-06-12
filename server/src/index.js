@@ -138,6 +138,7 @@ const isProductionRuntime =
   Boolean(process.env.RENDER_EXTERNAL_URL) ||
   CLIENT_ORIGIN === PRODUCTION_CLIENT_ORIGIN;
 const useSecureSessionCookie = isProductionRuntime || CLIENT_ORIGIN.startsWith("https://");
+const AUTH_TOKEN_MAX_AGE_MS = 1000 * 60 * 60 * 8;
 
 function isLocalhostOrigin(origin) {
   return /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
@@ -180,6 +181,69 @@ function verifyPassword(password, storedPassword) {
   return String(password || "") === String(storedPassword);
 }
 
+function base64UrlEncode(value) {
+  return Buffer.from(value).toString("base64url");
+}
+
+function base64UrlJson(value) {
+  return base64UrlEncode(JSON.stringify(value));
+}
+
+function getAuthTokenSecret() {
+  return process.env.AUTH_TOKEN_SECRET || process.env.SESSION_SECRET || "dev-infusion-secret";
+}
+
+function signAuthPayload(payload) {
+  return crypto.createHmac("sha256", getAuthTokenSecret()).update(payload).digest("base64url");
+}
+
+function createAuthToken(user) {
+  const payload = base64UrlJson({
+    role: user.role,
+    email: user.email,
+    exp: Date.now() + AUTH_TOKEN_MAX_AGE_MS
+  });
+  return `${payload}.${signAuthPayload(payload)}`;
+}
+
+function getBearerToken(req) {
+  const header = req.get("authorization") || "";
+  const match = header.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1].trim() : null;
+}
+
+function verifyAuthToken(token) {
+  if (!token || !token.includes(".")) return null;
+  const [payload, signature] = token.split(".");
+  if (!payload || !signature) return null;
+
+  const expected = signAuthPayload(payload);
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (actualBuffer.length !== expectedBuffer.length || !crypto.timingSafeEqual(actualBuffer, expectedBuffer)) return null;
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    if (!data?.email || !data?.role || !data?.exp || Number(data.exp) < Date.now()) return null;
+    if (data.role !== "admin" && data.role !== "biller") return null;
+    return { role: data.role, email: normalizeEmail(data.email) };
+  } catch (error) {
+    return null;
+  }
+}
+
+async function getAuthenticatedUser(req) {
+  if (req.session?.user?.role === "admin" || req.session?.user?.role === "biller") return req.session.user;
+
+  const tokenUser = verifyAuthToken(getBearerToken(req));
+  if (!tokenUser) return null;
+
+  const user = await findStaffAccountByEmail(tokenUser.email);
+  if (!user || user.role !== tokenUser.role || !user.verified || !isAllowedEmailForRole(tokenUser.email, tokenUser.role)) return null;
+  req.authUser = tokenUser;
+  return tokenUser;
+}
+
 
 const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
   ? nodemailer.createTransport({
@@ -209,14 +273,24 @@ async function sendEmail({ to, subject, text, html }) {
   return { sent: true };
 }
 
-function requireAdmin(req, res, next) {
-  if (req.session?.user?.role === "admin") return next();
-  return res.status(401).json({ message: "Admin login required." });
+async function requireAdmin(req, res, next) {
+  try {
+    const user = await getAuthenticatedUser(req);
+    if (user?.role === "admin") return next();
+    return res.status(401).json({ message: "Admin login required." });
+  } catch (error) {
+    return next(error);
+  }
 }
 
-function requireStaff(req, res, next) {
-  if (req.session?.user?.role === "admin" || req.session?.user?.role === "biller") return next();
-  return res.status(401).json({ message: "Staff login required." });
+async function requireStaff(req, res, next) {
+  try {
+    const user = await getAuthenticatedUser(req);
+    if (user?.role === "admin" || user?.role === "biller") return next();
+    return res.status(401).json({ message: "Staff login required." });
+  } catch (error) {
+    return next(error);
+  }
 }
 
 function slugify(value) {
@@ -249,7 +323,7 @@ function createLoginResponse(user, req, res) {
   if (!user.verified) {
     return res.status(403).json({ message: "Please verify your email." });
   }
-  const token = crypto.randomUUID();
+  const token = createAuthToken(user);
   req.session.user = { role: user.role, email: user.email, token };
   return res.json({ success: true, token, user: { role: user.role, email: user.email } });
 }
@@ -285,8 +359,13 @@ app.post("/api/auth/logout", (req, res) => {
   req.session.destroy(() => res.json({ ok: true }));
 });
 
-app.get("/api/auth/me", (req, res) => {
-  res.json({ user: req.session?.user || null });
+app.get("/api/auth/me", async (req, res, next) => {
+  try {
+    const user = await getAuthenticatedUser(req);
+    res.json({ user: user ? { role: user.role, email: user.email } : null });
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.get("/api/auth/check-email", async (req, res) => {

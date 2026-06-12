@@ -3,6 +3,7 @@ import demoMode from "../demoMode";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 const API = API_URL.replace(/\/$/, "") + "/api";
 const API_ROOT = API_URL.replace(/\/$/, "");
+const AUTH_TOKEN_STORAGE_KEY = "infusion-auth-token";
 
 const inFlight = new Map();
 const LOGIN_RETRY_DELAY_MS = 700;
@@ -26,16 +27,45 @@ function devLog(...args) {
   if (import.meta.env.DEV) console.warn(...args);
 }
 
+function getAuthToken() {
+  try {
+    return localStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || sessionStorage.getItem(AUTH_TOKEN_STORAGE_KEY) || "";
+  } catch (error) {
+    return "";
+  }
+}
+
+function setAuthToken(token) {
+  try {
+    if (token) {
+      localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+      return;
+    }
+    localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  } catch (error) {
+    try {
+      if (token) sessionStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+      else sessionStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    } catch (_error) {}
+  }
+}
+
 async function rawFetch(path, options = {}) {
   const url = `${API}${path}`;
   const method = (options.method || "GET").toUpperCase();
   const timeoutMs = options.timeout || (isLoginRequest(path) ? 8000 : 15000);
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+  const token = getAuthToken();
+  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (token && !headers.Authorization && !headers.authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const opts = {
-    credentials: "include",
-    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
     ...options,
+    credentials: "include",
+    headers,
     signal: controller ? controller.signal : options.signal
   };
   // If body is FormData let browser set Content-Type (don't force json)
@@ -87,14 +117,16 @@ async function rawFetch(path, options = {}) {
     if (timeoutId) clearTimeout(timeoutId);
   }
 
+  const body = await response.json().catch(() => ({}));
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
     const message = body.message || `Request failed: ${response.status}`;
     const e = new Error(message);
     e.status = response.status;
     throw e;
   }
-  return response.json().catch(() => ({}));
+  if (isLoginRequest(path) && body?.token) setAuthToken(body.token);
+  if (path === "/auth/logout") setAuthToken("");
+  return body;
 }
 
 function requestKey(method, path, body) {
