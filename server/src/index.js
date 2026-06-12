@@ -15,6 +15,7 @@ import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isC
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
+app.set("trust proxy", 1);
 const uploadsDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 const allowedUploadMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]);
@@ -128,7 +129,15 @@ function sendSseEvent(name, data) {
   }
 }
 
-const allowedOrigins = [process.env.CLIENT_ORIGIN || "http://localhost:5173"].filter(Boolean);
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const PRODUCTION_CLIENT_ORIGIN = "https://cafe-digital-menu.vercel.app";
+const allowedOrigins = [...new Set([CLIENT_ORIGIN, PRODUCTION_CLIENT_ORIGIN])].filter(Boolean);
+const isProductionRuntime =
+  process.env.NODE_ENV === "production" ||
+  process.env.RENDER === "true" ||
+  Boolean(process.env.RENDER_EXTERNAL_URL) ||
+  CLIENT_ORIGIN === PRODUCTION_CLIENT_ORIGIN;
+const useSecureSessionCookie = isProductionRuntime || CLIENT_ORIGIN.startsWith("https://");
 
 function isLocalhostOrigin(origin) {
   return /^https?:\/\/localhost(:\d+)?$/.test(origin) || /^https?:\/\/127\.0\.0\.1(:\d+)?$/.test(origin);
@@ -154,8 +163,8 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax",
-      secure: false,
+      sameSite: useSecureSessionCookie ? "none" : "lax",
+      secure: useSecureSessionCookie,
       maxAge: 1000 * 60 * 60 * 8
     }
   })
