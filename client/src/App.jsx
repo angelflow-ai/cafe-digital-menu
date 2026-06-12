@@ -2299,7 +2299,7 @@ function QuickAccessSection({ quickAccessMode, onQuickAccess, showWaterBottle = 
 
   return (
     <section className="mx-auto w-full max-w-3xl rounded-[28px] border border-white/60 bg-white/35 p-4 shadow-glass backdrop-blur-xl sm:p-5">
-      <p className="text-center text-[11px] font-bold uppercase tracking-[0.35em] text-stone-700">Quick Access</p>
+                  <p className="text-center text-[11px] font-black uppercase tracking-[0.35em] text-stone-950">Quick Access</p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         {buttons.map((button) => {
           const active = quickAccessMode === button.key;
@@ -2780,13 +2780,13 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/25 backdrop-blur-sm">
-      <aside className="h-full w-full max-w-md overflow-y-auto bg-[#fff8ec]/95 p-5 shadow-2xl">
+      <aside className="h-full w-full max-w-md overflow-y-auto bg-[#fff8ec]/95 p-4 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-black">Your cart</h2>
           <button className="icon-button" onClick={onClose}><X size={20} /></button>
         </div>
-        <div className="mt-5 space-y-3">
-          {cart.length === 0 && <p className="rounded-3xl bg-white/60 p-5 text-sm font-semibold text-stone-600">Your cart is waiting for something delicious.</p>}
+        <div className="mt-3 space-y-2">
+          {cart.length === 0 && <p className="rounded-3xl bg-white/60 p-4 text-sm font-semibold text-stone-600">Your cart is waiting for something delicious.</p>}
           {cart.map((line) => {
             const safeLine = line || {};
             const safeName = String(safeLine.name || "").trim();
@@ -2796,11 +2796,11 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
             const fallbackIcon = getCartFallbackIcon(safeLine);
 
             return (
-              <div key={safeLine.key || `${safeName}-${Math.random()}`} className="flex gap-3 rounded-3xl bg-white/65 p-3">
+              <div key={safeLine.key || `${safeName}-${Math.random()}`} className="flex gap-3 rounded-3xl bg-white/65 p-2.5">
                 {hasImage ? (
-                  <img src={imageUrl(safeLine.image)} alt="" className="h-20 w-20 rounded-2xl object-cover" />
+                  <img src={imageUrl(safeLine.image)} alt="" className="h-16 w-16 rounded-2xl object-cover" />
                 ) : (
-                  <div className={`grid h-20 w-20 place-items-center rounded-2xl text-3xl shadow-sm ring-1 ${safeCategory.includes("cigarette") || safeName.toLowerCase().includes("cigarette") ? "bg-rose-100/90 text-rose-700 ring-rose-200" : safeCategory.includes("water") || safeName.toLowerCase().includes("water bottle") ? "bg-blue-100/90 text-blue-700 ring-blue-200" : "bg-stone-100/90 text-stone-700 ring-stone-200"}`}>
+                  <div className={`grid h-16 w-16 place-items-center rounded-2xl text-2xl shadow-sm ring-1 ${safeCategory.includes("cigarette") || safeName.toLowerCase().includes("cigarette") ? "bg-rose-100/90 text-rose-700 ring-rose-200" : safeCategory.includes("water") || safeName.toLowerCase().includes("water bottle") ? "bg-blue-100/90 text-blue-700 ring-blue-200" : "bg-stone-100/90 text-stone-700 ring-stone-200"}`}>
                     {fallbackIcon}
                   </div>
                 )}
@@ -2812,48 +2812,51 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                     return addonText ? <p className="mt-1 text-xs font-semibold text-stone-600">{addonText}</p> : null;
                   })()}
                 </div>
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <button className="grid h-8 w-8 place-items-center rounded-full bg-black text-white" onClick={() => onQty(safeLine.key, 1)}><Plus size={15} /></button>
+                <div className="flex flex-col items-center justify-center gap-1.5">
+                  <button className="grid h-7 w-7 place-items-center rounded-full bg-black text-white" onClick={() => onQty(safeLine.key, 1)}><Plus size={14} /></button>
                   <span className="font-black">{safeQuantity}</span>
-                  <button className="grid h-8 w-8 place-items-center rounded-full bg-white" onClick={() => onQty(safeLine.key, -1)}><Minus size={15} /></button>
+                  <button className="grid h-7 w-7 place-items-center rounded-full bg-white" onClick={() => onQty(safeLine.key, -1)}><Minus size={14} /></button>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="mt-5 rounded-3xl bg-black p-5 text-white">
-          <div className="mb-3 flex items-center justify-between text-sm font-bold"><span>Total</span><span className="text-2xl font-black">{rupees(total)}</span></div>
-          <div className="space-y-2 text-xs text-white/80">
+        <div className="mt-3 rounded-3xl bg-black p-4 text-white">
+          <div className="mb-2 flex items-center justify-between text-sm font-bold"><span>Total</span><span className="text-2xl font-black">{rupees(total)}</span></div>
+          <div className="space-y-1 text-xs text-white/80">
             {cart.map((line) => (
               <p key={line.key}>{formatOrderItemLine(line)}</p>
             ))}
           </div>
         </div>
-        <p className="mt-3 inline-block rounded-full bg-amber-100/90 px-4 py-2 text-sm font-black text-amber-800 shadow-sm animate-pulse">Order Prep 15-20 mins</p>
+        <p className="mt-2 inline-block rounded-full bg-amber-100/90 px-3 py-1.5 text-xs font-black text-amber-800 shadow-sm animate-pulse">Order Prep 15-20 mins</p>
         {cart.length > 0 && (
-          <form onSubmit={submit} className="mt-5 space-y-3">
+          <form onSubmit={submit} className="mt-3 space-y-2">
             <input
               required
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value.replace(/[^A-Za-z ]/g, ""))}
               placeholder="Name"
-              className="field"
+              className="field py-3"
             />
             <input
               required
               value={phone}
               onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="Phone"
-              className="field"
+              className="field py-3"
               type="tel"
               inputMode="numeric"
               maxLength={10}
             />
-            <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/80 p-4">
-              <p className="text-sm font-black">Table no.</p>
-              <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2 rounded-3xl border border-stone-300 bg-white/85 p-3">
+              <div className="rounded-2xl bg-amber-100/80 px-3 py-2 ring-1 ring-amber-200/80">
+                <p className="text-center text-sm font-black text-stone-950">Choose Your Table</p>
+                <p className="mt-1 text-center text-[11px] font-bold text-stone-600">Tap your table number to continue</p>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
                 {tables.map((number) => (
-                  <label key={number} className={`flex cursor-pointer items-center justify-center gap-3 rounded-3xl border px-4 py-3 text-center text-sm font-semibold transition ${tableNumber === String(number) ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                  <label key={number} className={`flex min-h-9 cursor-pointer items-center justify-center rounded-full border px-2 py-1.5 text-center text-sm font-black transition ${tableNumber === String(number) ? "border-black bg-black text-white shadow-sm" : "border-stone-300 bg-white text-stone-900 shadow-sm"}`}>
                     <input
                       type="radio"
                       name="tableNumber"
@@ -2861,17 +2864,17 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                       checked={tableNumber === String(number)}
                       onChange={() => setTableNumber(String(number))}
                       required
-                      className="h-4 w-4 accent-black"
+                      className="sr-only"
                     />
-                    Table {number}
+                    {number}
                   </label>
                 ))}
               </div>
             </div>
-            <div className="space-y-3 rounded-3xl border border-stone-200 bg-white/80 p-4">
+            <div className="space-y-2 rounded-3xl border border-stone-200 bg-white/80 p-3">
               <p className="text-sm font-black">Payment Method</p>
-              <div className="grid grid-cols-2 gap-3">
-                <label className={`flex cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${paymentMethod === "online" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+              <div className="grid grid-cols-2 gap-2">
+                <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === "online" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
                   <input
                     type="radio"
                     name="paymentMethod"
@@ -2883,7 +2886,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                   />
                   Pay Online
                 </label>
-                <label className={`flex cursor-pointer items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-semibold transition ${paymentMethod === "cash" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === "cash" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
                   <input
                     type="radio"
                     name="paymentMethod"
@@ -2898,7 +2901,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               </div>
             </div>
             {error && <p className="text-sm font-bold text-red-700">{error}</p>}
-            <button disabled={submitting || !tableNumber || !paymentMethod} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:opacity-60">{submitting ? "Processing..." : orderOnCounter ? "Order On Counter" : "Place Order"}</button>
+            <button disabled={submitting || !tableNumber || !paymentMethod} className="w-full rounded-full bg-black px-5 py-3.5 font-black text-white disabled:opacity-60">{submitting ? "Processing..." : orderOnCounter ? "Order On Counter" : "Place Order"}</button>
           </form>
         )}
       </aside>
