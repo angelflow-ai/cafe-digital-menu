@@ -406,6 +406,69 @@ const memory = loadPersistedMemory();
 
 export const usingMongo = () => mongoose.connection.readyState === 1;
 
+async function autoSyncDefaultRecipes() {
+  // Only run auto-sync when using MongoDB
+  // In dev mode, recipes are already loaded from persisted store by loadPersistedMemory()
+  if (!usingMongo()) {
+    return;
+  }
+  
+  const results = { created: 0, skipped: 0, failed: 0, errors: [] };
+  
+  try {
+    // Get existing recipes
+    const existingRecipes = await Recipe.find({}, { id: 1, itemId: 1, _id: 1 }).lean();
+    const existingRecipeKeys = new Set(existingRecipes.flatMap((item) => [
+      String(item.id || "").trim().toLowerCase(),
+      String(item.itemId || "").trim().toLowerCase()
+    ]));
+    
+    // Get available raw materials for normalization
+    const availableRawMaterials = await RawMaterial.find({}, { id: 1, name: 1 }).lean();
+    
+    // Process each default recipe
+    for (const defaultRecipe of seedRecipes) {
+      try {
+        const normalizedId = String(defaultRecipe.id || "").trim().toLowerCase();
+        const normalizedItemId = String(defaultRecipe.itemId || "").trim().toLowerCase();
+        
+        // Skip if recipe already exists
+        if (existingRecipeKeys.has(normalizedId) || existingRecipeKeys.has(normalizedItemId)) {
+          results.skipped++;
+          continue;
+        }
+        
+        // Normalize ingredients
+        const { ingredients, skipped } = normalizeRecipeIngredients(defaultRecipe.ingredients || [], availableRawMaterials);
+        if (skipped.length > 0) {
+          console.warn(`[Recipe Startup Sync] Skipped unresolved ingredients for ${defaultRecipe.itemId || defaultRecipe.id}:`, skipped);
+        }
+        
+        const cleanRecipe = {
+          id: String(defaultRecipe.id || defaultRecipe.itemId || "").toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+          itemId: String(defaultRecipe.itemId || "").trim(),
+          ingredients
+        };
+        
+        await Recipe.insertOne(cleanRecipe);
+        
+        results.created++;
+        console.log(`[Recipe Startup Sync] Created: ${cleanRecipe.itemId || cleanRecipe.id}`);
+      } catch (error) {
+        results.failed++;
+        results.errors.push({ recipeId: defaultRecipe.id, error: error.message });
+        console.error(`[Recipe Startup Sync] Failed ${defaultRecipe.id}:`, error.message);
+      }
+    }
+  } catch (error) {
+    console.error(`[Recipe Startup Sync] Fatal error:`, error.message);
+  }
+  
+  if (results.created > 0 || results.failed > 0) {
+    console.log(`[Recipe Startup Sync] Complete: ${results.created} created, ${results.skipped} skipped, ${results.failed} failed`);
+  }
+}
+
 function canUsePersistedStaffFallback() {
   return process.env.NODE_ENV !== "production" && !process.env.MONGODB_URI;
 }
@@ -529,11 +592,14 @@ export async function connectDatabase() {
     }
     console.warn("MONGODB_URI not set. Using development fallback auth storage.");
     await seedStaffAccounts();
+    // Dev mode: recipes already loaded from persisted store
     return false;
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
   await seedDatabase();
+  // Auto-sync default recipes into MongoDB after initial seed
+  await autoSyncDefaultRecipes();
   await seedStaffAccounts();
   console.log("Connected to MongoDB.");
   return true;
@@ -569,11 +635,11 @@ export async function seedDatabase() {
   if (itemCount === 0) {
     await MenuItem.updateOne(
       { id: "kit-kat-shake" },
-      { $set: { image: "/assets/images/Cold Drinks/Milk Shakes/kitkat-shake-v2.jpg" } }
+      { $set: { image: "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg" } }
     );
     await MenuItem.updateOne(
       { id: "paneer-tikka-melt" },
-      { $set: { image: "/assets/images/Snacks/Sandwich/paneer-tikka-melt-v2.jpg" } }
+      { $set: { image: "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg" } }
     );
   }
 
@@ -631,7 +697,11 @@ export async function seedDatabase() {
 
   if (recipesToInsert.length > 0) {
     await Recipe.insertMany(recipesToInsert);
+    console.log(`[Recipe Sync] Auto-synced ${recipesToInsert.length} default recipes into database.`);
   }
+  
+  const totalRecipes = await Recipe.countDocuments();
+  console.log(`[Recipe Sync] Total recipes in database: ${totalRecipes} (${recipeCount} existing, ${recipesToInsert.length} newly synced)`);
 }
 
 export const store = {
@@ -869,6 +939,69 @@ export const store = {
     if (usingMongo()) return Recipe.deleteOne({ id });
     memory.recipes = memory.recipes.filter((item) => item.id !== id);
     return { deletedCount: 1 };
+  },
+  async syncDefaultRecipes(defaultRecipes) {
+    const results = { created: 0, skipped: 0, failed: 0, errors: [] };
+    
+    try {
+      // Get existing recipe keys for comparison
+      const existingRecipes = usingMongo()
+        ? await Recipe.find({}, { id: 1, itemId: 1, _id: 1 }).lean()
+        : memory.recipes;
+      const existingRecipeKeys = new Set(existingRecipes.flatMap((item) => [
+        String(item.id || "").trim().toLowerCase(),
+        String(item.itemId || "").trim().toLowerCase()
+      ]));
+      
+      // Get available raw materials for ingredient normalization
+      const availableRawMaterials = usingMongo()
+        ? await RawMaterial.find({}, { id: 1, name: 1 }).lean()
+        : memory.rawMaterials;
+      
+      for (const defaultRecipe of defaultRecipes) {
+        try {
+          const normalizedId = String(defaultRecipe.id || "").trim().toLowerCase();
+          const normalizedItemId = String(defaultRecipe.itemId || "").trim().toLowerCase();
+          
+          // Skip if recipe already exists
+          if (existingRecipeKeys.has(normalizedId) || existingRecipeKeys.has(normalizedItemId)) {
+            results.skipped++;
+            continue;
+          }
+          
+          // Normalize ingredients
+          const { ingredients, skipped } = normalizeRecipeIngredients(defaultRecipe.ingredients || [], availableRawMaterials);
+          if (skipped.length > 0) {
+            console.warn(`[Recipe Manual Sync] Skipped unresolved ingredients for ${defaultRecipe.itemId || defaultRecipe.id}:`, skipped);
+          }
+          
+          const cleanRecipe = {
+            id: String(defaultRecipe.id || defaultRecipe.itemId || "").toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+            itemId: String(defaultRecipe.itemId || "").trim(),
+            ingredients
+          };
+          
+          if (usingMongo()) {
+            await Recipe.insertOne(cleanRecipe);
+          } else {
+            memory.recipes.push(cleanRecipe);
+            savePersistedMemory(memory);
+          }
+          
+          results.created++;
+          console.log(`[Recipe Manual Sync] Created recipe: ${cleanRecipe.itemId || cleanRecipe.id}`);
+        } catch (error) {
+          results.failed++;
+          results.errors.push({ recipeId: defaultRecipe.id, error: error.message });
+          console.error(`[Recipe Manual Sync] Failed to sync recipe ${defaultRecipe.id}:`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error(`[Recipe Manual Sync] Fatal error:`, error.message);
+    }
+    
+    console.log(`[Recipe Manual Sync] Complete: ${results.created} created, ${results.skipped} skipped, ${results.failed} failed`);
+    return results;
   },
   async inventoryHistory() {
     if (usingMongo()) return InventoryHistory.find().sort({ createdAt: -1 }).lean();

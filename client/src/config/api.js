@@ -4,10 +4,36 @@
  * Vite exposes environment variables prefixed with VITE_ via import.meta.env
  */
 
-export const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+function isLocalAppHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function resolveBaseUrl() {
+  const configuredUrl = String(import.meta.env.VITE_API_URL || "").trim().replace(/\/$/, "");
+  const cleanConfiguredUrl = configuredUrl.replace(/\/api$/, "");
+
+  if (typeof window === "undefined") {
+    return cleanConfiguredUrl || "http://localhost:4000";
+  }
+
+  const isLocalApp = isLocalAppHost(window.location.hostname);
+  const configuredIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(cleanConfiguredUrl);
+
+  if (cleanConfiguredUrl && (isLocalApp || !configuredIsLocal)) {
+    return cleanConfiguredUrl;
+  }
+
+  if (isLocalApp) {
+    return "http://localhost:4000";
+  }
+
+  return window.location.origin;
+}
+
+export const BASE_URL = resolveBaseUrl();
 
 // Construct full API endpoint
-export const API_URL = BASE_URL.replace(/\/$/, "") + "/api";
+export const API_URL = `${BASE_URL}/api`;
 
 /**
  * Helper to construct login endpoint URLs

@@ -26,6 +26,7 @@ import "./styles.css";
 import QRCode from "qrcode";
 import PrintableReceipt, { normalizeReceiptOrder } from "./PrintableReceipt";
 import logoUrl from "./assets/infusion-saga-logo.png";
+import paymentQrUrl from "./assets/infusion-qr.jpeg";
 import ordersStore from "./ordersStore";
 import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
@@ -490,9 +491,9 @@ function slugifyValue(value) {
 }
 
 const TEST_UPI_CONFIG = {
-  upiId: import.meta.env.VITE_TEST_UPI_ID || "9929637525-2@axl",
-  payeeName: import.meta.env.VITE_TEST_UPI_PAYEE_NAME || "Angel Saini",
-  staticQrImage: import.meta.env.VITE_PAYMENT_QR || "/testing-scanner.png"
+  upiId: import.meta.env.VITE_TEST_UPI_ID || "gpay-11244829036@okbizaxis",
+  payeeName: import.meta.env.VITE_TEST_UPI_PAYEE_NAME || "THE INFUSION SAGA",
+  staticQrImage: import.meta.env.VITE_PAYMENT_QR || paymentQrUrl
 };
 
 function isPendingVerificationOrder(order) {
@@ -609,11 +610,31 @@ const serveOptionsByItemId = {
   "black-coffee": ["Kulhad", "Glass", "Cup"]
 };
 
+const hiddenServeOptionTeaIds = new Set([
+  "black-tea",
+  "green-tea",
+  "honey-lemon-tea",
+  "lemon-tea",
+  "tulsi-tea"
+]);
+
+const hiddenServeOptionTeaNames = new Set([
+  "black tea",
+  "green tea",
+  "honey lemon tea",
+  "lemon tea",
+  "tulsi tea"
+]);
+
 function getServeOptions(item) {
   if (!item) return [];
   const category = String(item.category || item.categoryId || "").toLowerCase();
   const isHotDrinks = category === "hot-drinks" || category === "hot drinks";
   if (!isHotDrinks) return [];
+
+  const itemId = String(item.id || item._id || item.itemId || "").toLowerCase();
+  const name = String(item.name || item.itemName || "").toLowerCase();
+  if (hiddenServeOptionTeaIds.has(itemId) || hiddenServeOptionTeaNames.has(name)) return [];
 
   // Prioritize serveTypes field
   const safeServeTypes = Array.isArray(item.serveTypes) ? item.serveTypes : [];
@@ -627,7 +648,6 @@ function getServeOptions(item) {
   if (safeServingOptions.length > 0) return safeServingOptions;
   if (safeItemServeOptions.length > 0) return safeItemServeOptions;
 
-  const name = String(item.name || item.itemName || "").toLowerCase();
   const subCategory = String(item.subCategory || item.subcategory || item.subcategoryName || "").toLowerCase();
 
   const hotCoffeeNames = [
@@ -1180,10 +1200,10 @@ function CustomerApp({ navigate, counterMode = false }) {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[linear-gradient(135deg,#f6dfc6_0%,#f9b8a9_38%,#f5e5ce_68%,#d8dec8_100%)] text-stone-950">
+    <main className="customer-compact min-h-screen overflow-hidden bg-[linear-gradient(135deg,#f6dfc6_0%,#f9b8a9_38%,#f5e5ce_68%,#d8dec8_100%)] text-stone-950">
       <div className="pointer-events-none fixed -left-12 top-24 h-56 w-56 rounded-full bg-white/30 blur-3xl" />
       <div className="pointer-events-none fixed right-0 top-10 h-72 w-72 rounded-full bg-rose-200/40 blur-3xl" />
-      <section className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-7 px-4 py-5 sm:px-6 lg:px-8">
+      <section className="customer-shell mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:gap-5 sm:px-6 sm:py-5 lg:px-7">
         <TopBar
           cartCount={cartTotals.itemCount}
           onCart={() => openCart(false)}
@@ -2264,10 +2284,10 @@ function TopBar({ cartCount, onCart, onOrderOnCounter, onBack }) {
 
 function BrandHeader({ query, setQuery }) {
   return (
-    <header className="mx-auto w-full max-w-3xl text-center">
-      <img src={logoUrl} alt="The Infusion Saga - Where Every Sip Begins a Story" className="mx-auto h-auto w-full max-w-[360px] drop-shadow-[0_18px_32px_rgba(67,45,28,0.18)]" />
-      <label className="relative mx-auto mt-6 flex max-w-xl items-center gap-3 rounded-full border border-white/60 bg-white/45 px-5 py-3 shadow-glass backdrop-blur-xl">
-        <Search size={20} className="text-stone-500" />
+    <header className="customer-brand mx-auto w-full max-w-3xl text-center">
+      <img src={logoUrl} alt="The Infusion Saga - Where Every Sip Begins a Story" className="customer-logo mx-auto h-auto w-full max-w-[240px] drop-shadow-[0_14px_24px_rgba(67,45,28,0.16)] sm:max-w-[280px] lg:max-w-[300px]" />
+      <label className="customer-search relative mx-auto mt-4 flex max-w-xl items-center gap-3 rounded-full border border-white/60 bg-white/45 px-4 py-2.5 shadow-glass backdrop-blur-xl sm:mt-5 sm:px-5 sm:py-3">
+        <Search size={18} className="text-stone-500" />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -2298,9 +2318,9 @@ function QuickAccessSection({ quickAccessMode, onQuickAccess, showWaterBottle = 
   if (!buttons.length) return null;
 
   return (
-    <section className="mx-auto w-full max-w-3xl rounded-[28px] border border-white/60 bg-white/35 p-4 shadow-glass backdrop-blur-xl sm:p-5">
-                  <p className="text-center text-[11px] font-black uppercase tracking-[0.35em] text-stone-950">Quick Access</p>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+    <section className="quick-access-compact mx-auto w-full max-w-3xl rounded-[24px] border border-white/60 bg-white/35 p-3 shadow-glass backdrop-blur-xl sm:p-4">
+      <p className="text-center text-[10px] font-black uppercase tracking-[0.32em] text-stone-950 sm:text-[11px]">Quick Access</p>
+      <div className="mt-2 grid grid-cols-2 gap-2 sm:gap-3">
         {buttons.map((button) => {
           const active = quickAccessMode === button.key;
           return (
@@ -2308,7 +2328,7 @@ function QuickAccessSection({ quickAccessMode, onQuickAccess, showWaterBottle = 
               key={button.key}
               type="button"
               onClick={() => onQuickAccess(button.key)}
-              className={`flex min-w-[170px] flex-1 items-center justify-center rounded-full px-4 py-3 text-sm font-black shadow-sm transition sm:min-w-[190px] ${active ? "bg-black text-white" : `${button.tone} text-stone-800`}`}
+              className={`flex min-h-11 w-full items-center justify-center rounded-full px-3 py-2.5 text-xs font-black shadow-sm transition sm:px-4 sm:text-sm ${active ? "bg-black text-white" : `${button.tone} text-stone-800`}`}
             >
               {button.label}
             </button>
@@ -2375,7 +2395,7 @@ function DetailModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="detail-modal w-full max-w-[380px]">
         <div className="detail-card">
           <div className="detail-header">
@@ -2507,7 +2527,7 @@ function WaterBottleModal({ item, onClose, onAdd }) {
 
   if (isUnavailable) {
     return (
-      <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
         <div className="detail-modal w-full max-w-[380px]">
           <div className="detail-card">
             <div className="detail-header">
@@ -2535,7 +2555,7 @@ function WaterBottleModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
       <div className="detail-modal w-full max-w-[380px]">
         <div className="detail-card">
           <div className="detail-header">
@@ -2630,8 +2650,8 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
 
   if (hasUnavailableItems) {
     return (
-      <div className="fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-        <div className="detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
+        <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
           <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
             <div className="detail-header px-4 pb-3 pt-4">
               <div className="flex items-center gap-3">
@@ -2656,8 +2676,8 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-      <div className="detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
+      <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
         <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
           <div className="detail-header px-4 pb-3 pt-4">
             <div className="flex items-center gap-3">
@@ -2779,7 +2799,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/25 backdrop-blur-sm">
+    <div className="cart-compact fixed inset-0 z-50 flex justify-end bg-black/25 backdrop-blur-sm">
       <aside className="h-full w-full max-w-md overflow-y-auto bg-[#fff8ec]/95 p-4 shadow-2xl">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-black">Your cart</h2>
@@ -2852,7 +2872,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
             <div className="space-y-2 rounded-3xl border border-stone-300 bg-white/85 p-3">
               <div className="rounded-2xl bg-amber-100/80 px-3 py-2 ring-1 ring-amber-200/80">
                 <p className="text-center text-sm font-black text-stone-950">Choose Your Table</p>
-                <p className="mt-1 text-center text-[11px] font-bold text-stone-600">Tap your table number to continue</p>
+                <p className="mt-1 text-center text-[11px] font-bold text-stone-600">See your Table No. near scanner</p>
               </div>
               <div className="grid grid-cols-5 gap-2">
                 {tables.map((number) => (
@@ -3185,16 +3205,16 @@ function BillerApp({ navigate }) {
 
   return (
     <OwnerShell>
-      <div className="mx-auto max-w-7xl">
+      <div className="biller-compact mx-auto max-w-7xl">
         {loadError && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
             {loadError}
           </div>
         )}
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-black text-stone-500">Biller dashboard</p>
-            <h1 className="text-4xl font-black tracking-tight">Biller page</h1>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-stone-500">biller@theinfusionsaga.com</p>
+            <h1 className="text-3xl font-black tracking-tight">Biller Dashboard</h1>
             <p className="mt-1 text-xs text-stone-500">Live sync: {lastSync ? new Date(lastSync).toLocaleTimeString() : "waiting for updates..."}</p>
           </div>
           <div className="flex items-center gap-2 md:hidden">
@@ -3209,11 +3229,11 @@ function BillerApp({ navigate }) {
           </div>
           <div className="hidden md:flex flex-col items-end gap-2 relative z-10">
             <div className="flex gap-2">
-              <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
-              <button onClick={() => navigate("/owner")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Owner app</button>
+              <button onClick={() => navigate("/")} className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow">Customer app</button>
+              <button onClick={() => navigate("/owner")} className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow">Owner app</button>
             </div>
             <div>
-              <button onClick={() => setBillerTab("pos")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">OOC (Order On Counter)</button>
+              <button onClick={() => setBillerTab("pos")} className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow">OOC (Order On Counter)</button>
             </div>
           </div>
         </div>
@@ -3272,7 +3292,7 @@ function BillerApp({ navigate }) {
 }
 
 function OwnerShell({ children }) {
-  return <main className="min-h-screen overflow-x-hidden bg-[#f8efe2] p-4 text-stone-950 sm:p-6 lg:p-8">{children}</main>;
+  return <main className="min-h-screen overflow-x-hidden bg-[#f8efe2] p-3 text-stone-950 sm:p-4 lg:p-5">{children}</main>;
 }
 
 function Login({ onLogin, navigate, role }) {
@@ -3697,11 +3717,11 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
 
   return (
     <OwnerShell>
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="owner-compact mx-auto max-w-7xl">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-sm font-black text-stone-500">{owner}</p>
-            <h1 className="text-4xl font-black tracking-tight">Owner Dashboard</h1>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-stone-500">{owner}</p>
+            <h1 className="text-3xl font-black tracking-tight">Owner Dashboard</h1>
             {lastSync && <p className="mt-1 text-xs text-stone-500">Last sync: {new Date(lastSync).toLocaleString()}</p>}
           </div>
           <div className="flex items-center gap-2 md:hidden">
@@ -3716,15 +3736,15 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
           </div>
           <div className="hidden md:flex flex-col items-end gap-2">
             <div className="flex gap-2">
-              <button onClick={() => navigate("/")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Customer app</button>
-              <button onClick={() => navigate("/biller")} className="rounded-full bg-white px-4 py-3 text-sm font-black shadow">Biller app</button>
-              <button onClick={logout} className="flex items-center gap-2 rounded-full bg-black px-4 py-3 text-sm font-black text-white"><LogOut size={17} /> Logout</button>
+              <button onClick={() => navigate("/")} className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow">Customer app</button>
+              <button onClick={() => navigate("/biller")} className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow">Biller app</button>
+              <button onClick={logout} className="flex items-center gap-2 rounded-full bg-black px-3.5 py-2.5 text-sm font-black text-white"><LogOut size={17} /> Logout</button>
             </div>
             {tab === "biller" && (
               <div>
                 <button
                   onClick={() => { setTab("biller"); setInitialBillerTab("pos"); }}
-                  className="rounded-full bg-white px-4 py-3 text-sm font-black shadow"
+                  className="rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow"
                 >
                   OOC (Order On Counter)
                 </button>
@@ -3733,7 +3753,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             <div>
               <button
                 onClick={() => setTab("deleted")}
-                className="flex items-center gap-2 rounded-full bg-white px-4 py-3 text-sm font-black shadow"
+                className="flex items-center gap-2 rounded-full bg-white px-3.5 py-2.5 text-sm font-black shadow"
               >
                 <span>Recently Deleted</span>
                 <span className="inline-flex min-w-7 items-center justify-center rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black text-stone-700">{deletedCount}</span>
@@ -3791,14 +3811,14 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             </div>
           </div>
         )}
-        <div className="mb-5 hidden md:flex flex-wrap gap-2">
+        <div className="mb-4 hidden md:flex flex-wrap gap-2">
           {ownerTabs.map((tabItem) => {
             const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
             return (
               <button
                 key={tabItem.key}
                 onClick={() => setTab(tabItem.key)}
-                className={`rounded-full px-5 py-3 text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : isLowStockAlertButton ? "bg-red-600 text-white shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-white text-stone-900"}`}
+                className={`rounded-full px-4 py-2.5 text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : isLowStockAlertButton ? "bg-red-600 text-white shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-white text-stone-900"}`}
               >
                 {tabItem.label}
                 {isLowStockAlertButton && attentionCount > 0 ? <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-black">{attentionCount}</span> : null}
@@ -3807,19 +3827,19 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
           })}
         </div>
         {tab === "items" && (
-          <section className="grid gap-5 lg:grid-cols-[1fr_430px]">
-            <div className="order-2 md:order-1 rounded-[1.5rem] bg-white p-4 shadow-sm">
-              <div className="mb-4 flex flex-col gap-3 md:flex-row md:flex-wrap">
+          <section className="grid gap-4 lg:grid-cols-[1fr_400px]">
+            <div className="order-2 md:order-1 rounded-[1.5rem] bg-white p-3 shadow-sm">
+              <div className="mb-3 flex flex-col gap-2 md:flex-row md:flex-wrap">
                 <label className="flex w-full items-center gap-2 rounded-full bg-stone-100 px-4 py-2 md:flex-1"><Search size={18} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search items" className="w-full bg-transparent text-sm font-bold outline-none" /></label>
                 <label className="flex items-center gap-2 rounded-full bg-stone-100 px-4 py-2 md:ml-auto"><SlidersHorizontal size={18} /><select value={sort} onChange={(event) => setSort(event.target.value)} className="bg-transparent text-sm font-bold outline-none"><option value="name">Name</option><option value="price">Base price</option></select></label>
               </div>
               <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[860px] text-left text-sm">
-                  <thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-3">Item</th><th>Category</th><th>Sub Category</th><th>Sizes</th><th>Status</th><th></th></tr></thead>
+                  <thead><tr className="border-b text-xs uppercase text-stone-500"><th className="py-2.5">Item</th><th>Category</th><th>Sub Category</th><th>Sizes</th><th>Status</th><th></th></tr></thead>
                   <tbody>
                     {visibleItems.map((item) => (
                       <tr key={item.id} className="border-b last:border-0">
-                        <td className="py-3 font-black">{item.name}</td>
+                        <td className="py-2.5 font-black">{item.name}</td>
                         <td>{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId}</td>
                         <td>{item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</td>
                         <td>{item.sizes.map((size) => `${size.label} ${rupees(size.price)}`).join(" / ")}</td>
@@ -3835,9 +3855,9 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                   </tbody>
                 </table>
               </div>
-              <div className="space-y-3 md:hidden">
+              <div className="space-y-2 md:hidden">
                 {visibleItems.map((item) => (
-                  <article key={item.id} className="rounded-[1.5rem] bg-stone-50 p-4 shadow-sm ring-1 ring-stone-200">
+                  <article key={item.id} className="rounded-[1.5rem] bg-stone-50 p-3 shadow-sm ring-1 ring-stone-200">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-base font-black text-stone-950">{item.name}</h3>
@@ -4028,14 +4048,14 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
   };
 
   return (
-    <section className="grid gap-5">
-      <div className="mb-5 flex flex-wrap gap-2">
+    <section className="grid gap-3">
+      <div className="mb-3 flex flex-wrap gap-2">
         {[
           { key: "orders", label: "Live Orders" },
           { key: "coc", label: "COC Requests" },
           { key: "verify", label: "Pending Verification" }
         ].map((t) => (
-          <button key={t.key} onClick={() => handleTabChange(t.key)} className={`rounded-full px-5 py-3 text-sm font-black ${billerTab === t.key ? "bg-black text-white" : "bg-white"}`}>
+          <button key={t.key} onClick={() => handleTabChange(t.key)} className={`rounded-full px-4 py-2.5 text-sm font-black ${billerTab === t.key ? "bg-black text-white" : "bg-white"}`}>
             <span className="inline-flex items-center gap-2">
               {t.label}
               {t.key === "orders" && liveOrderCount > 0 && (
@@ -4108,17 +4128,17 @@ function PendingVerification({ orders, onSaved }) {
     }
   }
 
-  if (!pending.length) return <p className="rounded-[1.5rem] bg-white p-6 font-bold text-stone-500">No pending payments.</p>;
+    if (!pending.length) return <p className="rounded-[1.5rem] bg-white p-4 font-bold text-stone-500">No pending payments.</p>;
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2.5">
       {pending.map((order) => {
         const sourceLabel = getBillerOrderClassification(order).sourceBadge;
         const orderItems = Array.isArray(order?.items) ? order.items : [];
         const paymentLabel = String(order?.paymentMethod || order?.method || "").toLowerCase().includes("cash") ? "Cash on Counter" : "Online";
 
         return (
-          <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
+          <article key={order._id || order.id} className="rounded-[1.5rem] bg-white p-3.5 shadow-sm sm:p-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <h2 className="text-lg font-black sm:text-xl">
@@ -4312,7 +4332,7 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
   const STANDARD_ORDER_STATUSES = ['pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled', 'payment_rejected'];
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2.5">
       {updateError && <div className="rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-700">Error: {updateError}</div>}
       {updateMessage && <div className="rounded-[1.5rem] bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{updateMessage}</div>}
       {((orders || []).filter((o) => isLiveOrderVisible(o))).map((order) => {
@@ -4323,7 +4343,7 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
         const statusValue = STANDARD_ORDER_STATUSES.includes(String(safeOrder.status || "").toLowerCase()) ? String(safeOrder.status || "").toLowerCase() : 'pending';
 
         return (
-        <article key={safeOrder._id || safeOrder.id} className="rounded-[1.5rem] border-2 border-black bg-white p-5 shadow-sm">
+          <article key={safeOrder._id || safeOrder.id} className="rounded-[1.5rem] border-2 border-black bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-black">{safeOrder.customerName || "Customer"}</h2>
@@ -4346,7 +4366,7 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
             </div>
           </div>
           {!hideWarnings && orderWarnings.length > 0 && (
-            <div className="mt-3 rounded-[1.5rem] bg-amber-50 p-4 text-sm font-semibold text-amber-900">
+            <div className="mt-3 rounded-[1.5rem] bg-amber-50 p-3 text-sm font-semibold text-amber-900">
               <p className="font-black">Inventory warnings</p>
               <ul className="mt-2 list-disc space-y-1 pl-4 text-amber-900">
                 {orderWarnings.map((warning, index) => <li key={index}>{warning}</li>)}
@@ -4359,7 +4379,7 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
         </article>
         );
       })}
-      {(orders || []).length === 0 && <p className="rounded-[1.5rem] bg-white p-6 font-bold text-stone-500">No orders yet.</p>}
+      {(orders || []).length === 0 && <p className="rounded-[1.5rem] bg-white p-4 font-bold text-stone-500">No orders yet.</p>}
       {/* In-page receipt preview modal for admin */}
       {showPreview && previewOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.5)'}}>
@@ -4423,7 +4443,7 @@ function CocAdmin({ cocRequests, onSaved }) {
   }
 
   return (
-    <section className="space-y-3">
+    <section className="space-y-2.5">
       {error && <div className="rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-700">Error: {error}</div>}
       {(cocRequests || []).map((req) => {
         const safeRequest = req || {};
@@ -4432,7 +4452,7 @@ function CocAdmin({ cocRequests, onSaved }) {
         const sourceLabel = getBillerOrderClassification(safeRequest).sourceBadge;
 
         return (
-        <article key={requestId || safeRequest._id || safeRequest.id} className="rounded-[1.5rem] bg-white p-5 shadow-sm">
+          <article key={requestId || safeRequest._id || safeRequest.id} className="rounded-[1.5rem] bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-black">{safeRequest.customerName || "Customer"} • Table {safeRequest.tableNumber ?? safeRequest.table ?? "-"}</h2>
@@ -4466,7 +4486,7 @@ function CocAdmin({ cocRequests, onSaved }) {
         </article>
         );
       })}
-      {(cocRequests || []).length === 0 && <p className="rounded-[1.5rem] bg-white p-6 font-bold text-stone-500">No COC requests.</p>}
+      {(cocRequests || []).length === 0 && <p className="rounded-[1.5rem] bg-white p-4 font-bold text-stone-500">No COC requests.</p>}
     </section>
   );
 }
@@ -5017,6 +5037,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
   const [selectedItemId, setSelectedItemId] = useState(items[0]?.id || "");
   const [ingredients, setIngredients] = useState([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
   const [message, setMessage] = useState("");
+  const [syncLoading, setSyncLoading] = useState(false);
 
   useEffect(() => {
     if (!selectedItemId && items[0]) setSelectedItemId(items[0].id);
@@ -5066,6 +5087,20 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
     }
   }
 
+  async function handleSyncDefaultRecipes() {
+    setSyncLoading(true);
+    setMessage("");
+    try {
+      const result = await menuService.syncDefaultRecipes();
+      setMessage(`Synced: ${result.created} created, ${result.skipped} already exist${result.failed > 0 ? `, ${result.failed} failed` : ""}.`);
+      onSaved();
+    } catch (err) {
+      setMessage(`Sync failed: ${err.message}`);
+    } finally {
+      setSyncLoading(false);
+    }
+  }
+
   const selectedItem = items.find((item) => item.id === selectedItemId);
 
   return (
@@ -5076,7 +5111,10 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
             <h2 className="text-xl font-black">Recipe mapping</h2>
             <p className="mt-1 text-sm text-stone-600">Link menu items to raw material usage for automatic stock adjustment.</p>
           </div>
-          <button type="button" onClick={addIngredient} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Add ingredient</button>
+          <div className="flex gap-2">
+            <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
+            <button type="button" onClick={addIngredient} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Add ingredient</button>
+          </div>
         </div>
         <div className="space-y-4">
           <select className="field bg-stone-50" value={selectedItemId} onChange={(event) => setSelectedItemId(event.target.value)}>

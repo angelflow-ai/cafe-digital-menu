@@ -10,9 +10,9 @@ export default function CustomerMenu({
   onAdd 
 }) {
   return (
-    <section className="grid gap-5">
+    <section className="grid gap-3">
       <div>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-xl font-black tracking-tight">
               {counterMode ? "Order On Counter" : "Fresh from the cafe"}
@@ -33,11 +33,11 @@ export default function CustomerMenu({
           </span>
         </div>
         {loading ? (
-          <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-8 text-center text-sm font-semibold text-stone-500">
+            <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-6 text-center text-sm font-semibold text-stone-500">
             Loading menu...
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="menu-grid-compact grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
             {filteredItems.map((item) => (
               <MenuItemCard 
                 key={item.id} 

@@ -69,4 +69,8 @@ export async function deleteRecipe(id) {
   return api(`/recipes/${id}`, { method: "DELETE" });
 }
 
-export default { getCategories, getMenu, createMenuItem, deleteMenuItem, restoreMenuItem, permanentlyDeleteMenuItem, uploadPhoto, createCategory, deleteCategory, restoreCategory, permanentlyDeleteCategory, getRecipes, getReports };
+export async function syncDefaultRecipes() {
+  return api(`/recipes/sync-defaults`, { method: "POST", body: JSON.stringify({}) });
+}
+
+export default { getCategories, getMenu, createMenuItem, deleteMenuItem, restoreMenuItem, permanentlyDeleteMenuItem, uploadPhoto, createCategory, deleteCategory, restoreCategory, permanentlyDeleteCategory, getRecipes, getReports, createRecipe, patchRecipe, deleteRecipe, syncDefaultRecipes };

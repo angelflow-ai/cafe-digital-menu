@@ -25,7 +25,7 @@ const CATEGORY_DISPLAY_ORDER = [
 const SUBCATEGORY_DISPLAY_ORDER = {
   "hot-drinks": ["Chai", "Hot Coffee"],
   "coconut-water": ["Coconut Water"],
-  "cold-drinks": ["Ice Tea", "Cold Coffee", "Coolberg", "Mojito", "Ice Slush", "Milk Shakes"],
+  "cold-drinks": ["Ice Tea", "Cold Coffee", "Coolberg", "Energy Drinks", "Mojito", "Ice Slush", "Milk Shakes"],
   "snacks": ["Sandwich", "Pasta", "Garlic Bread", "French Fries", "Burger", "Noodles", "Maggi", "Pizza", "Dumplings"],
   "dessert": [],
   "energy-drinks": []

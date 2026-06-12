@@ -1,8 +1,33 @@
 import demoMode from "../demoMode";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
-const API = API_URL.replace(/\/$/, "") + "/api";
-const API_ROOT = API_URL.replace(/\/$/, "");
+function isLocalAppHost(hostname) {
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+}
+
+function resolveApiRoot() {
+  const configuredUrl = String(import.meta.env.VITE_API_URL || "").trim().replace(/\/$/, "");
+  const cleanConfiguredUrl = configuredUrl.replace(/\/api$/, "");
+
+  if (typeof window === "undefined") {
+    return cleanConfiguredUrl || "http://localhost:4000";
+  }
+
+  const isLocalApp = isLocalAppHost(window.location.hostname);
+  const configuredIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(cleanConfiguredUrl);
+
+  if (cleanConfiguredUrl && (isLocalApp || !configuredIsLocal)) {
+    return cleanConfiguredUrl;
+  }
+
+  if (isLocalApp) {
+    return "http://localhost:4000";
+  }
+
+  return window.location.origin;
+}
+
+const API_ROOT = resolveApiRoot();
+const API = `${API_ROOT}/api`;
 const AUTH_TOKEN_STORAGE_KEY = "infusion-auth-token";
 
 const inFlight = new Map();

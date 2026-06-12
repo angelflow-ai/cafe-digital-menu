@@ -11,6 +11,7 @@ import Twilio from "twilio";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store } from "./db.js";
+import { defaultRecipes } from "./seed.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -854,6 +855,14 @@ app.patch("/api/recipes/:id", requireAdmin, async (req, res, next) => {
 app.delete("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   try {
     res.json(await store.deleteRecipe(req.params.id));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/recipes/sync-defaults", requireAdmin, async (_req, res, next) => {
+  try {
+    res.json(await store.syncDefaultRecipes(defaultRecipes));
   } catch (error) {
     next(error);
   }

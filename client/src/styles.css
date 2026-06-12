@@ -21,16 +21,16 @@ textarea {
 
 .glass-card {
   border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 2rem;
+  border-radius: 1.65rem;
   background: linear-gradient(145deg, rgba(255, 255, 255, 0.46), rgba(255, 244, 225, 0.25));
-  box-shadow: 0 24px 70px rgba(67, 45, 28, 0.16);
+  box-shadow: 0 20px 54px rgba(67, 45, 28, 0.14);
   backdrop-filter: blur(22px);
 }
 
 .icon-button {
   display: grid;
-  height: 3.25rem;
-  width: 3.25rem;
+  height: 3rem;
+  width: 3rem;
   place-items: center;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.45);
@@ -471,9 +471,61 @@ textarea {
   color: #0f172a;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .upi-modal-container {
-    padding: 18px;
+    max-width: min(92vw, 380px);
+    border-radius: 1.45rem;
+    padding: 14px;
+  }
+
+  .upi-modal-header {
+    margin-bottom: 12px;
+  }
+
+  .upi-modal-header h2 {
+    font-size: 20px;
+  }
+
+  .upi-modal-header p {
+    margin-top: 4px;
+    font-size: 12px;
+  }
+
+  .upi-amount {
+    margin-top: 8px;
+    font-size: 26px;
+  }
+
+  .upi-primary-btn {
+    margin-top: 10px;
+    padding: 9px 16px;
+    font-size: 13px;
+  }
+
+  .upi-qr-card {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+
+  .upi-qr-card p {
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+
+  .qr-center {
+    margin: 8px 0;
+    padding: 6px;
+  }
+
+  .upi-id {
+    margin-top: 8px;
+    font-size: 11px;
+  }
+
+  .upi-actions {
+    margin-top: 10px;
+    gap: 8px;
   }
 
   .upi-actions {
@@ -483,6 +535,18 @@ textarea {
   .upi-paid-btn,
   .upi-close-btn {
     width: 100%;
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .upi-order-summary {
+    margin-top: 10px;
+    padding-top: 10px;
+    font-size: 11px;
+  }
+
+  .upi-order-summary p {
+    margin: 3px 0;
   }
 }
 
@@ -513,8 +577,8 @@ textarea {
 }
 .detail-card {
   width: 100%;
-  max-width: 380px;
-  border-radius: 36px;
+  max-width: 360px;
+  border-radius: 30px;
   border: 1px solid rgba(255,255,255,0.22);
   background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
   backdrop-filter: blur(20px);
@@ -536,12 +600,12 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 22px 22px 0 22px;
+  padding: 18px 18px 0 18px;
   position: relative;
   z-index: 1;
 }
 .detail-title {
-  font-size: 28px;
+  font-size: 25px;
   line-height: 1.05;
   font-weight: 900;
   color: #ffffff;
@@ -552,8 +616,8 @@ textarea {
   border: 1px solid rgba(255,255,255,0.22);
   color: #ffffff;
   border-radius: 999px;
-  width: 46px;
-  height: 46px;
+  width: 44px;
+  height: 44px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -566,24 +630,24 @@ textarea {
 .detail-image-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 12px;
+  margin-top: 10px;
   position: relative;
   z-index: 1;
 }
 .detail-image {
-  width: min(88vw, 280px);
-  height: min(88vw, 280px);
-  max-width: 280px;
-  max-height: 280px;
+  width: min(82vw, 240px);
+  height: min(82vw, 240px);
+  max-width: 240px;
+  max-height: 240px;
   object-fit: cover;
   border-radius: 28px;
   box-shadow: 0 30px 70px rgba(0, 0, 0, 0.28);
 }
 .detail-body {
-  padding: 18px 22px 24px 22px;
+  padding: 16px 18px 20px 18px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   align-items: stretch;
   position: relative;
   z-index: 1;
@@ -592,7 +656,7 @@ textarea {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 .price-label {
   font-size: 12px;
@@ -602,14 +666,14 @@ textarea {
   font-weight: 900;
 }
 .price-value {
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 900;
   color: #ffffff;
 }
 .section-block {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 .section-label {
   font-size: 13px;
@@ -621,7 +685,7 @@ textarea {
 .pill-row,
 .pill-column {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 .pill-column {
@@ -632,7 +696,7 @@ textarea {
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.12);
   color: rgba(255,255,255,0.92);
-  padding: 12px 14px;
+  padding: 10px 13px;
   font-size: 14px;
   font-weight: 900;
   cursor: pointer;
@@ -654,16 +718,16 @@ textarea {
 .quantity-block {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 .quantity-card {
-  border-radius: 24px;
+  border-radius: 22px;
   background: rgba(0,0,0,0.42);
   border: 1px solid rgba(255,255,255,0.16);
-  padding: 18px 18px 16px 18px;
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
 }
 .qty-label {
   font-size: 12px;
@@ -676,11 +740,11 @@ textarea {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
 }
 .qty-btn {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: rgba(0,0,0,0.78);
   border: 1px solid rgba(255,255,255,0.18);
@@ -705,8 +769,8 @@ textarea {
   background: #000000;
   color: #ffffff;
   border: none;
-  border-radius: 24px;
-  padding: 16px 0;
+  border-radius: 22px;
+  padding: 14px 0;
   font-size: 15px;
   font-weight: 900;
   width: 100%;
@@ -717,21 +781,530 @@ textarea {
   transform: translateY(-1px);
   box-shadow: 0 18px 30px rgba(0,0,0,0.24);
 }
+
+/* Compact UI pass: scoped visual density only, no flow/data changes. */
+.customer-compact .customer-shell {
+  min-height: auto !important;
+  gap: 0.72rem !important;
+  padding-top: 0.45rem !important;
+  padding-bottom: 1rem !important;
+}
+
+.customer-compact .customer-brand {
+  max-width: 38rem !important;
+  margin-top: 0 !important;
+}
+
+.customer-compact .customer-logo {
+  max-width: 190px !important;
+}
+
+.customer-compact .customer-search {
+  margin-top: 0.55rem !important;
+  padding-top: 0.48rem !important;
+  padding-bottom: 0.48rem !important;
+}
+
+.customer-compact .quick-access-compact {
+  max-width: 38rem !important;
+  margin-top: 0.2rem !important;
+  margin-bottom: 0.14rem !important;
+  padding: 0.45rem !important;
+  border-radius: 18px !important;
+}
+
+.customer-compact .quick-access-compact p {
+  font-size: 9px !important;
+}
+
+.customer-compact .quick-access-compact > div {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.4rem !important;
+  margin-top: 0.35rem !important;
+}
+
+.customer-compact .quick-access-compact button {
+  min-height: 2rem !important;
+  padding: 0.42rem 0.6rem !important;
+}
+
+.customer-compact .scrollbar-none {
+  padding-bottom: 0 !important;
+  margin-top: 0.16rem !important;
+  margin-bottom: 0.16rem !important;
+}
+
+.customer-compact .scrollbar-none button {
+  min-height: 2.25rem !important;
+  padding: 0.45rem 0.75rem !important;
+  font-size: 0.78rem !important;
+}
+
+.customer-compact section.grid {
+  gap: 0.62rem !important;
+}
+
+.customer-compact .menu-grid-compact {
+  gap: 0.72rem !important;
+  grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)) !important;
+}
+
+.customer-compact .menu-card-compact {
+  min-height: 188px !important;
+  padding: 0.48rem !important;
+  border-radius: 1.08rem !important;
+}
+
+.customer-compact .menu-card-compact h3 {
+  margin-top: 0.3rem !important;
+  min-height: 1.6rem !important;
+  font-size: 0.78rem !important;
+}
+
+.customer-compact .menu-card-compact .relative.mx-auto {
+  max-width: 68px !important;
+}
+
+.customer-compact .menu-card-compact .rounded-3xl {
+  padding: 0.4rem !important;
+  border-radius: 0.9rem !important;
+}
+
+.customer-compact .menu-card-compact .mt-2 {
+  margin-top: 0.25rem !important;
+}
+
+.customer-compact .menu-card-compact .gap-2\.5 {
+  gap: 0.28rem !important;
+}
+
+.customer-compact .menu-card-compact .grid.grid-cols-2 {
+  gap: 0.35rem !important;
+}
+
+.customer-compact .menu-card-compact .rounded-full.px-3 {
+  padding: 0.38rem 0.5rem !important;
+  font-size: 0.7rem !important;
+}
+
+.customer-compact .menu-card-compact .grid.h-10,
+.customer-compact .menu-card-compact button.grid.h-10 {
+  width: 2rem !important;
+  height: 2rem !important;
+}
+
+.customer-compact .menu-card-compact span.text-sm {
+  font-size: 0.74rem !important;
+}
+
+.product-modal-compact {
+  padding: 0.75rem !important;
+}
+
+.product-modal-compact .detail-modal {
+  max-width: 320px !important;
+}
+
+.product-modal-compact .detail-card {
+  max-width: 320px !important;
+  border-radius: 26px !important;
+}
+
+.product-modal-compact .detail-header {
+  padding: 12px 14px 0 14px !important;
+}
+
+.product-modal-compact .detail-title {
+  font-size: 22px !important;
+}
+
+.product-modal-compact .detail-close {
+  width: 38px !important;
+  height: 38px !important;
+}
+
+.product-modal-compact .detail-image {
+  width: min(68vw, 190px) !important;
+  height: min(68vw, 190px) !important;
+}
+
+.product-modal-compact .detail-body {
+  padding: 10px 14px 14px 14px !important;
+  gap: 9px !important;
+}
+
+.product-modal-compact .price-value {
+  font-size: 28px !important;
+}
+
+.product-modal-compact .section-block,
+.product-modal-compact .quantity-block {
+  gap: 8px !important;
+}
+
+.product-modal-compact .pill-button {
+  padding: 8px 11px !important;
+  font-size: 13px !important;
+}
+
+.product-modal-compact .quantity-card {
+  padding: 11px 13px !important;
+  gap: 8px !important;
+  border-radius: 18px !important;
+}
+
+.product-modal-compact .qty-btn {
+  width: 42px !important;
+  height: 42px !important;
+}
+
+.product-modal-compact .qty-num {
+  font-size: 22px !important;
+}
+
+.product-modal-compact .add-cart-btn {
+  padding: 12px 0 !important;
+  border-radius: 18px !important;
+}
+
+.product-modal-compact .cigarette-modal {
+  max-width: 560px !important;
+}
+
+.product-modal-compact .cigarette-modal .detail-card {
+  max-width: 560px !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.product-modal-compact .cigarette-modal .detail-header {
+  padding-bottom: 0.2rem !important;
+}
+
+.product-modal-compact .cigarette-modal .detail-body {
+  max-height: none !important;
+  padding: 0.55rem 0.65rem 0.65rem !important;
+  overflow: visible !important;
+  gap: 0.55rem !important;
+}
+
+.product-modal-compact .cigarette-modal .detail-body > div:first-child {
+  padding: 0.25rem 0 0 !important;
+  margin-bottom: 0.05rem !important;
+}
+
+.product-modal-compact .cigarette-modal .detail-body > div:first-child > div {
+  padding: 0.5rem 0.6rem !important;
+  border-radius: 1rem !important;
+}
+
+.product-modal-compact .cigarette-modal .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.35rem !important;
+}
+
+.product-modal-compact .cigarette-modal .h-8 {
+  height: 1.85rem !important;
+}
+
+.product-modal-compact .cigarette-modal .w-8 {
+  width: 1.85rem !important;
+}
+
+.product-modal-compact .cigarette-modal .sticky {
+  position: static !important;
+  background: linear-gradient(180deg, rgba(80, 80, 80, 0), rgba(80, 80, 80, 0.86) 28%, rgba(80, 80, 80, 0.96));
+  padding: 0.5rem 0 0 !important;
+  margin-top: 0.05rem !important;
+  background: transparent !important;
+}
+
+.cart-compact aside {
+  max-width: 390px !important;
+  padding: 0.75rem !important;
+}
+
+.cart-compact h2 {
+  font-size: 1.35rem !important;
+}
+
+.cart-compact .icon-button {
+  width: 2.45rem !important;
+  height: 2.45rem !important;
+}
+
+.cart-compact .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.4rem !important;
+}
+
+.cart-compact .rounded-3xl {
+  border-radius: 1.2rem !important;
+}
+
+.cart-compact .field {
+  padding-top: 0.62rem !important;
+  padding-bottom: 0.62rem !important;
+}
+
+.cart-compact form {
+  margin-top: 0.55rem !important;
+  gap: 0.45rem !important;
+}
+
+.cart-compact label {
+  min-height: 2.05rem !important;
+}
+
+.cart-compact button[type="submit"],
+.cart-compact form > button {
+  padding-top: 0.7rem !important;
+  padding-bottom: 0.7rem !important;
+}
+
+.biller-compact,
+.owner-compact {
+  font-size: 0.9rem;
+}
+
+.biller-compact > .mb-4,
+.owner-compact > .mb-4 {
+  margin-bottom: 0.45rem !important;
+}
+
+.biller-compact h1,
+.owner-compact h1 {
+  font-size: 1.55rem !important;
+  line-height: 1.08 !important;
+}
+
+.biller-compact .rounded-\[1\.5rem\],
+.owner-compact .rounded-\[1\.5rem\] {
+  border-radius: 1.25rem !important;
+}
+
+.biller-compact .p-5,
+.owner-compact .p-5 {
+  padding: 0.78rem !important;
+}
+
+.biller-compact .p-4,
+.owner-compact .p-4 {
+  padding: 0.68rem !important;
+}
+
+.biller-compact .gap-5,
+.owner-compact .gap-5 {
+  gap: 0.65rem !important;
+}
+
+.biller-compact .gap-4,
+.owner-compact .gap-4 {
+  gap: 0.55rem !important;
+}
+
+.biller-compact article,
+.owner-compact article {
+  padding-top: 0.62rem !important;
+  padding-bottom: 0.62rem !important;
+}
+
+.biller-compact article h2,
+.owner-compact article h2 {
+  font-size: 0.98rem !important;
+}
+
+.biller-compact article .mt-4,
+.owner-compact article .mt-4 {
+  margin-top: 0.5rem !important;
+}
+
+.biller-compact article .pt-4,
+.owner-compact article .pt-4 {
+  padding-top: 0.5rem !important;
+}
+
+.biller-compact button,
+.owner-compact button,
+.biller-compact select,
+.owner-compact select {
+  padding-top: 0.42rem !important;
+  padding-bottom: 0.42rem !important;
+}
+
+.biller-compact table th,
+.biller-compact table td,
+.owner-compact table th,
+.owner-compact table td {
+  padding-top: 0.45rem !important;
+  padding-bottom: 0.45rem !important;
+}
+
+.biller-compact .space-y-2 > :not([hidden]) ~ :not([hidden]),
+.owner-compact .space-y-2 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.35rem !important;
+}
+
+.biller-compact .space-y-4 > :not([hidden]) ~ :not([hidden]),
+.owner-compact .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.65rem !important;
+}
+
+@media (min-width: 640px) {
+  .customer-compact .scrollbar-none {
+    justify-content: center !important;
+  }
+
+  .customer-compact .customer-shell {
+    gap: 0.8rem !important;
+    padding-top: 0.55rem !important;
+  }
+
+  .customer-compact .customer-logo {
+    max-width: 220px !important;
+  }
+
+  .customer-compact .menu-card-compact {
+    min-height: 214px !important;
+    padding: 0.58rem !important;
+  }
+
+  .customer-compact .menu-card-compact .relative.mx-auto {
+    max-width: 78px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .customer-compact .customer-shell {
+    padding-top: 0.55rem !important;
+  }
+
+  .customer-compact .customer-logo {
+    max-width: 236px !important;
+  }
+
+  .customer-compact .menu-card-compact {
+    min-height: 218px !important;
+  }
+
+  .customer-compact .menu-grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(184px, 1fr)) !important;
+    gap: 0.82rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .customer-compact .customer-shell {
+    gap: 0.62rem !important;
+    padding-top: 0.45rem !important;
+  }
+
+  .customer-compact .customer-logo {
+    max-width: 162px !important;
+  }
+
+  .customer-compact .quick-access-compact {
+    padding: 0.5rem !important;
+  }
+
+  .customer-compact .quick-access-compact button {
+    min-height: 2.1rem !important;
+    padding: 0.45rem 0.4rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap;
+  }
+
+  .customer-compact .menu-card-compact {
+    min-height: 184px !important;
+    padding: 0.42rem !important;
+  }
+
+  .customer-compact .menu-card-compact .relative.mx-auto {
+    max-width: 60px !important;
+  }
+
+  .customer-compact .menu-grid-compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.55rem !important;
+  }
+
+  .product-modal-compact .cigarette-modal .detail-body {
+    padding: 0.45rem 0.55rem 0.55rem !important;
+    gap: 0.45rem !important;
+  }
+
+  .product-modal-compact .cigarette-modal .detail-body > div:first-child > div {
+    padding: 0.42rem 0.5rem !important;
+  }
+
+  .product-modal-compact .detail-card,
+  .product-modal-compact .detail-modal {
+    max-width: min(90vw, 286px) !important;
+  }
+
+  .product-modal-compact .detail-card {
+    border-radius: 23px !important;
+  }
+
+  .product-modal-compact .detail-header {
+    padding: 10px 12px 0 12px !important;
+  }
+
+  .product-modal-compact .detail-title {
+    font-size: 20px !important;
+  }
+
+  .product-modal-compact .detail-close {
+    width: 34px !important;
+    height: 34px !important;
+  }
+
+  .product-modal-compact .detail-image {
+    width: min(60vw, 162px) !important;
+    height: min(60vw, 162px) !important;
+  }
+
+  .product-modal-compact .detail-body {
+    padding: 8px 12px 12px 12px !important;
+    gap: 7px !important;
+  }
+
+  .product-modal-compact .price-value {
+    font-size: 25px !important;
+  }
+
+  .product-modal-compact .section-block,
+  .product-modal-compact .quantity-block {
+    gap: 6px !important;
+  }
+
+  .product-modal-compact .quantity-card {
+    padding: 9px 11px !important;
+    gap: 6px !important;
+  }
+
+  .product-modal-compact .add-cart-btn {
+    padding: 10px 0 !important;
+  }
+
+  .product-modal-compact .cigarette-modal,
+  .product-modal-compact .cigarette-modal .detail-card {
+    max-width: calc(100vw - 16px) !important;
+  }
+}
 @media (max-width: 420px) {
   .detail-card {
     max-width: 100%;
   }
   .detail-image {
-    width: min(76vw, 240px);
-    height: min(76vw, 240px);
+    width: min(70vw, 220px);
+    height: min(70vw, 220px);
     border-radius: 24px;
   }
   .price-value {
-    font-size: 32px;
+    font-size: 30px;
   }
   .detail-body {
-    padding: 16px 18px 20px 18px;
-    gap: 16px;
+    padding: 14px 16px 18px 16px;
+    gap: 13px;
   }
   .pill-row,
   .pill-column {

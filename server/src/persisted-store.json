@@ -4281,6 +4281,74 @@
           "unit": "ml"
         }
       ]
+    },
+    {
+      "id": "signature-infusion-chai",
+      "itemId": "signature-infusion-chai",
+      "ingredients": [
+        {
+          "rawMaterialId": "tea-leaves",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "milk",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 7,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "hot-chocolate",
+      "itemId": "hot-chocolate",
+      "ingredients": [
+        {
+          "rawMaterialId": "milk",
+          "amount": 160,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cocoa-powder",
+          "amount": 18,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 6,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "core-coffee",
+      "itemId": "core-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "milk",
+          "amount": 140,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 7,
+          "unit": "g"
+        }
+      ]
     }
   ],
   "inventoryHistory": []

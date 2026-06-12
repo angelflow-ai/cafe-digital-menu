@@ -707,7 +707,7 @@ export const menuItems = [
     "categoryId": "cold-drinks",
     "subcategory": "Milk Shakes",
     "description": "",
-    "image": "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg",
+    "image": "/uploads/7e1a3e07-9f17-404c-b06d-1e5c2eb51133.jpg",
     "sizes": [
       {
         "id": "one",
@@ -764,7 +764,7 @@ export const menuItems = [
     "categoryId": "cold-drinks",
     "subcategory": "Milk Shakes",
     "description": "",
-    "image": "/assets/images/Cold Drinks/Milk Shakes/kitkat-shake-v2.jpg",
+    "image": "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg",
     "sizes": [
       {
         "id": "one",
@@ -859,7 +859,7 @@ export const menuItems = [
     "categoryId": "cold-drinks",
     "subcategory": "Milk Shakes",
     "description": "",
-    "image": "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg",
+    "image": "/uploads/be460614-dd1b-4640-9582-0dc5b5d9b87a.jpg",
     "sizes": [
       {
         "id": "one",
@@ -878,7 +878,7 @@ export const menuItems = [
     "categoryId": "cold-drinks",
     "subcategory": "Milk Shakes",
     "description": "",
-    "image": "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg",
+    "image": "/uploads/37fa3608-dac2-4f02-a805-82edfef18be8.webp",
     "sizes": [
       {
         "id": "one",
@@ -891,12 +891,23 @@ export const menuItems = [
     "category": "cold-drinks",
     "price": 125
   },
+  { "id": "strawberry-coolberg", "name": "Strawberry Coolberg", "categoryId": "cold-drinks", "subcategory": "Coolberg", "description": "", "image": "/uploads/25bc3ad5-1d58-4ad8-a53f-ff33c866ceea.png", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 109 }], "active": true, "category": "cold-drinks", "price": 109, "isDeleted": false, "deletedAt": null },
+  { "id": "peach-coolberg", "name": "Peach Coolberg", "categoryId": "cold-drinks", "subcategory": "Coolberg", "description": "", "image": "/uploads/386e71b3-bb2f-4254-b264-95bdb3faae1d.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 109 }], "active": true, "category": "cold-drinks", "price": 109, "isDeleted": false, "deletedAt": null },
+  { "id": "cranberry-coolberg", "name": "Cranberry Coolberg", "categoryId": "cold-drinks", "subcategory": "Coolberg", "description": "", "image": "/uploads/18a07f00-9b46-4ec3-8a55-3cd028aa48e1.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 109 }], "active": true, "category": "cold-drinks", "price": 109, "isDeleted": false, "deletedAt": null },
+  { "id": "jugaaro-coolberg", "name": "Jugaaro Coolberg", "categoryId": "cold-drinks", "subcategory": "Coolberg", "description": "", "image": "/uploads/a23a3e8b-d30d-479c-ac9f-1ba7619dd7aa.webp", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 109 }], "active": true, "category": "cold-drinks", "price": 109, "isDeleted": false, "deletedAt": null },
+  { "id": "ultra-white-monster", "name": "Ultra White Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/87751f04-4a34-46aa-98bd-847574fa0146.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 350 }], "active": true, "category": "cold-drinks", "price": 350, "isDeleted": false, "deletedAt": null },
+  { "id": "ultra-original-monster", "name": "Ultra Original Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/2d4b271c-b1c5-460d-b032-9f0ccf53f2de.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 300 }], "active": true, "category": "cold-drinks", "price": 300, "isDeleted": false, "deletedAt": null },
+  { "id": "ultra-pink-monster", "name": "Ultra Pink Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/b2083273-7759-4e6a-9588-a51456fdb760.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 300 }], "active": true, "category": "cold-drinks", "price": 300, "isDeleted": false, "deletedAt": null },
+  { "id": "bad-apple-monster", "name": "Bad Apple Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/05d16901-6be0-4b25-ae3f-84c2eca6d6f0.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 300 }], "active": true, "category": "cold-drinks", "price": 300, "isDeleted": false, "deletedAt": null },
+  { "id": "rio-punch-monster", "name": "Rio Punch Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/127071af-0bf5-4229-b6b9-decafdbdbeeb.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 300 }], "active": true, "category": "cold-drinks", "price": 300, "isDeleted": false, "deletedAt": null },
+  { "id": "white-pineapple-monster", "name": "White Pineapple Monster", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/19614428-7335-4a3c-937e-60325b5ceebf.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 300 }], "active": true, "category": "cold-drinks", "price": 300, "isDeleted": false, "deletedAt": null },
+  { "id": "redbull-250ml-", "name": "Redbull (250ml)", "categoryId": "cold-drinks", "subcategory": "Energy Drinks", "description": "", "image": "/uploads/644e4d6b-9c31-421f-bf86-779e2970e2cd.jpg", "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 125 }], "active": true, "category": "cold-drinks", "price": 125, "isDeleted": false, "deletedAt": null },
   {
     "id": "storia-coconut-water",
     "name": "Storia Coconut Water",
     "categoryId": "coconut-water",
     "description": "",
-    "image": "/assets/images/Cold Drinks/Ice Tea/Watermelon Ice Tea.jpg",
+    "image": "/uploads/f32c4f11-bbdb-4836-b265-e4467a64e470.jpg",
     "sizes": [
       {
         "id": "one",
@@ -934,7 +945,7 @@ export const menuItems = [
     "categoryId": "snacks",
     "subcategory": "Sandwich",
     "description": "",
-    "image": "/assets/images/Snacks/Sandwich/paneer-tikka-melt-v2.jpg",
+    "image": "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg",
     "sizes": [
       {
         "id": "one",
@@ -1191,6 +1202,20 @@ export const menuItems = [
     "active": true,
     "category": "snacks",
     "price": 98
+  },
+  {
+    "id": "persistence-test-burger",
+    "name": "Infusion Loaded Stack",
+    "categoryId": "snacks",
+    "subcategory": "Burger",
+    "description": "",
+    "image": "/uploads/50af6a4e-4bc1-46dc-8d9b-864074badb11.jpg",
+    "sizes": [{ "id": "one", "name": "Regular", "label": "Regular", "price": 99 }],
+    "active": true,
+    "category": "snacks",
+    "price": 99,
+    "isDeleted": false,
+    "deletedAt": null
   },
   {
     "id": "infusion-loaded-stack",
@@ -1870,7 +1895,7 @@ export const menuItems = [
 
 export const subcategoryConfig = {
   "hot-drinks": ["Chai", "Coffee"],
-  "cold-drinks": ["Ice Tea", "Cold Coffee", "Mojito", "Ice Slush", "Milk Shakes"],
+  "cold-drinks": ["Ice Tea", "Cold Coffee", "Mojito", "Ice Slush", "Milk Shakes", "Coolberg", "Energy Drinks"],
   "coconut-water": [],
   snacks: ["Sandwich", "Pasta", "Garlic Bread", "French Fries", "Burger", "Noodles", "Maggi", "Pizza", "Dumplings"],
   cigarettes: []

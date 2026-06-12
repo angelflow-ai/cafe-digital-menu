@@ -60,23 +60,38 @@ export const menuItems = [
   { id: "strawberry-slush", name: "Strawberry Slush", categoryId: "cold-drinks", subcategory: "Ice Slush", description: "", image: "/assets/images/Cold Drinks/Ice Slush/Strawberry Slush.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
 
   // Milk Shakes
-  { id: "kunafa-shake", name: "Kunafa Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
+  { id: "kunafa-shake", name: "Kunafa Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/7e1a3e07-9f17-404c-b06d-1e5c2eb51133.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
   { id: "brownie-shake", name: "Brownie Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
   { id: "dark-chocolate-shake", name: "Dark Chocolate Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
-  { id: "kit-kat-shake", name: "Kit-Kat Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/kitkat-shake-v2.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "kit-kat-shake", name: "Kit-Kat Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "oreo-shake", name: "Oreo Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Oreo Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "butterscotch-shake", name: "Butterscotch Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Butterscotch Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
   { id: "mango-shake", name: "Mango Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Mango Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
   { id: "strawberry-shake", name: "Strawberry Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Strawberry Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
-  { id: "prab-protein-milk-shake-double-chocolate", name: "Prab Protein Milk-shake (Double Chocolate)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 85 }], active: true },
-  { id: "prab-protein-milk-shake-coffee", name: "Prab Protein Milk-shake (Coffee)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true },
+  { id: "prab-protein-milk-shake-double-chocolate", name: "Prab Protein Milk-shake (Double Chocolate)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/be460614-dd1b-4640-9582-0dc5b5d9b87a.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 85 }], active: true },
+  { id: "prab-protein-milk-shake-coffee", name: "Prab Protein Milk-shake (Coffee)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/37fa3608-dac2-4f02-a805-82edfef18be8.webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true },
+
+  // Coolberg
+  { id: "strawberry-coolberg", name: "Strawberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/25bc3ad5-1d58-4ad8-a53f-ff33c866ceea.png", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "peach-coolberg", name: "Peach Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/386e71b3-bb2f-4254-b264-95bdb3faae1d.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "cranberry-coolberg", name: "Cranberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/18a07f00-9b46-4ec3-8a55-3cd028aa48e1.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "jugaaro-coolberg", name: "Jugaaro Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/a23a3e8b-d30d-479c-ac9f-1ba7619dd7aa.webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+
+  // Energy Drinks
+  { id: "ultra-white-monster", name: "Ultra White Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/87751f04-4a34-46aa-98bd-847574fa0146.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 350 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "ultra-original-monster", name: "Ultra Original Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/2d4b271c-b1c5-460d-b032-9f0ccf53f2de.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "ultra-pink-monster", name: "Ultra Pink Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/b2083273-7759-4e6a-9588-a51456fdb760.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "bad-apple-monster", name: "Bad Apple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/05d16901-6be0-4b25-ae3f-84c2eca6d6f0.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "rio-punch-monster", name: "Rio Punch Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/127071af-0bf5-4229-b6b9-decafdbdbeeb.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "white-pineapple-monster", name: "White Pineapple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/19614428-7335-4a3c-937e-60325b5ceebf.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "redbull-250ml-", name: "Redbull (250ml)", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/644e4d6b-9c31-421f-bf86-779e2970e2cd.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true, isDeleted: false, deletedAt: null },
 
   // Coconut Water
   { id: "storia-coconut-water", name: "Storia Coconut Water", categoryId: "coconut-water", description: "", image: "/uploads/f32c4f11-bbdb-4836-b265-e4467a64e470.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 60 }], active: true },
 
   // Sandwich
   { id: "infusion-heritage-melt", name: "Infusion Heritage Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Infusion Heritage Melt.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 173 }], active: true },
-  { id: "paneer-tikka-melt", name: "Paneer Tikka Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/paneer-tikka-melt-v2.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 143 }], active: true },
+  { id: "paneer-tikka-melt", name: "Paneer Tikka Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 143 }], active: true },
   { id: "trio-delight-sandwich", name: "Trio Delight Sandwich", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Trio Delight Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 113 }], active: true },
   { id: "garden-fresh-sandwich", name: "Garden Fresh Sandwich", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Garden Fresh Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 93 }], active: true },
 
@@ -98,6 +113,7 @@ export const menuItems = [
   { id: "golden-crisp-fries", name: "Golden Crisp Fries", categoryId: "snacks", subcategory: "French Fries", description: "", image: "/assets/images/Snacks/French-Fries/Golden Crisp Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
 
   // Burger
+  { id: "persistence-test-burger", name: "Infusion Loaded Stack", categoryId: "snacks", subcategory: "Burger", description: "", image: "/uploads/50af6a4e-4bc1-46dc-8d9b-864074badb11.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 99 }], active: true, isDeleted: false, deletedAt: null },
   { id: "infusion-loaded-stack", name: "Infusion Loaded Stack", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Infusion Loaded Stack.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },
   { id: "paneer-bliss-burger", name: "Paneer Bliss Burger", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Paneer Bliss Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "cheese-indulgence-burger", name: "Cheese Indulgence Burger", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Cheese Indulgence Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
@@ -458,61 +474,90 @@ const recipeSeedEntries = [
     { name: "Redbull 250ml", amount: 1, unit: "can" }
   ]),
   createRecipe("green-tea", [
-    { name: "Green tea leaves", amount: 5, unit: "g" },
-    { name: "Water", amount: 150, unit: "ml" }
+    { name: "Green tea leaves", amount: 2, unit: "g" },
+    { name: "Water", amount: 180, unit: "ml" }
   ]),
   createRecipe("tulsi-tea", [
-    { name: "Tulsi tea leaves", amount: 5, unit: "g" },
-    { name: "Water", amount: 150, unit: "ml" }
+    { name: "Tulsi tea leaves", amount: 2, unit: "g" },
+    { name: "Water", amount: 180, unit: "ml" }
   ]),
   createRecipe("lemon-tea", [
-    { name: "Lemon tea blend / powder", amount: 5, unit: "g" },
-    { name: "Water", amount: 150, unit: "ml" }
+    { name: "Lemon tea blend / powder", amount: 2, unit: "g" },
+    { name: "Lemon", amount: 10, unit: "ml" },
+    { name: "Water", amount: 180, unit: "ml" },
+    { name: "Sugar", amount: 6, unit: "g" }
   ]),
   createRecipe("honey-lemon-tea", [
-    { name: "Honey", amount: 5, unit: "g" },
+    { name: "Honey", amount: 12, unit: "g" },
     { name: "Lemon", amount: 10, unit: "ml" },
-    { name: "Water", amount: 150, unit: "ml" }
+    { name: "Water", amount: 180, unit: "ml" }
   ])
 ].filter(Boolean);
 
 const defaultRecipesBase = [
   {
-    id: "black-coffee",
-    itemId: "black-coffee",
-    ingredients: [
-      { rawMaterialId: "coffee-powder", amount: 15, unit: "g" },
-      { rawMaterialId: "water", amount: 100, unit: "ml" },
-      { rawMaterialId: "sugar", amount: 10, unit: "g" }
-    ]
-  },
-  {
     id: "personal-blend-chai",
     itemId: "personal-blend-chai",
     ingredients: [
-      { rawMaterialId: "tea-leaves", amount: 5, unit: "g" },
-      { rawMaterialId: "milk", amount: 150, unit: "ml" },
-      { rawMaterialId: "water", amount: 100, unit: "ml" },
-      { rawMaterialId: "sugar", amount: 10, unit: "g" },
-      { rawMaterialId: "kulhad-cup", amount: 1, unit: "pcs", serveType: "Kulhad" }
+      { rawMaterialId: "tea-leaves", amount: 4, unit: "g" },
+      { rawMaterialId: "milk", amount: 120, unit: "ml" },
+      { rawMaterialId: "water", amount: 60, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 8, unit: "g" }
     ]
   },
-    {
-      id: "black-tea",
-      itemId: "black-tea",
-      ingredients: [
-        { rawMaterialId: "tea-leaves", amount: 5, unit: "g" },
-        { rawMaterialId: "water", amount: 150, unit: "ml" },
-        { rawMaterialId: "sugar", amount: 10, unit: "g" }
-      ]
-    },
+  {
+    id: "black-tea",
+    itemId: "black-tea",
+    ingredients: [
+      { rawMaterialId: "tea-leaves", amount: 3, unit: "g" },
+      { rawMaterialId: "water", amount: 180, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: "signature-infusion-chai",
+    itemId: "signature-infusion-chai",
+    ingredients: [
+      { rawMaterialId: "tea-leaves", amount: 3, unit: "g" },
+      { rawMaterialId: "milk", amount: 100, unit: "ml" },
+      { rawMaterialId: "water", amount: 60, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 7, unit: "g" }
+    ]
+  },
   {
     id: "infusion-heritage-coffee",
     itemId: "infusion-heritage-coffee",
     ingredients: [
-      { rawMaterialId: "coffee-powder", amount: 15, unit: "g" },
-      { rawMaterialId: "milk", amount: 180, unit: "ml" },
-      { rawMaterialId: "sugar", amount: 10, unit: "g" }
+      { rawMaterialId: "coffee-powder", amount: 6, unit: "g" },
+      { rawMaterialId: "milk", amount: 150, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 8, unit: "g" }
+    ]
+  },
+  {
+    id: "hot-chocolate",
+    itemId: "hot-chocolate",
+    ingredients: [
+      { rawMaterialId: "milk", amount: 160, unit: "ml" },
+      { rawMaterialId: "cocoa-powder", amount: 18, unit: "g" },
+      { rawMaterialId: "sugar", amount: 6, unit: "g" }
+    ]
+  },
+  {
+    id: "core-coffee",
+    itemId: "core-coffee",
+    ingredients: [
+      { rawMaterialId: "coffee-powder", amount: 5, unit: "g" },
+      { rawMaterialId: "milk", amount: 140, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 7, unit: "g" }
+    ]
+  },
+  {
+    id: "black-coffee",
+    itemId: "black-coffee",
+    ingredients: [
+      { rawMaterialId: "coffee-powder", amount: 4, unit: "g" },
+      { rawMaterialId: "water", amount: 180, unit: "ml" },
+      { rawMaterialId: "sugar", amount: 5, unit: "g" }
     ]
   },
   {
