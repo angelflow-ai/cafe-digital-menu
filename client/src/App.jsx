@@ -3400,7 +3400,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     loadPromiseRef.current = (async () => {
     try {
       const [freshOrders, freshInventory, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
-        orderService.listOrders("limit=100").catch(() => sync.getOrdersFromStorage()),
+        orderService.listOrders("limit=500").catch(() => sync.getOrdersFromStorage()),
         inventoryStore.loadInventory().catch(() => sync.getInventoryFromStorage()),
         menuService.getCategories(),
         menuService.getMenu({ includeInactive: true }),
