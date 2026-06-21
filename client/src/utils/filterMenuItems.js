@@ -3,6 +3,7 @@
 export function normalizeMenuItem(item) {
   if (!item) return item;
   const subcategoryName = item.subCategoryName || item.subcategoryName || item.subcategory || item.subCategory || null;
+  const image = item.image || item.photoUrl || item.imageUrl || item.photo || item.img || "";
   const serveOptions = Array.isArray(item.serveOptions)
     ? item.serveOptions
     : Array.isArray(item.servingOptions)
@@ -16,6 +17,7 @@ export function normalizeMenuItem(item) {
     subCategoryName: subcategoryName,
     subcategoryName,
     subcategory: subcategoryName,
+    image,
     serveOptions,
     addons: Array.isArray(item.addons) ? item.addons : item.addons || [],
     isDeleted: item.isDeleted === true,

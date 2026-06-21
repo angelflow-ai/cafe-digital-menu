@@ -37,7 +37,7 @@ npm run client  # Terminal 2
 
 5. **Add Environment Variable:**
    - Key: `VITE_API_URL`
-   - Value: `https://your-backend-url.com/api`
+   - Value: `https://your-backend-url.com`
 
 6. **Deploy** (auto-deploys on push to main)
 
@@ -79,7 +79,7 @@ npm run client  # Terminal 2
 
 ### Client (.env for development)
 ```
-VITE_API_URL=http://localhost:4000/api
+VITE_API_URL=http://localhost:4000
 ```
 
 ### Server (.env)

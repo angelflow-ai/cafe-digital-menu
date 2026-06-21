@@ -135,7 +135,7 @@ POST   /api/uploads         # Upload menu item photo
 
 ### Frontend (.env or .env.local in client/)
 ```
-VITE_API_URL=http://localhost:4000/api
+VITE_API_URL=http://localhost:4000
 ```
 
 ### Backend (.env in server/)
@@ -181,7 +181,7 @@ For complete deployment instructions, see [DEPLOY.md](./DEPLOY.md)
 1. **Frontend → Netlify**
    - Build: `npm run build --prefix client`
    - Publish: `client/dist` folder
-   - Add env: `VITE_API_URL=<backend-url>/api`
+   - Add env: `VITE_API_URL=<backend-url>`
 
 2. **Backend → Render/Railway/Heroku**
    - Connect GitHub repo

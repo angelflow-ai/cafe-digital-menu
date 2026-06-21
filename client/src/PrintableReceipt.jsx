@@ -1,7 +1,7 @@
 import React from "react";
 import logoUrl from "./assets/infusion-saga-logo.png";
 import reviewQrUrl from "./assets/review-qr.jpeg";
-import { formatOrderItemLine, getAddonTotal, getBasePrice, getFinalItemTotal, getItemQuantity, getOrderTotal } from "./utils/orderDisplayFormatter";
+import { formatOrderItemLine, getAddonEntries, getAddonTotal, getBasePrice, getFinalItemTotal, getItemQuantity, getOrderTotal } from "./utils/orderDisplayFormatter";
 
 function rupees(value) {
   return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
@@ -30,6 +30,7 @@ function normalizeLineItem(item) {
     sizeName: item.sizeName || item.size || "",
     serveType: item.serveType || "",
     addons: item.addons || {},
+    addOns: Array.isArray(item.addOns) ? item.addOns : [],
     lineText
   };
 }
@@ -134,16 +135,10 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
             </div>
             {items.length === 0 && <div style={{padding:'8px 0'}}>No items.</div>}
             {items.map((line, idx) => {
-              const addonEntries = [
-                ...(Array.isArray(line.addons?.selectedAddons) ? line.addons.selectedAddons.map((addon) => ({
-                  name: addon.name || "Addon",
-                  amount: Number(addon.price || 0) * line.qty
-                })) : []),
-                ...(line.addons?.extraCheese ? [{
-                  name: "Extra Cheese",
-                  amount: Number(line.addons?.extraCheesePrice || 0) * line.qty
-                }] : [])
-              ];
+              const addonEntries = getAddonEntries(line).map((addon) => ({
+                name: addon.name || "Addon",
+                amount: Number(addon.price || 0) * line.qty
+              }));
               const itemLabel = [line.name, line.serveType ? `• ${line.serveType}` : ""].filter(Boolean).join(" ");
 
               return (
@@ -158,7 +153,7 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
                   {addonEntries.map((addon, addonIndex) => (
                     <div key={`${line.name}-${idx}-addon-${addonIndex}`} className="receipt-item receipt-item-addon">
                       <div />
-                      <div style={{ fontSize: 10 }}>{addon.name}</div>
+                      <div style={{ fontSize: 10 }}>+ {addon.name}</div>
                       <div className="receipt-amount">+ {rupees(addon.amount)}</div>
                     </div>
                   ))}

@@ -26,11 +26,19 @@ function resolveApiRoot() {
 }
 
 const API_ROOT = resolveApiRoot();
+export const DEFAULT_MENU_IMAGE = "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg";
 
-export function imageUrl(value) {
+function appendImageVersion(url, version) {
+  const token = String(version || "").trim();
+  if (!token || !url.startsWith("/assets/images/")) return url;
+  return `${url}${url.includes("?") ? "&" : "?"}v=${encodeURIComponent(token)}`;
+}
+
+export function imageUrl(value, version = "") {
   if (!value) return "";
+  const versionedValue = appendImageVersion(value, version);
   if (value.startsWith("/uploads")) {
     return API_ROOT ? encodeURI(`${API_ROOT}${value}`) : encodeURI(value);
   }
-  return encodeURI(value);
+  return encodeURI(versionedValue);
 }

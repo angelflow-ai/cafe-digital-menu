@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { imageUrl } from "../utils/imageHelper";
+import { DEFAULT_MENU_IMAGE, imageUrl } from "../utils/imageHelper";
 
 const hiddenServeOptionTeaIds = new Set([
   "black-tea",
@@ -87,6 +87,13 @@ function isCigaretteItem(item) {
   return category.includes("cigarette") || name.includes("cigarette");
 }
 
+function handleImageError(event) {
+  const fallbackSrc = imageUrl(DEFAULT_MENU_IMAGE);
+  if (event.currentTarget.src !== fallbackSrc) {
+    event.currentTarget.src = fallbackSrc;
+  }
+}
+
 export default function MenuItemCard({ item, onDetail, onAdd }) {
   const sizes = item?.sizes?.length
     ? item.sizes
@@ -95,7 +102,7 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
   const serveOptions = getServeOptions(item);
   const displaySizes = sizes.filter(size => (size.label || size.name || "").toLowerCase() !== "regular");
   const [serveType, setServeType] = useState(serveOptions[0] || "");
-  const imageSrc = imageUrl(item?.image);
+  const imageSrc = imageUrl(item?.image, item?.updatedAt || item?.imageUpdatedAt);
   const showCigaretteFallback = isCigaretteItem(item) && !imageSrc;
 
   useEffect(() => {
@@ -117,7 +124,7 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
               {showCigaretteFallback ? (
                 <div className="grid h-full w-full place-items-center rounded-full bg-rose-100 text-4xl text-rose-700 shadow-sm ring-1 ring-rose-200">🚬</div>
               ) : (
-                <img src={imageSrc} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" />
+                <img src={imageSrc || imageUrl(DEFAULT_MENU_IMAGE)} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" onError={handleImageError} />
               )}
             </div>
             <h3 className="mt-2 min-h-[2.4rem] text-center text-sm font-black leading-tight sm:text-[15px]">{item.name}</h3>
@@ -157,7 +164,7 @@ export default function MenuItemCard({ item, onDetail, onAdd }) {
                 {showCigaretteFallback ? (
                   <div className="grid h-full w-full place-items-center rounded-full bg-rose-100 text-4xl text-rose-700 shadow-sm ring-1 ring-rose-200">🚬</div>
                 ) : (
-                  <img src={imageSrc} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" />
+                  <img src={imageSrc || imageUrl(DEFAULT_MENU_IMAGE)} alt="" className="h-full w-full rounded-full object-cover drop-shadow-2xl transition group-hover:scale-105" onError={handleImageError} />
                 )}
               </div>
               <h3 className="mt-2 min-h-[2.4rem] text-center text-sm font-black leading-tight sm:text-[15px]">{item.name}</h3>

@@ -1,4 +1,4 @@
-import { rawMaterials } from './seed.js';
+import { rawMaterials } from './server/src/seed.js';
 const required = [
   'Pizza base','Pizza sauce','Mozzarella cheese','Pizza seasoning','Oregano','Chilli flakes','Paneer tikka topping','Mixed pizza vegetables',
   'Sandwich bread','Burger bun','Veg burger patty','Aloo patty','Lettuce','Tomato','Onion','Cucumber','Capsicum','Mayonnaise','Cheese slice',

@@ -66,6 +66,232 @@ textarea {
   overflow: hidden;
 }
 
+.about-cafe-page {
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: #1c1917;
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.48), transparent 26rem),
+    radial-gradient(circle at 90% 8%, rgba(251, 185, 172, 0.48), transparent 24rem),
+    radial-gradient(circle at 42% 98%, rgba(255, 244, 210, 0.56), transparent 28rem),
+    linear-gradient(135deg, #f6dfc6 0%, #f9b8a9 38%, #fff4df 70%, #d8dec8 100%);
+}
+
+.about-navbar-wrap {
+  background: linear-gradient(180deg, rgba(246, 223, 198, 0.78), rgba(246, 223, 198, 0));
+}
+
+.about-navbar {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.54), rgba(255, 242, 223, 0.34));
+  box-shadow: 0 16px 42px rgba(67, 45, 28, 0.14);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.about-section {
+  position: relative;
+  width: 100%;
+}
+
+.about-hero-grid {
+  min-height: calc(100vh - 7rem);
+}
+
+.about-hero-copy {
+  padding: 0.5rem 0;
+}
+
+.about-hero-actions {
+  align-items: stretch;
+}
+
+.about-premium-button {
+  border: 0;
+  background: linear-gradient(135deg, #050505, #2b211d);
+  color: #fff;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24), 0 0 28px rgba(255, 190, 150, 0.2);
+  cursor: pointer;
+}
+
+.about-premium-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3), 0 0 38px rgba(255, 190, 150, 0.34);
+}
+
+.about-secondary-button {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.5);
+  color: #1c1917;
+  box-shadow: 0 16px 34px rgba(67, 45, 28, 0.12);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.about-secondary-button:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.about-video-card {
+  border: 1px solid rgba(255, 255, 255, 0.68);
+  background:
+    radial-gradient(circle at 24% 18%, rgba(255, 255, 255, 0.95), transparent 30%),
+    radial-gradient(circle at 82% 76%, rgba(251, 146, 60, 0.24), transparent 34%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.58), rgba(255, 224, 199, 0.28), rgba(255, 255, 255, 0.28));
+  box-shadow: 0 24px 72px rgba(67, 45, 28, 0.18);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.about-video-card::before {
+  content: "";
+  position: absolute;
+  inset: 1.25rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.about-story-card,
+.about-cinematic-card,
+.about-review-card,
+.about-instagram-card,
+.about-cta-banner,
+.about-service-card {
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(255, 238, 215, 0.28));
+  box-shadow: 0 24px 70px rgba(67, 45, 28, 0.16);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.about-story-copy {
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.about-service-card {
+  width: 17.5rem;
+  flex: 0 0 auto;
+  min-height: 16.5rem;
+}
+
+.about-lift {
+  transition: transform 0.28s ease, box-shadow 0.28s ease, background-color 0.28s ease;
+}
+
+.about-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 30px 82px rgba(67, 45, 28, 0.22);
+}
+
+.about-carousel {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.about-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.about-carousel-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  padding-bottom: 0.25rem;
+}
+
+.about-carousel-track > * {
+  scroll-snap-align: start;
+}
+
+.about-cinematic-card,
+.about-review-card {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(255, 229, 204, 0.28));
+}
+
+.about-instagram-card {
+  background:
+    radial-gradient(circle at 14% 20%, rgba(255, 255, 255, 0.78), transparent 18rem),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.5), rgba(255, 226, 202, 0.34));
+}
+
+.about-cta-banner {
+  background:
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.72), transparent 14rem),
+    radial-gradient(circle at 16% 92%, rgba(251, 185, 172, 0.38), transparent 16rem),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.64), rgba(255, 213, 190, 0.42), rgba(255, 244, 223, 0.6));
+}
+
+.about-reveal {
+  animation: aboutFadeUp 0.8s ease both;
+}
+
+@supports (animation-timeline: view()) {
+  .about-reveal {
+    animation-timeline: view();
+    animation-range: entry 0% cover 30%;
+  }
+
+  .about-reveal:first-of-type {
+    animation-timeline: auto;
+  }
+}
+
+@keyframes aboutFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (min-width: 640px) {
+  .about-service-card {
+    width: 20rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .about-cafe-page {
+    background:
+      radial-gradient(circle at 18% 4%, rgba(255, 255, 255, 0.52), transparent 18rem),
+      linear-gradient(135deg, #f6dfc6 0%, #f9b8a9 46%, #fff4df 100%);
+  }
+
+  .about-navbar {
+    border-radius: 999px;
+  }
+
+  .about-hero-grid {
+    min-height: auto;
+  }
+
+  .about-hero-actions > * {
+    width: 100%;
+  }
+
+  .about-service-card {
+    width: min(82vw, 19rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-reveal,
+  .about-lift,
+  .about-cafe-page * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 @media (max-width: 420px) {
   .glass-card {
     border-radius: 1.45rem;

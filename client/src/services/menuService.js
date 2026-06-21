@@ -17,6 +17,14 @@ export async function createMenuItem(payload) {
   return api("/menu", { method: "POST", body: JSON.stringify(payload) });
 }
 
+export async function updateMenuItem(id, payload) {
+  return api(`/menu/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(payload) });
+}
+
+export async function setMenuItemActive(id, active) {
+  return api(`/menu/${id}/active`, { method: "PATCH", body: JSON.stringify({ active }) });
+}
+
 export async function deleteMenuItem(id) {
   return api(`/menu/${id}`, { method: "DELETE" });
 }
@@ -73,4 +81,4 @@ export async function syncDefaultRecipes() {
   return api(`/recipes/sync-defaults`, { method: "POST", body: JSON.stringify({}) });
 }
 
-export default { getCategories, getMenu, createMenuItem, deleteMenuItem, restoreMenuItem, permanentlyDeleteMenuItem, uploadPhoto, createCategory, deleteCategory, restoreCategory, permanentlyDeleteCategory, getRecipes, getReports, createRecipe, patchRecipe, deleteRecipe, syncDefaultRecipes };
+export default { getCategories, getMenu, createMenuItem, updateMenuItem, setMenuItemActive, deleteMenuItem, restoreMenuItem, permanentlyDeleteMenuItem, uploadPhoto, createCategory, deleteCategory, restoreCategory, permanentlyDeleteCategory, getRecipes, getReports, createRecipe, patchRecipe, deleteRecipe, syncDefaultRecipes };

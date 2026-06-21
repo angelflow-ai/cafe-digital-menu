@@ -302,6 +302,48 @@ function slugify(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function normalizeInventoryUnitPayload(body = {}) {
+  const rawUnit = String(body.unit || "pcs").trim().toLowerCase();
+  const quantity = Number(body.stock ?? body.quantity ?? 0);
+  const minStock = Number(body.minStock ?? body.minimumStock ?? 0);
+  const unitMap = {
+    kg: { unit: "g", factor: 1000 },
+    kilogram: { unit: "g", factor: 1000 },
+    kilograms: { unit: "g", factor: 1000 },
+    g: { unit: "g", factor: 1 },
+    gram: { unit: "g", factor: 1 },
+    grams: { unit: "g", factor: 1 },
+    litre: { unit: "ml", factor: 1000 },
+    liter: { unit: "ml", factor: 1000 },
+    litres: { unit: "ml", factor: 1000 },
+    liters: { unit: "ml", factor: 1000 },
+    l: { unit: "ml", factor: 1000 },
+    ml: { unit: "ml", factor: 1 },
+    pcs: { unit: "pcs", factor: 1 },
+    pc: { unit: "pcs", factor: 1 },
+    piece: { unit: "pcs", factor: 1 },
+    pieces: { unit: "pcs", factor: 1 }
+  };
+  const normalized = unitMap[rawUnit];
+  if (!normalized) {
+    throw new Error("Unit must be kg, gram, litre, ml, or pcs.");
+  }
+  return {
+    ...body,
+    unit: normalized.unit,
+    stock: Number.isFinite(quantity) ? quantity * normalized.factor : quantity,
+    minStock: Number.isFinite(minStock) ? minStock * normalized.factor : minStock,
+    costPerUnit: body.costPerUnit ?? body.purchasePrice ?? body.price
+  };
+}
+
+function getInventoryLowStockThreshold(item = {}) {
+  const minStock = Number(item.minStock || 0);
+  if (minStock > 0) return minStock;
+  const unit = String(item.unit || "pcs").toLowerCase();
+  return unit === "g" || unit === "ml" ? 10000 : 10;
+}
+
 function normalizeEmail(value) {
   return String(value || "").trim().toLowerCase();
 }
@@ -583,7 +625,29 @@ app.get("/api/menu/:id", async (req, res, next) => {
 
 app.post("/api/menu", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.upsertMenuItem(req.body));
+    const item = await store.upsertMenuItem(req.body);
+    if (!item) return res.status(404).json({ message: "Menu item not found." });
+    return res.json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/menu/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const item = await store.updateMenuItem(req.params.id, req.body || {});
+    if (!item) return res.status(404).json({ message: "Menu item not found." });
+    return res.json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/menu/:id/active", requireAdmin, async (req, res, next) => {
+  try {
+    const item = await store.setMenuItemActive(req.params.id, req.body?.active !== false);
+    if (!item) return res.status(404).json({ message: "Menu item not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -591,7 +655,9 @@ app.post("/api/menu", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/menu/:id/restore", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.restoreMenuItem(req.params.id));
+    const item = await store.restoreMenuItem(req.params.id);
+    if (!item) return res.status(404).json({ message: "Menu item not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -603,7 +669,9 @@ app.delete("/api/menu/:id", requireAdmin, async (req, res, next) => {
       res.json(await store.permanentlyDeleteMenuItem(req.params.id));
       return;
     }
-    res.json(await store.deleteMenuItem(req.params.id));
+    const item = await store.deleteMenuItem(req.params.id);
+    if (!item) return res.status(404).json({ message: "Menu item not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -775,9 +843,9 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
   }
 });
 
-app.get("/api/inventory", requireAdmin, async (_req, res, next) => {
+app.get("/api/inventory", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.rawMaterials());
+    res.json(await store.rawMaterials({ includeDeleted: req.query.includeDeleted === "true" }));
   } catch (error) {
     next(error);
   }
@@ -785,7 +853,7 @@ app.get("/api/inventory", requireAdmin, async (_req, res, next) => {
 
 app.post("/api/inventory", requireAdmin, async (req, res, next) => {
   try {
-    const payload = { ...req.body, unit: String(req.body.unit || "pcs").toLowerCase() };
+    const payload = normalizeInventoryUnitPayload(req.body);
     res.json(await store.upsertRawMaterial(payload));
   } catch (error) {
     next(error);
@@ -794,8 +862,10 @@ app.post("/api/inventory", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/inventory/:id", requireAdmin, async (req, res, next) => {
   try {
-    const payload = { ...req.body, id: req.params.id, unit: String(req.body.unit || "pcs").toLowerCase() };
-    res.json(await store.upsertRawMaterial(payload));
+    const payload = { ...normalizeInventoryUnitPayload(req.body), id: req.params.id };
+    const item = await store.upsertRawMaterial(payload);
+    if (!item) return res.status(404).json({ message: "Inventory item not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -803,7 +873,19 @@ app.patch("/api/inventory/:id", requireAdmin, async (req, res, next) => {
 
 app.delete("/api/inventory/:id", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.deleteRawMaterial(req.params.id));
+    const item = await store.deleteRawMaterial(req.params.id);
+    if (!item) return res.status(404).json({ message: "Inventory item not found." });
+    return res.json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/inventory/:id/restore", requireAdmin, async (req, res, next) => {
+  try {
+    const item = await store.restoreRawMaterial(req.params.id);
+    if (!item) return res.status(404).json({ message: "Inventory item not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -846,7 +928,9 @@ app.post("/api/recipes", requireAdmin, async (req, res, next) => {
 app.patch("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   try {
     const payload = { ...req.body, id: req.params.id };
-    res.json(await store.upsertRecipe(payload));
+    const item = await store.upsertRecipe(payload);
+    if (!item) return res.status(404).json({ message: "Recipe not found." });
+    return res.json(item);
   } catch (error) {
     next(error);
   }
@@ -854,7 +938,9 @@ app.patch("/api/recipes/:id", requireAdmin, async (req, res, next) => {
 
 app.delete("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.deleteRecipe(req.params.id));
+    const result = await store.deleteRecipe(req.params.id);
+    if (!result || result.deletedCount === 0) return res.status(404).json({ message: "Recipe not found." });
+    return res.json(result);
   } catch (error) {
     next(error);
   }
@@ -874,7 +960,7 @@ app.get("/api/reports", requireAdmin, async (_req, res, next) => {
     const completedOrders = orders.filter((order) => isCompletedSale(order));
     const totalSales = completedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const totalOrders = completedOrders.length;
-    const lowStockItems = rawMaterials.filter((item) => Number(item.stock || 0) <= Number(item.minStock || 0));
+    const lowStockItems = rawMaterials.filter((item) => Number(item.stock || 0) <= getInventoryLowStockThreshold(item));
     const inventoryValue = rawMaterials.reduce((sum, item) => sum + Number(item.stock || 0) * Number(item.costPerUnit || 0), 0);
     const itemCount = {};
     completedOrders.forEach((order) => {

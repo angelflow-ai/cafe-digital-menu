@@ -6,6 +6,7 @@ import {
   CupSoda,
   Droplets,
   Filter,
+  Info,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -32,24 +33,26 @@ import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
 import inventoryStore from "./inventoryStore";
 import demoMode from "./demoMode";
-import { imageUrl } from "./utils/imageHelper";
+import { DEFAULT_MENU_IMAGE, imageUrl } from "./utils/imageHelper";
 import { normalizeMenuItem, filterMenuItems } from "./utils/filterMenuItems";
 import { sortMenuItemsForDisplay } from "./utils/menuDisplayOrder";
 import { categories as defaultCategories, menuItems as defaultMenuItems, subcategoryConfig } from "./data/menuData";
 import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
+import AboutCafe from "./pages/AboutCafe";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
-import { calculateTodayTotalProfit } from "./utils/profitHelpers";
+import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
 import { getCocRequestIdentityKeys, isCocTerminalState, mergeCocRequestEntries as mergeCocRequestEntriesFromHelper, resolveCocRequestId } from "./utils/cocRequestUtils";
-import { formatOrderItemLine, getBasePrice, getAddonDisplay, getAddonEachText, getFinalItemTotal, getOrderTotal, normalizeVisibleSizeLabel } from "./utils/orderDisplayFormatter";
+import { formatOrderItemLine, getAddonEntries, getBasePrice, getAddonDisplay, getAddonEachText, getFinalItemTotal, getOrderTotal, normalizeVisibleSizeLabel } from "./utils/orderDisplayFormatter";
 import { api, API, API_ROOT } from "./services/apiClient";
 import orderService from "./services/orderService";
 import paymentService from "./services/paymentService";
 import authService from "./services/authService";
 import menuService from "./services/menuService";
+import inventoryService from "./services/inventoryService";
 
 // Subcategory config persistence helpers
 const SUBCATEGORY_CONFIG_KEY = "subCategories";
@@ -294,6 +297,44 @@ function isHiddenInventoryItem(item) {
   return normalizeInventoryName(item?.name || item?.id) === "paper cup";
 }
 
+function normalizeInventoryUnitForApi(quantity, minStock, unit) {
+  const rawUnit = String(unit || "pcs").trim().toLowerCase();
+  const value = Number(quantity);
+  const minValue = Number(minStock);
+  const map = {
+    kg: { unit: "g", factor: 1000 },
+    kilogram: { unit: "g", factor: 1000 },
+    kilograms: { unit: "g", factor: 1000 },
+    gram: { unit: "g", factor: 1 },
+    grams: { unit: "g", factor: 1 },
+    g: { unit: "g", factor: 1 },
+    litre: { unit: "ml", factor: 1000 },
+    liter: { unit: "ml", factor: 1000 },
+    litres: { unit: "ml", factor: 1000 },
+    liters: { unit: "ml", factor: 1000 },
+    l: { unit: "ml", factor: 1000 },
+    ml: { unit: "ml", factor: 1 },
+    pcs: { unit: "pcs", factor: 1 },
+    pc: { unit: "pcs", factor: 1 },
+    piece: { unit: "pcs", factor: 1 },
+    pieces: { unit: "pcs", factor: 1 }
+  };
+  const normalized = map[rawUnit];
+  if (!normalized) throw new Error("Unit must be kg, gram, litre, ml, or pcs.");
+  return {
+    unit: normalized.unit,
+    stock: Number.isFinite(value) ? value * normalized.factor : value,
+    minStock: Number.isFinite(minValue) ? minValue * normalized.factor : minValue
+  };
+}
+
+function getInventoryLowStockThreshold(item) {
+  const minStock = Number(item?.minStock ?? item?.minimumStock ?? 0) || 0;
+  if (minStock > 0) return minStock;
+  const unit = String(item?.unit || "pcs").toLowerCase();
+  return unit === "g" || unit === "ml" ? 10000 : 10;
+}
+
 function normalizeLocalInventoryItem(item) {
   const source = item && typeof item === "object" ? item : {};
   return {
@@ -330,6 +371,12 @@ function saveLocalInventoryItems(items) {
     return loadLocalInventoryItems();
   }
   return normalized;
+}
+
+function removeLocalInventoryItemsByIds(ids = []) {
+  const idSet = new Set(ids.map((id) => String(id || "").trim()).filter(Boolean));
+  if (idSet.size === 0) return loadLocalInventoryItems();
+  return saveLocalInventoryItems(loadLocalInventoryItems().filter((item) => !idSet.has(String(item.id || "").trim())));
 }
 
 function dispatchOwnerDataUpdated(detail = {}) {
@@ -371,6 +418,18 @@ function ensureActiveMenuItems(data, categories) {
       return allowedCategoryIds.has(item.categoryId);
     })
     .map((item) => normalizeMenuItem(item));
+}
+
+function normalizeOwnerMenuItems(data, categories) {
+  if (!Array.isArray(data)) return [];
+  const allowedCategoryIds = new Set((Array.isArray(categories) ? categories : []).filter((category) => category?.isDeleted !== true).map((category) => category.id));
+  return data
+    .filter((item) => {
+      if (!item || item?.isDeleted === true || item?.deleted === true) return false;
+      if (allowedCategoryIds.size === 0) return false;
+      return allowedCategoryIds.has(item.categoryId);
+    })
+    .map((item) => normalizeMenuItem({ ...item, active: item?.active !== false && item?.isActive !== false }));
 }
 
 function getQuickAccessPrice(item) {
@@ -530,6 +589,13 @@ function showToast(message, duration = 3000) {
 
 function rupees(value) {
   return `Rs. ${Math.round(Number(value || 0)).toLocaleString("en-IN")}`;
+}
+
+function handleMenuImageError(event) {
+  const fallbackSrc = imageUrl(DEFAULT_MENU_IMAGE);
+  if (event.currentTarget.src !== fallbackSrc) {
+    event.currentTarget.src = fallbackSrc;
+  }
 }
 
 function getOrderTimeLabel(order) {
@@ -694,6 +760,7 @@ function App() {
 
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
+  if (normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
   if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/biller/forgot-password") return <BillerApp navigate={navigate} />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
@@ -1207,6 +1274,7 @@ function CustomerApp({ navigate, counterMode = false }) {
         <TopBar
           cartCount={cartTotals.itemCount}
           onCart={() => openCart(false)}
+          onAbout={() => navigate("/about-cafe")}
           onOrderOnCounter={handleOrderOnCounterClick}
           onBack={counterMode ? () => navigate("/") : undefined}
         />
@@ -1256,6 +1324,7 @@ function CustomerApp({ navigate, counterMode = false }) {
 function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
   const [form, setForm] = useState({ name: "", categoryId: categories[0]?.id || "", subCategoryId: "", subCategoryName: "", description: "", image: "", active: true, price: "", serveOptions: [], addons: [] });
   const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
   const [newServeOption, setNewServeOption] = useState("");
   const [newAddonName, setNewAddonName] = useState("");
   const [newAddonPrice, setNewAddonPrice] = useState("");
@@ -1391,7 +1460,9 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
+    if (saving) return;
     setMessage("");
+    setSaving(true);
     try {
       if (String(form.price ?? "").trim() === "") {
         throw new Error("Please enter a valid price.");
@@ -1401,31 +1472,34 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
         throw new Error("Please enter a valid price.");
       }
 
-      await api("/menu", {
-        method: "POST",
-        body: JSON.stringify({
-          ...form,
-          sizes: [
-            {
-              id: "regular",
-              name: "Regular",
-              label: "Regular",
-              price: numericPrice,
-              sortOrder: 1
-            }
-          ],
-          serveOptions: Array.isArray(form.serveOptions) ? form.serveOptions : [],
-          addons: Array.isArray(form.addons) ? form.addons : form.addons || []
-        })
-      });
+      const payload = {
+        ...form,
+        sizes: [
+          {
+            id: "regular",
+            name: "Regular",
+            label: "Regular",
+            price: numericPrice,
+            sortOrder: 1
+          }
+        ],
+        serveOptions: Array.isArray(form.serveOptions) ? form.serveOptions : [],
+        addons: Array.isArray(form.addons) ? form.addons : form.addons || []
+      };
+      const saved = editingItem
+        ? await menuService.updateMenuItem(editingItem._id || editingItem.id, payload)
+        : await menuService.createMenuItem(payload);
+      if (!saved?.id) throw new Error("Save did not return the saved menu item.");
       setForm({ name: "", categoryId: categories[0]?.id || "", subCategoryId: "", subCategoryName: "", description: "", image: "", active: true, price: "", serveOptions: [], addons: [] });
       setNewServeOption("");
       setNewAddonName("");
       setNewAddonPrice("");
+      if (onSaved) await onSaved();
       setMessage("Saved.");
-      onSaved();
     } catch (err) {
       setMessage(err.message);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -1450,7 +1524,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
         {form.image ? (
           <div className="rounded-2xl border border-stone-200 bg-white p-3">
             <p className="text-xs font-bold text-stone-500">Photo preview</p>
-            <img src={imageUrl(form.image)} alt="Item preview" className="mt-2 h-36 w-full rounded-xl object-cover" />
+            <img src={imageUrl(form.image, editingItem?.updatedAt || editingItem?.imageUpdatedAt)} alt="Item preview" className="mt-2 h-36 w-full rounded-xl object-cover" />
           </div>
         ) : null}
         <textarea className="field min-h-24 resize-none bg-stone-50" placeholder="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -1538,7 +1612,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
           ) : null}
         </div>
         {message && <p className="text-sm font-bold text-stone-600">{message}</p>}
-        <button className="w-full rounded-full bg-black px-5 py-4 font-black text-white">Save item</button>
+        <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save item"}</button>
       </div>
     </form>
   );
@@ -2246,7 +2320,7 @@ function OrderTracking({ orderId }) {
   );
 }
 
-function TopBar({ cartCount, onCart, onOrderOnCounter, onBack }) {
+function TopBar({ cartCount, onCart, onAbout, onOrderOnCounter, onBack }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -2272,7 +2346,16 @@ function TopBar({ cartCount, onCart, onOrderOnCounter, onBack }) {
           Order On Counter
         </button>
       </div>
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3">
+        <button
+          type="button"
+          className="icon-button bg-white/65 text-stone-950 transition hover:bg-white/85"
+          aria-label="About Cafe"
+          title="About Cafe"
+          onClick={onAbout}
+        >
+          <Info size={21} />
+        </button>
         <button className="icon-button relative bg-black text-white" aria-label="Open cart" onClick={onCart}>
           <ShoppingCart size={21} />
           {cartCount > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-300 px-1 text-[11px] font-black text-black">{cartCount}</span>}
@@ -2409,7 +2492,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {showCigaretteFallback ? (
               <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">🚬</div>
             ) : (
-              <img src={imageUrl(item.image)} alt={item.name} className="detail-image" />
+              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image" onError={handleMenuImageError} />
             )}
           </div>
 
@@ -2818,7 +2901,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
             return (
               <div key={safeLine.key || `${safeName}-${Math.random()}`} className="flex gap-3 rounded-3xl bg-white/65 p-2.5">
                 {hasImage ? (
-                  <img src={imageUrl(safeLine.image)} alt="" className="h-16 w-16 rounded-2xl object-cover" />
+                  <img src={imageUrl(safeLine.image, safeLine.updatedAt || safeLine.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt="" className="h-16 w-16 rounded-2xl object-cover" onError={handleMenuImageError} />
                 ) : (
                   <div className={`grid h-16 w-16 place-items-center rounded-2xl text-2xl shadow-sm ring-1 ${safeCategory.includes("cigarette") || safeName.toLowerCase().includes("cigarette") ? "bg-rose-100/90 text-rose-700 ring-rose-200" : safeCategory.includes("water") || safeName.toLowerCase().includes("water bottle") ? "bg-blue-100/90 text-blue-700 ring-blue-200" : "bg-stone-100/90 text-stone-700 ring-stone-200"}`}>
                     {fallbackIcon}
@@ -3405,6 +3488,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [cocRequests, setCocRequests] = useState([]);
   const [rawMaterials, setRawMaterials] = useState([]);
   const [localInventoryItems, setLocalInventoryItems] = useState([]);
+  const [deletedServerInventoryItems, setDeletedServerInventoryItems] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [reports, setReports] = useState({});
   const [lastSync, setLastSync] = useState(null);
@@ -3422,9 +3506,10 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     if (loadPromiseRef.current) return loadPromiseRef.current;
     loadPromiseRef.current = (async () => {
     try {
-      const [freshOrders, freshInventory, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
+      const [freshOrders, freshInventory, allInventoryData, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
         orderService.listOrders("limit=500").catch(() => sync.getOrdersFromStorage()),
         inventoryStore.loadInventory().catch(() => sync.getInventoryFromStorage()),
+        inventoryService.getInventoryItems({ includeDeleted: true }).catch(() => []),
         menuService.getCategories(),
         menuService.getMenu({ includeInactive: true }),
         menuService.getCategories({ includeDeleted: true }),
@@ -3435,30 +3520,27 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
       ]);
       const safeOrders = Array.isArray(freshOrders) ? freshOrders : [];
       const safeInventory = Array.isArray(freshInventory) ? freshInventory : [];
+      const safeAllInventory = Array.isArray(allInventoryData) ? allInventoryData : [];
       try { sync.saveOrders(safeOrders); } catch (error) {}
       try { sync.saveInventory(safeInventory); } catch (error) {}
       const safeCategories = normalizeOwnerCategories(categoryData);
-      const safeItems = ensureActiveMenuItems(itemData, safeCategories);
-      const activeCategoryIds = new Set(safeCategories.map((category) => category.id));
+      const safeItems = normalizeOwnerMenuItems(itemData, safeCategories);
       setCategories(safeCategories);
-      setItems(safeItems.filter((item) => {
-        if (!item || item?.isDeleted === true) return false;
-        if (activeCategoryIds.size === 0) return false;
-        return activeCategoryIds.has(item.categoryId);
-      }));
+      setItems(safeItems);
       setDeletedCategories((Array.isArray(deletedCategoryData) ? deletedCategoryData : []).filter((category) => category?.isDeleted === true));
       setDeletedItems((Array.isArray(deletedItemData) ? deletedItemData : []).filter((item) => item?.isDeleted === true));
       setDeletedSubcategories(loadDeletedSubcategoryConfig());
       setOrders(safeOrders);
       setCocRequests(cocData || []);
       setRawMaterials(safeInventory);
+      setDeletedServerInventoryItems(safeAllInventory.filter((item) => item?.isDeleted === true));
       setRecipes(recipeData || []);
       setReports(reportData || {});
       logLoadStats("OwnerDashboard", {
         rawCategories: Array.isArray(categoryData) ? categoryData.length : 0,
         activeCategories: safeCategories.length,
         rawItems: Array.isArray(itemData) ? itemData.length : 0,
-        activeItems: safeItems.length,
+        activeItems: safeItems.filter((item) => item.active !== false).length,
         rawSubcategories: loadSubcategoryConfig(),
         activeSubcategories: Object.keys(loadSubcategoryConfig()).length,
         deletedCount: ((deletedItemData || []).filter((item) => item?.isDeleted === true).length || 0) + ((deletedCategoryData || []).filter((category) => category?.isDeleted === true).length || 0)
@@ -3475,6 +3557,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
       setOrders(sync.getOrdersFromStorage());
       setCocRequests([]);
       setRawMaterials(sync.getInventoryFromStorage());
+      setDeletedServerInventoryItems([]);
       setRecipes([]);
       setReports({});
       logLoadStats("OwnerDashboard (fallback)", {
@@ -3618,19 +3701,39 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
       load();
     } catch (error) {
       console.error("Failed to delete item:", error);
+      alert(error.message || "Delete failed. Please try again.");
     }
   }
 
   async function restoreItem(id) {
-    await menuService.restoreMenuItem(id);
-    dispatchOwnerDataUpdated({ source: "itemRestored", id });
-    load();
+    try {
+      await menuService.restoreMenuItem(id);
+      dispatchOwnerDataUpdated({ source: "itemRestored", id });
+      load();
+    } catch (error) {
+      alert(error.message || "Menu item could not be restored.");
+    }
+  }
+
+  async function toggleMenuItemActive(id, active) {
+    try {
+      await menuService.setMenuItemActive(id, active);
+      dispatchOwnerDataUpdated({ source: active ? "itemActivated" : "itemDeactivated", id });
+      load();
+    } catch (error) {
+      console.error("Failed to update item status:", error);
+      alert(error.message || "Menu item status could not be updated.");
+    }
   }
 
   async function restoreCategory(id) {
-    await menuService.restoreCategory(id);
-    dispatchOwnerDataUpdated({ source: "categoryRestored", id });
-    load();
+    try {
+      await menuService.restoreCategory(id);
+      dispatchOwnerDataUpdated({ source: "categoryRestored", id });
+      load();
+    } catch (error) {
+      alert(error.message || "Category could not be restored.");
+    }
   }
 
   async function restoreSubcategory(parentId, name) {
@@ -3639,9 +3742,21 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     load();
   }
 
-  function restoreInventoryItem(id) {
-    const nextItems = localInventoryItems.map((item) => (item.id === id ? { ...item, isDeleted: false, deletedAt: null } : item));
-    setLocalInventoryItems(saveLocalInventoryItems(nextItems));
+  async function restoreInventoryItem(id) {
+    try {
+      const serverDeleted = deletedServerInventoryItems.some((item) => item.id === id);
+      if (serverDeleted) {
+        await inventoryService.restoreInventoryItem(id);
+        dispatchOwnerDataUpdated({ source: "inventoryRestored", id });
+        await load();
+        return;
+      }
+      const nextItems = localInventoryItems.map((item) => (item.id === id ? { ...item, isDeleted: false, deletedAt: null } : item));
+      setLocalInventoryItems(saveLocalInventoryItems(nextItems));
+    } catch (error) {
+      console.error("Failed to restore inventory item:", error);
+      alert(error.message || "Inventory item could not be restored.");
+    }
   }
 
   useEffect(() => {
@@ -3666,7 +3781,8 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   }, [mobileNavOpen]);
 
   const deletedSubcategoryCount = Object.values(deletedSubcategories || {}).reduce((total, entries) => total + (Array.isArray(entries) ? entries.length : 0), 0);
-  const deletedInventoryItems = localInventoryItems.filter((item) => item?.isDeleted === true);
+  const deletedInventoryItems = [...deletedServerInventoryItems, ...localInventoryItems.filter((item) => item?.isDeleted === true)]
+    .filter((item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index);
   const deletedCount = (deletedItems?.length || 0) + (deletedCategories?.length || 0) + deletedSubcategoryCount + deletedInventoryItems.length;
 
   const inventoryAttentionItems = useMemo(() => {
@@ -3686,8 +3802,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
 
   const lowStockCount = inventoryAttentionItems.filter((item) => {
     const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
-    const minStock = Number(item.minStock ?? item.minimumStock ?? 0) || 0;
-    return quantity > 0 && quantity <= minStock;
+    return quantity > 0 && quantity <= getInventoryLowStockThreshold(item);
   }).length;
 
   const outOfStockCount = inventoryAttentionItems.filter((item) => {
@@ -3843,9 +3958,17 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                         <td>{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId}</td>
                         <td>{item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</td>
                         <td>{item.sizes.map((size) => `${size.label} ${rupees(size.price)}`).join(" / ")}</td>
-                        <td>{item.active ? "Active" : "Hidden"}</td>
+                        <td>
+                          <span className={`rounded-full px-3 py-1 text-xs font-black ${item.active ? "bg-emerald-100 text-emerald-700" : "bg-stone-200 text-stone-700"}`}>
+                            {item.active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
                         <td>
                           <div className="flex justify-end gap-1">
+                            <label className="flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black hover:bg-stone-100">
+                              <input type="checkbox" checked={item.active !== false} onChange={(event) => toggleMenuItemActive(item.id, event.target.checked)} />
+                              Active
+                            </label>
                             <button onClick={() => setEditingItem(item)} className="rounded-full p-2 hover:bg-stone-100" aria-label={`Edit ${item.name}`}><Pencil size={17} /></button>
                             <button onClick={() => setPendingDelete({ type: "item", id: item.id, name: item.name })} className="rounded-full p-2 hover:bg-red-50" aria-label={`Delete ${item.name}`}><Trash2 size={17} /></button>
                           </div>
@@ -3863,12 +3986,16 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                         <h3 className="text-base font-black text-stone-950">{item.name}</h3>
                         <p className="text-sm text-stone-600">{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId} • {item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</p>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-xs font-black ${item.active ? "bg-emerald-100 text-emerald-700" : "bg-stone-200 text-stone-700"}`}>{item.active ? "Active" : "Hidden"}</span>
+                      <span className={`rounded-full px-3 py-1 text-xs font-black ${item.active ? "bg-emerald-100 text-emerald-700" : "bg-stone-200 text-stone-700"}`}>{item.active ? "Active" : "Inactive"}</span>
                     </div>
                     <div className="mt-3 text-sm text-stone-700">
                       <p className="font-semibold">{item.sizes.map((size) => `${size.label} ${rupees(size.price)}`).join(" / ")}</p>
                     </div>
                     <div className="mt-4 flex items-center justify-end gap-2">
+                      <label className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-black shadow-sm">
+                        <input type="checkbox" checked={item.active !== false} onChange={(event) => toggleMenuItemActive(item.id, event.target.checked)} />
+                        Active
+                      </label>
                       <button onClick={() => setEditingItem(item)} className="rounded-full bg-white px-3 py-2 text-sm font-black shadow-sm" aria-label={`Edit ${item.name}`}>Edit</button>
                       <button onClick={() => setPendingDelete({ type: "item", id: item.id, name: item.name })} className="rounded-full bg-rose-50 px-3 py-2 text-sm font-black text-rose-700 shadow-sm" aria-label={`Delete ${item.name}`}>Delete</button>
                     </div>
@@ -3903,7 +4030,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
         {tab === "lowstock" && <LowStockAlerts rawMaterials={rawMaterials} />}
         {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
         {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(orders, cocRequests)} />}
-        {tab === "profit" && <TotalProfitPage orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
+        {tab === "profit" && <TotalProfitPage orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
       </div>
       <ConfirmDialog
         open={Boolean(pendingDelete)}
@@ -4278,8 +4405,16 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
               <div class="receipt-table-header"><div>QTY</div><div>DESC</div><div class="receipt-amount">AMT</div></div>
               ${Array.isArray(normalizedOrder.items) && normalizedOrder.items.length? normalizedOrder.items.map(line=>{
                 const qty = line.quantity||line.qty||1;
-                const amt = Math.round(Number((line.lineTotal ?? ((line.unitPrice || 0) * qty)) || 0));
-                return `<div class="receipt-item"><div>${qty}</div><div><div style="font-weight:700">${formatOrderItemLine(line)}</div></div><div class="receipt-amount">Rs. ${amt}</div></div>`;
+                const baseAmt = Math.round(getBasePrice(line) * qty);
+                const addonHtml = getAddonEntries(line).map(addon => {
+                  const addonAmt = Math.round(Number(addon.price || 0) * qty);
+                  return `<div class="receipt-item"><div></div><div style="font-size:10px">+ ${addon.name || "Addon"}</div><div class="receipt-amount">+ Rs. ${addonAmt}</div></div>`;
+                }).join('');
+                const sizeLabel = normalizeVisibleSizeLabel(line);
+                const serveLabel = String(line.serveType || "").trim();
+                const itemMeta = [sizeLabel, serveLabel].filter(Boolean).join(" - ");
+                const itemLabel = `${line.name || line.title || line.itemId || "Item"}${itemMeta ? ` (${itemMeta})` : ""}`;
+                return `<div class="receipt-item"><div>${qty}</div><div><div style="font-weight:700">${itemLabel}</div></div><div class="receipt-amount">Rs. ${baseAmt}</div></div>${addonHtml}`;
               }).join('') : '<div style="padding:8px 0">No items.</div>'}
             </div>
             <div class="receipt-line"></div>
@@ -4531,6 +4666,8 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const [form, setForm] = useState({ id: "", name: "", quantity: "", unit: "pcs", minStock: "", purchasePrice: "", supplier: "" });
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -4570,9 +4707,10 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     return normalized;
   }
 
-  function getStockStatus(quantity, minStock) {
+  function getStockStatus(quantity, minStock, item = null) {
+    const threshold = item ? getInventoryLowStockThreshold(item) : Number(minStock || 0);
     if (quantity <= 0) return "Out of Stock";
-    if (quantity <= minStock) return "Low Stock";
+    if (quantity <= threshold) return "Low Stock";
     return "In Stock";
   }
 
@@ -4592,8 +4730,9 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     return "";
   }
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault();
+    if (saving) return;
     setMessage("");
     
     const error = validateForm(!editingItem);
@@ -4603,46 +4742,39 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
       return;
     }
 
-    const purchasePriceValue = form.purchasePrice === "" ? null : Number(form.purchasePrice);
-    let updatedItems;
-    if (editingItem) {
-      const editedPrice = purchasePriceValue === null ? editingItem.purchasePrice : purchasePriceValue;
-      updatedItems = inventoryItems.map(item => 
-        item.id === editingItem.id
-          ? {
-              ...item,
-              name: form.name.trim(),
-              quantity: Number(form.quantity),
-              unit: form.unit,
-              minStock: Number(form.minStock),
-              purchasePrice: editedPrice === null || Number.isNaN(editedPrice) ? item.purchasePrice : editedPrice,
-              supplier: form.supplier.trim(),
-              lastUpdated: new Date().toISOString()
-            }
-          : item
-      );
-      setMessage("Inventory item updated successfully.");
-    } else {
-      const newItem = {
-        id: Date.now().toString(),
+    setSaving(true);
+    try {
+      const purchasePriceValue = form.purchasePrice === "" ? editingItem?.purchasePrice : Number(form.purchasePrice);
+      const normalizedUnit = normalizeInventoryUnitForApi(form.quantity, form.minStock, form.unit);
+      const payload = {
+        id: editingItem?.id || form.id || undefined,
         name: form.name.trim(),
-        quantity: Number(form.quantity),
-        unit: form.unit,
-        minStock: Number(form.minStock),
+        ...normalizedUnit,
+        costPerUnit: purchasePriceValue,
         purchasePrice: purchasePriceValue,
         supplier: form.supplier.trim(),
-        lastUpdated: new Date().toISOString()
+        active: true
       };
-      updatedItems = [...inventoryItems, newItem];
-      setMessage("Inventory item added successfully.");
-    }
 
-    setMessageType("success");
-    saveInventoryItems(updatedItems);
-    setForm({ id: "", name: "", quantity: "", unit: "pcs", minStock: "", purchasePrice: "", supplier: "" });
-    setEditingItem(null);
-    
-    if (onSaved) onSaved();
+      const saved = editingItem
+        ? await inventoryService.updateInventoryItem(editingItem.id, payload)
+        : await inventoryService.createInventoryItem(payload);
+      const normalizedSaved = normalizeServerInventoryItem(saved);
+      if (!normalizedSaved?.id) throw new Error("Save did not return the saved inventory item.");
+      const prunedLocalItems = removeLocalInventoryItemsByIds([normalizedSaved.id]);
+      setInventoryItems(prunedLocalItems);
+      if (onInventoryChanged) onInventoryChanged(prunedLocalItems);
+      setMessage(editingItem ? "Inventory item updated successfully." : "Inventory item added successfully.");
+      setMessageType("success");
+      setForm({ id: "", name: "", quantity: "", unit: "pcs", minStock: "", purchasePrice: "", supplier: "" });
+      setEditingItem(null);
+      if (onSaved) await onSaved();
+    } catch (err) {
+      setMessage(err.message || "Inventory item could not be saved.");
+      setMessageType("error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleEdit(item) {
@@ -4664,15 +4796,25 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     setPendingDelete(item);
   }
 
-  function confirmDeletion() {
+  async function confirmDeletion() {
     if (!pendingDelete) return;
-    const deletedAt = new Date().toISOString();
-    const updatedItems = inventoryItems.map((item) => (item.id === pendingDelete.id ? { ...item, isDeleted: true, deletedAt } : item));
-    saveInventoryItems(updatedItems);
-    setPendingDelete(null);
-    setMessage("Inventory item deleted successfully.");
-    setMessageType("success");
-    if (onSaved) onSaved();
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await inventoryService.deleteInventoryItem(pendingDelete.id);
+      const prunedLocalItems = removeLocalInventoryItemsByIds([pendingDelete.id]);
+      setInventoryItems(prunedLocalItems);
+      if (onInventoryChanged) onInventoryChanged(prunedLocalItems);
+      setPendingDelete(null);
+      setMessage("Inventory item deleted successfully.");
+      setMessageType("success");
+      if (onSaved) await onSaved();
+    } catch (err) {
+      setMessage(err.message || "Inventory item could not be deleted.");
+      setMessageType("error");
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function cancelDeletion() {
@@ -4717,7 +4859,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const activeItems = renderedInventory.filter((item) => item?.isDeleted !== true);
   const filteredItems = activeItems.filter(item => {
     const matchesQuery = item.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const status = getStockStatus(item.quantity, item.minStock);
+    const status = getStockStatus(item.quantity, item.minStock, item);
     let matchesFilter = true;
     if (filterStatus === "low") matchesFilter = status === "Low Stock";
     if (filterStatus === "out") matchesFilter = status === "Out of Stock";
@@ -4726,8 +4868,8 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   });
 
   // Calculate summary
-  const lowStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Low Stock").length;
-  const outOfStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock) === "Out of Stock").length;
+  const lowStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock, item) === "Low Stock").length;
+  const outOfStockCount = activeItems.filter(item => getStockStatus(item.quantity, item.minStock, item) === "Out of Stock").length;
   const totalValue = activeItems.reduce((sum, item) => sum + (item.quantity * (item.purchasePrice || 0)), 0);
 
   if (import.meta.env.DEV) {
@@ -4751,18 +4893,16 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
                 <option value="">Select unit</option>
                 <option value="kg">kg</option>
                 <option value="gram">gram</option>
-                <option value="liter">liter</option>
+                <option value="litre">litre</option>
                 <option value="ml">ml</option>
                 <option value="pcs">pcs</option>
-                <option value="packet">packet</option>
-                <option value="bottle">bottle</option>
               </select>
             </div>
             <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
             <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
             <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
             {message && (<p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>)}
-            <button disabled={!!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{editingItem ? "Update item" : "Add item"}</button>
+            <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
           </div>
         </form>
 
@@ -4789,7 +4929,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
           </div>
           <div className="space-y-3">
             {filteredItems.length > 0 ? filteredItems.map((item) => {
-              const status = getStockStatus(item.quantity, item.minStock);
+              const status = getStockStatus(item.quantity, item.minStock, item);
               const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600";
               return (
                 <article key={item.id} className="rounded-[1.25rem] border border-stone-200 bg-stone-50 p-4">
@@ -4826,19 +4966,19 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
           <div className="min-w-0 rounded-[1.5rem] bg-white p-3 shadow-sm sm:p-4 lg:p-5">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Inventory items</h2><button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button></div>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row"><input placeholder="Search by item name..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="field w-full flex-1 bg-stone-50" /><select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)} className="field w-full bg-stone-50 sm:max-w-[220px]"><option value="all">All items</option><option value="in">In Stock</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select></div>
-            <div className="overflow-x-auto"><table className="w-full min-w-[780px] table-fixed text-left text-sm lg:min-w-0"><thead><tr className="border-b text-[11px] uppercase tracking-wide text-stone-500"><th className="w-[30%] py-3 pr-3">Item Name</th><th className="w-[8%] whitespace-nowrap">Stock</th><th className="w-[8%] whitespace-nowrap pl-2 pr-3">Min Stock</th><th className="w-[9%] whitespace-nowrap px-3">Status</th><th className="w-[8%] whitespace-nowrap pl-4 pr-2">Price</th><th className="w-[10%] whitespace-nowrap">Supplier</th><th className="w-[12%] whitespace-nowrap">Last Updated</th><th className="w-[15%] text-right">Actions</th></tr></thead><tbody>{filteredItems.length > 0 ? filteredItems.map((item) => { const status = getStockStatus(item.quantity, item.minStock); const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600"; return (<tr key={item.id} className="border-b last:border-0"><td className="py-3 pr-3 font-black align-top">{item.name}</td><td className="align-top text-sm text-stone-700">{item.quantity} {item.unit}</td><td className="align-top pl-2 pr-3 text-sm text-stone-700">{item.minStock} {item.unit}</td><td className="align-top px-3"><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td><td className="align-top pl-4 pr-2 text-sm text-stone-700">{rupees(item.purchasePrice || 0)}</td><td className="align-top text-xs text-stone-500">{item.supplier || "-"}</td><td className="align-top text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td><td className="align-top text-right"><div className="flex gap-1 justify-end"><button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button><button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button><button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button><button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button></div></td></tr>); }) : <tr><td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found. Click "New item" to add one.</td></tr>}</tbody></table></div>
+            <div className="overflow-x-auto"><table className="w-full min-w-[780px] table-fixed text-left text-sm lg:min-w-0"><thead><tr className="border-b text-[11px] uppercase tracking-wide text-stone-500"><th className="w-[30%] py-3 pr-3">Item Name</th><th className="w-[8%] whitespace-nowrap">Stock</th><th className="w-[8%] whitespace-nowrap pl-2 pr-3">Min Stock</th><th className="w-[9%] whitespace-nowrap px-3">Status</th><th className="w-[8%] whitespace-nowrap pl-4 pr-2">Price</th><th className="w-[10%] whitespace-nowrap">Supplier</th><th className="w-[12%] whitespace-nowrap">Last Updated</th><th className="w-[15%] text-right">Actions</th></tr></thead><tbody>{filteredItems.length > 0 ? filteredItems.map((item) => { const status = getStockStatus(item.quantity, item.minStock, item); const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600"; return (<tr key={item.id} className="border-b last:border-0"><td className="py-3 pr-3 font-black align-top">{item.name}</td><td className="align-top text-sm text-stone-700">{item.quantity} {item.unit}</td><td className="align-top pl-2 pr-3 text-sm text-stone-700">{item.minStock} {item.unit}</td><td className="align-top px-3"><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td><td className="align-top pl-4 pr-2 text-sm text-stone-700">{rupees(item.purchasePrice || 0)}</td><td className="align-top text-xs text-stone-500">{item.supplier || "-"}</td><td className="align-top text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td><td className="align-top text-right"><div className="flex gap-1 justify-end"><button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button><button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button><button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button><button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button></div></td></tr>); }) : <tr><td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found. Click "New item" to add one.</td></tr>}</tbody></table></div>
           </div>
 
           <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
             <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>{editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}</div>
             <div className="space-y-3">
               <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"><input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /><select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option value="">Select unit</option><option value="kg">kg</option><option value="gram">gram</option><option value="liter">liter</option><option value="ml">ml</option><option value="pcs">pcs</option><option value="packet">packet</option><option value="bottle">bottle</option></select></div>
+              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"><input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /><select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option value="">Select unit</option><option value="kg">kg</option><option value="gram">gram</option><option value="litre">litre</option><option value="ml">ml</option><option value="pcs">pcs</option></select></div>
               <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
               <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
               <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
               {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>}
-              <button disabled={!!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{editingItem ? "Update item" : "Add item"}</button>
+              <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
             </div>
           </form>
         </div>
@@ -4848,7 +4988,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
         open={Boolean(pendingDelete)}
         title={pendingDelete ? `Delete ${pendingDelete.name || "item"}?` : "Delete this?"}
         message="Are you sure you want to delete this? This can be restored from Recently Deleted."
-        confirmLabel="Delete"
+        confirmLabel={deleting ? "Deleting..." : "Delete"}
         cancelLabel="Cancel"
         onConfirm={confirmDeletion}
         onCancel={cancelDeletion}
@@ -4864,6 +5004,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
+  const [saving, setSaving] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState([]);
 
   // Load local inventory items and recent transactions
@@ -4902,6 +5043,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
+    if (saving) return;
     setMessage("");
     
     if (!selectedId) {
@@ -4915,6 +5057,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
       return;
     }
 
+    setSaving(true);
     try {
       const item = activeLocalItems.find(i => i.id === selectedId);
       if (item) {
@@ -4927,7 +5070,9 @@ function AddStockPage({ rawMaterials, onSaved }) {
         setLocalItems(saveLocalInventoryItems(updatedItems));
       } else {
         // Try backend API for server-managed materials
-        await (await import("./services/inventoryService")).purchaseInventory(selectedId, { quantity: Number(quantity), note });
+        const result = await inventoryService.purchaseInventory(selectedId, { quantity: Number(quantity), note });
+        if (!result?.material?.id) throw new Error("Stock update did not return the updated inventory item.");
+        setLocalItems(removeLocalInventoryItemsByIds([result.material.id]));
       }
       
       // Create stock transaction record
@@ -4947,10 +5092,12 @@ function AddStockPage({ rawMaterials, onSaved }) {
       setNote("");
       setMessage("Stock updated successfully.");
       setMessageType("success");
-      if (onSaved) onSaved();
+      if (onSaved) await onSaved();
     } catch (err) {
       setMessage(err.message);
       setMessageType("error");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -5025,7 +5172,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
                 {message}
               </p>
             )}
-            <button className="w-full rounded-full bg-black px-5 py-4 font-black text-white">Add to stock</button>
+            <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Add to stock"}</button>
           </div>
         </form>
       )}
@@ -5034,14 +5181,24 @@ function AddStockPage({ rawMaterials, onSaved }) {
 }
 
 function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
-  const [selectedItemId, setSelectedItemId] = useState(items[0]?.id || "");
+  const recipeItems = useMemo(() => (Array.isArray(items) ? items.filter((item) => !isPackagedMenuItem(item)) : []), [items]);
+  const [selectedItemId, setSelectedItemId] = useState(recipeItems[0]?.id || "");
   const [ingredients, setIngredients] = useState([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
 
   useEffect(() => {
-    if (!selectedItemId && items[0]) setSelectedItemId(items[0].id);
-  }, [items, selectedItemId]);
+    if (!recipeItems.length) {
+      if (selectedItemId) setSelectedItemId("");
+      return;
+    }
+    if (!selectedItemId || !recipeItems.some((item) => item.id === selectedItemId)) {
+      setSelectedItemId(recipeItems[0].id);
+    }
+  }, [recipeItems, selectedItemId]);
 
   useEffect(() => {
     const recipe = recipes.find((recipeItem) => recipeItem.itemId === selectedItemId);
@@ -5066,24 +5223,68 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
 
   async function submit(event) {
     event.preventDefault();
+    if (saving) return;
     setMessage("");
+    setMessageType("");
+    let cleanIngredients = [];
+    setSaving(true);
     try {
+      if (!selectedItemId) throw new Error("Please select a menu item.");
+      cleanIngredients = ingredients
+        .map((ingredient) => ({
+          rawMaterialId: String(ingredient.rawMaterialId || "").trim(),
+          amount: Number(ingredient.amount),
+          unit: String(ingredient.unit || "g").trim().toLowerCase(),
+          serveType: String(ingredient.serveType || "").trim()
+        }))
+        .filter((ingredient) => ingredient.rawMaterialId || Number.isFinite(ingredient.amount));
+      if (!cleanIngredients.length) throw new Error("Please add at least one ingredient.");
+      const invalid = cleanIngredients.find((ingredient) => !ingredient.rawMaterialId || !Number.isFinite(ingredient.amount) || ingredient.amount <= 0 || !["g", "ml", "pcs"].includes(ingredient.unit));
+      if (invalid) throw new Error("Each ingredient needs a raw material, positive amount, and unit.");
       const recipeId = selectedItemId;
-      await menuService.patchRecipe(recipeId, { id: recipeId, itemId: selectedItemId, ingredients });
+      const saved = await menuService.patchRecipe(recipeId, { id: recipeId, itemId: selectedItemId, ingredients: cleanIngredients });
+      if (!saved?.id) throw new Error("Recipe save did not return the saved mapping.");
       setMessage("Recipe saved.");
-      onSaved();
+      setMessageType("success");
+      if (onSaved) await onSaved();
     } catch (err) {
       if (err.message.includes("not found")) {
         try {
-          await menuService.createRecipe({ id: selectedItemId, itemId: selectedItemId, ingredients });
+          const saved = await menuService.createRecipe({ id: selectedItemId, itemId: selectedItemId, ingredients: cleanIngredients });
+          if (!saved?.id) throw new Error("Recipe save did not return the saved mapping.");
           setMessage("Recipe saved.");
-          onSaved();
+          setMessageType("success");
+          if (onSaved) await onSaved();
         } catch (postError) {
           setMessage(postError.message);
+          setMessageType("error");
         }
       } else {
         setMessage(err.message);
+        setMessageType("error");
       }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteRecipe() {
+    if (!selectedItemId) return;
+    if (deleting) return;
+    setMessage("");
+    setMessageType("");
+    setDeleting(true);
+    try {
+      await menuService.deleteRecipe(selectedItemId);
+      setIngredients([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
+      setMessage("Recipe deleted.");
+      setMessageType("success");
+      if (onSaved) await onSaved();
+    } catch (err) {
+      setMessage(err.message || "Recipe could not be deleted.");
+      setMessageType("error");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -5093,15 +5294,17 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
     try {
       const result = await menuService.syncDefaultRecipes();
       setMessage(`Synced: ${result.created} created, ${result.skipped} already exist${result.failed > 0 ? `, ${result.failed} failed` : ""}.`);
-      onSaved();
+      setMessageType(result.failed > 0 ? "error" : "success");
+      if (onSaved) await onSaved();
     } catch (err) {
       setMessage(`Sync failed: ${err.message}`);
+      setMessageType("error");
     } finally {
       setSyncLoading(false);
     }
   }
 
-  const selectedItem = items.find((item) => item.id === selectedItemId);
+  const selectedItem = recipeItems.find((item) => item.id === selectedItemId);
 
   return (
     <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -5113,12 +5316,13 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
           </div>
           <div className="flex gap-2">
             <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
+            <button type="button" onClick={handleDeleteRecipe} disabled={deleting} className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 disabled:opacity-50">{deleting ? "Deleting..." : "Delete recipe"}</button>
             <button type="button" onClick={addIngredient} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Add ingredient</button>
           </div>
         </div>
         <div className="space-y-4">
           <select className="field bg-stone-50" value={selectedItemId} onChange={(event) => setSelectedItemId(event.target.value)}>
-            {items.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            {recipeItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
           {ingredients.map((ingredient, index) => (
             <div key={index} className="grid gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
@@ -5138,8 +5342,8 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
               <button type="button" onClick={() => removeIngredient(index)} className="rounded-full bg-white p-2 text-stone-600 hover:bg-stone-100"><Trash2 size={18} /></button>
             </div>
           ))}
-          {message && <p className="text-sm font-bold text-stone-600">{message}</p>}
-          <button className="w-full rounded-full bg-black px-5 py-4 font-black text-white">Save recipe</button>
+          {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : messageType === "success" ? "text-emerald-700" : "text-stone-600"}`}>{message}</p>}
+          <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
         </div>
       </div>
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
@@ -5187,8 +5391,7 @@ function LowStockAlerts({ rawMaterials }) {
   const allMaterials = [...(rawMaterials || []), ...localItems].filter((material) => !isHiddenInventoryItem(material));
   const lowMaterials = allMaterials.filter((material) => {
     const qty = material.stock !== undefined ? material.stock : material.quantity || 0;
-    const minStock = material.minStock || 0;
-    return Number(qty) <= Number(minStock);
+    return Number(qty) <= getInventoryLowStockThreshold(material);
   });
 
   return (
@@ -5257,7 +5460,7 @@ function ReportsPage({ reports, items, orders = [], rawMaterials = [], recipes =
   const totalOrders = completedReport.totalOrders;
   
   const enrichedTopItems = topItems.map((record) => ({ ...record, name: savedItems.find((item) => item.id === record.itemId)?.name || record.itemId }));
-  const { totalSales: todaySales, inventoryCostUsed: todayInventoryCostUsed, totalProfit } = calculateTodayTotalProfit(savedOrders, rawMaterials, recipes);
+  const { totalSales: todaySales, inventoryCostUsed: todayInventoryCostUsed, totalProfit } = calculateTodayTotalProfit(savedOrders, rawMaterials, recipes, savedItems);
 
   return (
     <section className="space-y-5">
@@ -5533,7 +5736,7 @@ function SalesAnalytics({ orders = [] }) {
   );
 }
 
-function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [] }) {
+function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [], items = [] }) {
   const savedOrders = Array.isArray(orders) ? orders : [];
   const [selectedFilter, setSelectedFilter] = useState("today");
   const [customStartDate, setCustomStartDate] = useState("");
@@ -5621,28 +5824,7 @@ function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [] }) {
     filteredOrders.forEach((order) => {
       if (!Array.isArray(order.items)) return;
       order.items.forEach((line) => {
-        const qty = Number(line.quantity ?? line.qty ?? 1) || 0;
-        const itemId = line.itemId || line.id || line.productId || line.menuItemId || "";
-        const recipe = Array.isArray(recipes) ? recipes.find((r) => r.itemId === itemId || r.id === itemId) : null;
-        if (!recipe || !Array.isArray(recipe.ingredients)) return;
-        let costPerMenuItem = 0;
-        recipe.ingredients.forEach((ingredient) => {
-          const raw = Array.isArray(rawMaterials)
-            ? rawMaterials.find((material) =>
-                material.id === ingredient.rawMaterialId ||
-                material.id === ingredient.inventoryId ||
-                material.id === ingredient.ingredientId ||
-                material.name === ingredient.rawMaterialId ||
-                material.name === ingredient.inventoryId ||
-                material.name === ingredient.ingredientId ||
-                material.name === ingredient.name
-              )
-            : null;
-          const unitCost = Number(raw?.costPerUnit ?? raw?.purchasePrice ?? raw?.purchase_price ?? raw?.unitCost ?? raw?.price ?? raw?.unitPrice ?? 0) || 0;
-          const amount = Number(ingredient.amount ?? 0) || 0;
-          costPerMenuItem += amount * unitCost;
-        });
-        inventoryCostUsed += costPerMenuItem * qty;
+        inventoryCostUsed += calculateInventoryCostForLine(line, rawMaterials, recipes, items);
       });
     });
 
@@ -5656,7 +5838,7 @@ function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [] }) {
   const activeRange = getActiveRange();
   const { totalSales, inventoryCostUsed, totalProfit } = useMemo(
     () => calculateProfitForRange(savedOrders, activeRange),
-    [savedOrders, rawMaterials, recipes, activeRange?.start?.toISOString(), activeRange?.end?.toISOString()]
+    [savedOrders, rawMaterials, recipes, items, activeRange?.start?.toISOString(), activeRange?.end?.toISOString()]
   );
 
   function handleFilterSelect(filterKey) {
@@ -6252,3 +6434,4 @@ function QrOrders({ orders, onSaved }) {
 }
 
 export default App;
+
