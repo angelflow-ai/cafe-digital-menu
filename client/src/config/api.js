@@ -10,7 +10,7 @@ function isLocalAppHost(hostname) {
 
 function resolveBaseUrl() {
   const configuredUrl = String(import.meta.env.VITE_API_URL || "").trim().replace(/\/$/, "");
-  const cleanConfiguredUrl = configuredUrl.replace(/\/api$/, "");
+  const cleanConfiguredUrl = configuredUrl.replace(/(?:\/api)+$/i, "");
 
   if (typeof window === "undefined") {
     return cleanConfiguredUrl || "http://localhost:4000";

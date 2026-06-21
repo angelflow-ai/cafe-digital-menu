@@ -1,5 +1,9 @@
 import { api } from "./apiClient";
 
+function menuItemPath(id, suffix = "") {
+  return `/menu/${encodeURIComponent(id)}${suffix}`;
+}
+
 export async function getCategories(opts = {}) {
   const qs = opts.includeDeleted ? "?includeDeleted=true" : "";
   return api(`/categories${qs}`);
@@ -18,23 +22,23 @@ export async function createMenuItem(payload) {
 }
 
 export async function updateMenuItem(id, payload) {
-  return api(`/menu/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(payload) });
+  return api(menuItemPath(id), { method: "PATCH", body: JSON.stringify(payload) });
 }
 
 export async function setMenuItemActive(id, active) {
-  return api(`/menu/${id}/active`, { method: "PATCH", body: JSON.stringify({ active }) });
+  return api(menuItemPath(id, "/active"), { method: "PATCH", body: JSON.stringify({ active }) });
 }
 
 export async function deleteMenuItem(id) {
-  return api(`/menu/${id}`, { method: "DELETE" });
+  return api(menuItemPath(id), { method: "DELETE" });
 }
 
 export async function restoreMenuItem(id) {
-  return api(`/menu/${id}/restore`, { method: "PATCH" });
+  return api(menuItemPath(id, "/restore"), { method: "PATCH" });
 }
 
 export async function permanentlyDeleteMenuItem(id) {
-  return api(`/menu/${id}?permanent=true`, { method: "DELETE" });
+  return api(menuItemPath(id, "?permanent=true"), { method: "DELETE" });
 }
 
 export async function uploadPhoto(formData) {

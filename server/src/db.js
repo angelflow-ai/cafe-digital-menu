@@ -324,6 +324,15 @@ function buildOrderLookup(identifier) {
   return filters.length === 1 ? filters[0] : { $or: filters };
 }
 
+function buildMenuItemLookup(identifier) {
+  const key = String(identifier || "").trim();
+  if (!key) return {};
+  const filters = [];
+  if (mongoose.Types.ObjectId.isValid(key)) filters.push({ _id: key });
+  filters.push({ id: key });
+  return filters.length === 1 ? filters[0] : { $or: filters };
+}
+
 function shouldDeductInventoryOnCreate(order) {
   const status = normalizeSalesStatus(order?.status);
   const paymentStatus = normalizeSalesStatus(order?.paymentStatus);
@@ -859,11 +868,7 @@ export const store = {
   },
   async menuItem(id) {
     if (usingMongo()) {
-      if (mongoose.Types.ObjectId.isValid(id)) {
-        const byObjectId = await MenuItem.findById(id).lean();
-        if (byObjectId) return byObjectId;
-      }
-      return MenuItem.findOne({ id }).lean();
+      return MenuItem.findOne(buildMenuItemLookup(id)).lean();
     }
     return memory.menuItems.find((item) => item.id === id || String(item._id || "") === String(id));
   },
@@ -914,12 +919,12 @@ export const store = {
     const nextActive = active !== false;
     if (usingMongo()) {
       return MenuItem.findOneAndUpdate(
-        { id },
+        buildMenuItemLookup(id),
         { $set: { active: nextActive, isDeleted: false, deletedAt: null } },
         { new: true, runValidators: true }
       ).lean();
     }
-    const index = memory.menuItems.findIndex((item) => item.id === id);
+    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
@@ -927,24 +932,24 @@ export const store = {
   },
   async deleteMenuItem(id) {
     const deletedAt = new Date();
-    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
-    const index = memory.menuItems.findIndex((item) => item.id === id);
+    if (usingMongo()) return MenuItem.findOneAndUpdate(buildMenuItemLookup(id), { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
+    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
     savePersistedMemory(memory);
     return memory.menuItems[index];
   },
   async restoreMenuItem(id) {
-    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
-    const index = memory.menuItems.findIndex((item) => item.id === id);
+    if (usingMongo()) return MenuItem.findOneAndUpdate(buildMenuItemLookup(id), { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
+    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
     return memory.menuItems[index];
   },
   async permanentlyDeleteMenuItem(id) {
-    if (usingMongo()) return MenuItem.deleteOne({ id });
-    memory.menuItems = memory.menuItems.filter((item) => item.id !== id);
+    if (usingMongo()) return MenuItem.deleteOne(buildMenuItemLookup(id));
+    memory.menuItems = memory.menuItems.filter((item) => item.id !== id && String(item._id || "") !== String(id));
     savePersistedMemory(memory);
     return { deletedCount: 1 };
   },

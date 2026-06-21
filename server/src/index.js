@@ -598,7 +598,7 @@ app.delete("/api/categories/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.get("/api/menu", async (req, res, next) => {
+app.get(["/api/menu", "/api/menu-items"], async (req, res, next) => {
   try {
     res.json(
       await store.menuItems({
@@ -613,7 +613,7 @@ app.get("/api/menu", async (req, res, next) => {
   }
 });
 
-app.get("/api/menu/:id", async (req, res, next) => {
+app.get(["/api/menu/:id", "/api/menu-items/:id"], async (req, res, next) => {
   try {
     const item = await store.menuItem(req.params.id);
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -623,7 +623,7 @@ app.get("/api/menu/:id", async (req, res, next) => {
   }
 });
 
-app.post("/api/menu", requireAdmin, async (req, res, next) => {
+app.post(["/api/menu", "/api/menu-items"], requireAdmin, async (req, res, next) => {
   try {
     const item = await store.upsertMenuItem(req.body);
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -633,7 +633,7 @@ app.post("/api/menu", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.patch("/api/menu/:id", requireAdmin, async (req, res, next) => {
+app.patch(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, res, next) => {
   try {
     const item = await store.updateMenuItem(req.params.id, req.body || {});
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -643,7 +643,7 @@ app.patch("/api/menu/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.patch("/api/menu/:id/active", requireAdmin, async (req, res, next) => {
+app.patch(["/api/menu/:id/active", "/api/menu-items/:id/active"], requireAdmin, async (req, res, next) => {
   try {
     const item = await store.setMenuItemActive(req.params.id, req.body?.active !== false);
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -653,7 +653,7 @@ app.patch("/api/menu/:id/active", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.patch("/api/menu/:id/restore", requireAdmin, async (req, res, next) => {
+app.patch(["/api/menu/:id/restore", "/api/menu-items/:id/restore"], requireAdmin, async (req, res, next) => {
   try {
     const item = await store.restoreMenuItem(req.params.id);
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -663,7 +663,7 @@ app.patch("/api/menu/:id/restore", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.delete("/api/menu/:id", requireAdmin, async (req, res, next) => {
+app.delete(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, res, next) => {
   try {
     if (req.query.permanent === "true") {
       res.json(await store.permanentlyDeleteMenuItem(req.params.id));
