@@ -60,38 +60,38 @@ export const menuItems = [
   { id: "strawberry-slush", name: "Strawberry Slush", categoryId: "cold-drinks", subcategory: "Ice Slush", description: "", image: "/assets/images/Cold Drinks/Ice Slush/Strawberry Slush.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
 
   // Milk Shakes
-  { id: "kunafa-shake", name: "Kunafa Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/7e1a3e07-9f17-404c-b06d-1e5c2eb51133.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
+  { id: "kunafa-shake", name: "Kunafa Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 198 }], active: true },
   { id: "brownie-shake", name: "Brownie Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
   { id: "dark-chocolate-shake", name: "Dark Chocolate Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
-  { id: "kit-kat-shake", name: "Kit-Kat Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
+  { id: "kit-kat-shake", name: "Kit-Kat Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "oreo-shake", name: "Oreo Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Oreo Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "butterscotch-shake", name: "Butterscotch Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Butterscotch Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
   { id: "mango-shake", name: "Mango Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Mango Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
   { id: "strawberry-shake", name: "Strawberry Shake", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Strawberry Shake.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
-  { id: "prab-protein-milk-shake-double-chocolate", name: "Prab Protein Milk-shake (Double Chocolate)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/be460614-dd1b-4640-9582-0dc5b5d9b87a.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 85 }], active: true },
-  { id: "prab-protein-milk-shake-coffee", name: "Prab Protein Milk-shake (Coffee)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/uploads/37fa3608-dac2-4f02-a805-82edfef18be8.webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true },
+  { id: "prab-protein-milk-shake-double-chocolate", name: "Prab Protein Milk-shake (Double Chocolate)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Double Chocolate).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 85 }], active: true },
+  { id: "prab-protein-milk-shake-coffee", name: "Prab Protein Milk-shake (Coffee)", categoryId: "cold-drinks", subcategory: "Milk Shakes", description: "", image: "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Coffee).webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true },
 
   // Coolberg
-  { id: "strawberry-coolberg", name: "Strawberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/25bc3ad5-1d58-4ad8-a53f-ff33c866ceea.png", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "peach-coolberg", name: "Peach Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/386e71b3-bb2f-4254-b264-95bdb3faae1d.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "cranberry-coolberg", name: "Cranberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/18a07f00-9b46-4ec3-8a55-3cd028aa48e1.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "jugaaro-coolberg", name: "Jugaaro Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/uploads/a23a3e8b-d30d-479c-ac9f-1ba7619dd7aa.webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "strawberry-coolberg", name: "Strawberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "peach-coolberg", name: "Peach Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "cranberry-coolberg", name: "Cranberry Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "jugaaro-coolberg", name: "Jugaaro Coolberg", categoryId: "cold-drinks", subcategory: "Coolberg", description: "", image: "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 109 }], active: true, isDeleted: false, deletedAt: null },
 
   // Energy Drinks
-  { id: "ultra-white-monster", name: "Ultra White Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/87751f04-4a34-46aa-98bd-847574fa0146.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 350 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "ultra-original-monster", name: "Ultra Original Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/2d4b271c-b1c5-460d-b032-9f0ccf53f2de.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "ultra-pink-monster", name: "Ultra Pink Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/b2083273-7759-4e6a-9588-a51456fdb760.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "bad-apple-monster", name: "Bad Apple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/05d16901-6be0-4b25-ae3f-84c2eca6d6f0.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "rio-punch-monster", name: "Rio Punch Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/127071af-0bf5-4229-b6b9-decafdbdbeeb.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "white-pineapple-monster", name: "White Pineapple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/19614428-7335-4a3c-937e-60325b5ceebf.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
-  { id: "redbull-250ml-", name: "Redbull (250ml)", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/uploads/644e4d6b-9c31-421f-bf86-779e2970e2cd.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "ultra-white-monster", name: "Ultra White Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 350 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "ultra-original-monster", name: "Ultra Original Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "ultra-pink-monster", name: "Ultra Pink Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "bad-apple-monster", name: "Bad Apple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "rio-punch-monster", name: "Rio Punch Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "white-pineapple-monster", name: "White Pineapple Monster", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 300 }], active: true, isDeleted: false, deletedAt: null },
+  { id: "redbull-250ml-", name: "Redbull (250ml)", categoryId: "cold-drinks", subcategory: "Energy Drinks", description: "", image: "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 125 }], active: true, isDeleted: false, deletedAt: null },
 
   // Coconut Water
-  { id: "storia-coconut-water", name: "Storia Coconut Water", categoryId: "coconut-water", description: "", image: "/uploads/f32c4f11-bbdb-4836-b265-e4467a64e470.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 60 }], active: true },
+  { id: "storia-coconut-water", name: "Storia Coconut Water", categoryId: "coconut-water", description: "", image: "/assets/images/Coconut Water/Storia Coconut Water.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 60 }], active: true },
 
   // Sandwich
   { id: "infusion-heritage-melt", name: "Infusion Heritage Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Infusion Heritage Melt.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 173 }], active: true },
-  { id: "paneer-tikka-melt", name: "Paneer Tikka Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 143 }], active: true },
+  { id: "paneer-tikka-melt", name: "Paneer Tikka Melt", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 143 }], active: true },
   { id: "trio-delight-sandwich", name: "Trio Delight Sandwich", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Trio Delight Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 113 }], active: true },
   { id: "garden-fresh-sandwich", name: "Garden Fresh Sandwich", categoryId: "snacks", subcategory: "Sandwich", description: "", image: "/assets/images/Snacks/Sandwich/Garden Fresh Sandwich.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 93 }], active: true },
 
@@ -113,7 +113,6 @@ export const menuItems = [
   { id: "golden-crisp-fries", name: "Golden Crisp Fries", categoryId: "snacks", subcategory: "French Fries", description: "", image: "/assets/images/Snacks/French-Fries/Golden Crisp Fries.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 98 }], active: true },
 
   // Burger
-  { id: "persistence-test-burger", name: "Infusion Loaded Stack", categoryId: "snacks", subcategory: "Burger", description: "", image: "/uploads/50af6a4e-4bc1-46dc-8d9b-864074badb11.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 99 }], active: true, isDeleted: false, deletedAt: null },
   { id: "infusion-loaded-stack", name: "Infusion Loaded Stack", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Infusion Loaded Stack.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },
   { id: "paneer-bliss-burger", name: "Paneer Bliss Burger", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Paneer Bliss Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 158 }], active: true },
   { id: "cheese-indulgence-burger", name: "Cheese Indulgence Burger", categoryId: "snacks", subcategory: "Burger", description: "", image: "/assets/images/Snacks/Burger/Cheese Indulgence Burger.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 128 }], active: true },
@@ -202,6 +201,10 @@ const baseInventoryItems = [
   { name: "Salt", category: "Spices", unit: "g" },
   { name: "Black Pepper", category: "Spices", unit: "g" },
   { name: "Chaat Masala", category: "Spices", unit: "g" },
+  { name: "Tea Concentrate", category: "Beverages", unit: "ml" },
+  { name: "Sugar Syrup", category: "Beverages", unit: "ml" },
+  { name: "Lemon Juice", category: "Beverages", unit: "ml" },
+  { name: "Chilled Milk", category: "Dairy", unit: "ml" },
   { name: "Instant coffee / coffee powder", category: "Beverages", unit: "g" },
   { name: "Cocoa powder", category: "Beverages", unit: "g" },
   { name: "Chocolate syrup", category: "Beverages", unit: "ml" },
@@ -213,6 +216,7 @@ const baseInventoryItems = [
   { name: "Green apple syrup", category: "Beverages", unit: "ml" },
   { name: "Cranberry syrup", category: "Beverages", unit: "ml" },
   { name: "Watermelon syrup", category: "Beverages", unit: "ml" },
+  { name: "Kala Khatta Syrup", category: "Beverages", unit: "ml" },
   { name: "Peach syrup", category: "Beverages", unit: "ml" },
   { name: "Mango pulp / mango syrup", category: "Beverages", unit: "ml" },
   { name: "Mango syrup", category: "Beverages", unit: "ml" },
@@ -224,11 +228,17 @@ const baseInventoryItems = [
   { name: "Soda", category: "Beverages", unit: "ml" },
   { name: "Sparkling water / black soda", category: "Beverages", unit: "ml" },
   { name: "Ice cubes", category: "Cold Prep", unit: "g" },
+  { name: "Vanilla Ice Cream", category: "Dairy", unit: "g" },
+  { name: "Chocolate Ice Cream", category: "Dairy", unit: "g" },
+  { name: "Butterscotch Ice Cream", category: "Dairy", unit: "g" },
   { name: "Protein powder (double chocolate)", category: "Beverages", unit: "g" },
   { name: "Protein powder (coffee)", category: "Beverages", unit: "g" },
   { name: "Kunafa mix", category: "Bakery", unit: "g" },
+  { name: "Pistachio Crushed", category: "Bakery", unit: "g" },
   { name: "Brownies (pieces for shakes)", category: "Bakery", unit: "g" },
+  { name: "Dark Chocolate Compound", category: "Bakery", unit: "g" },
   { name: "Oreo cookies (crumbled)", category: "Bakery", unit: "g" },
+  { name: "KitKat Crushed", category: "Bakery", unit: "g" },
   { name: "KitKat bars (mini)", category: "Bakery", unit: "pcs" },
   { name: "Butterscotch syrup", category: "Beverages", unit: "ml" },
   { name: "Coolberg Strawberry", category: "Packaged", unit: "ml" },
@@ -239,11 +249,15 @@ const baseInventoryItems = [
   { name: "Vanilla ice cream (for milkshakes)", category: "Dairy", unit: "g" },
   { name: "Storia Coconut Water (packaged bottle)", category: "Packaged", unit: "ml" },
   { name: "Storia Coconut Water", category: "Packaged", unit: "ml" },
+  { name: "Guava Syrup", category: "Beverages", unit: "ml" },
   { name: "Guava juice / guava pulp", category: "Beverages", unit: "ml" },
+  { name: "Chilli Powder", category: "Spices", unit: "g" },
   { name: "Red chilli powder", category: "Spices", unit: "g" },
   { name: "Black salt", category: "Spices", unit: "g" },
+  { name: "Masala Mix", category: "Beverages", unit: "g" },
   { name: "Jal‑jeera / masala lemonade mix", category: "Beverages", unit: "g" },
   { name: "Mango puree", category: "Beverages", unit: "ml" },
+  { name: "Mango Pulp", category: "Beverages", unit: "g" },
   { name: "Spicy mango mix (mango + chilli)", category: "Beverages", unit: "ml" },
   { name: "Cranberry juice", category: "Beverages", unit: "ml" },
   { name: "Watermelon juice", category: "Beverages", unit: "ml" },
@@ -280,6 +294,7 @@ const baseInventoryItems = [
   { name: "Onions", category: "Vegetables", unit: "g" },
   { name: "Capsicum", category: "Vegetables", unit: "g" },
   { name: "Bell peppers (capsicum)", category: "Vegetables", unit: "g" },
+  { name: "Cabbage", category: "Vegetables", unit: "g" },
   { name: "Carrot", category: "Vegetables", unit: "g" },
   { name: "Corn kernels", category: "Vegetables", unit: "g" },
   { name: "Olives", category: "Vegetables", unit: "g" },
@@ -287,9 +302,16 @@ const baseInventoryItems = [
   { name: "Mushrooms", category: "Vegetables", unit: "g" },
   { name: "Vegetable patties (veg burger patty)", category: "Vegetables", unit: "pcs" },
   { name: "Veg burger patty", category: "Vegetables", unit: "pcs" },
+  { name: "Paneer Patty", category: "Dairy", unit: "pcs" },
   { name: "Aloo patty", category: "Vegetables", unit: "pcs" },
+  { name: "Burger Sauce", category: "Sauces", unit: "g" },
   { name: "Paneer tikka cubes/marination", category: "Dairy", unit: "g" },
   { name: "Cheese slices", category: "Dairy", unit: "pcs" },
+  { name: "Sweet Corn", category: "Vegetables", unit: "g" },
+  { name: "Sandwich Sauce", category: "Sauces", unit: "g" },
+  { name: "Tikka Sauce", category: "Sauces", unit: "g" },
+  { name: "Green Chutney", category: "Sauces", unit: "g" },
+  { name: "Seasoning Mix", category: "Spices", unit: "g" },
   { name: "Mayonnaise", category: "Sauces", unit: "ml" },
   { name: "Tomato ketchup", category: "Sauces", unit: "ml" },
   { name: "Mustard sauce", category: "Sauces", unit: "ml" },
@@ -318,17 +340,24 @@ const baseInventoryItems = [
   { name: "Maggi noodles", category: "Grains", unit: "g" },
   { name: "Maggi masala", category: "Spices", unit: "g" },
   { name: "Extra cheese add‑on mix", category: "Dairy", unit: "g" },
+  { name: "Maggi Noodles Packet", category: "Grains", unit: "pcs" },
+  { name: "Maggi Masala Packet", category: "Spices", unit: "pcs" },
+  { name: "Tandoori Sauce", category: "Sauces", unit: "g" },
   { name: "Tandoori masala mix", category: "Spices", unit: "g" },
   { name: "Potatoes (for fries)", category: "Vegetables", unit: "g" },
   { name: "Frozen french fries", category: "Frozen", unit: "g" },
+  { name: "Potato Bites", category: "Frozen", unit: "g" },
   { name: "Vegetable oil (for frying)", category: "Pantry", unit: "ml" },
   { name: "Peri‑peri seasoning", category: "Spices", unit: "g" },
   { name: "Peri peri masala", category: "Spices", unit: "g" },
   { name: "French fries seasoning (peri‑peri / chilli)", category: "Spices", unit: "g" },
   { name: "Honey chilli glaze", category: "Sauces", unit: "ml" },
   { name: "Honey chilli sauce", category: "Sauces", unit: "ml" },
+  { name: "Chilli Sauce", category: "Sauces", unit: "ml" },
+  { name: "Sesame Seeds", category: "Spices", unit: "g" },
   { name: "Garlic bread loaf", category: "Bakery", unit: "pcs" },
   { name: "Garlic bread", category: "Bakery", unit: "pcs" },
+  { name: "Garlic Bread Base", category: "Bakery", unit: "pcs" },
   { name: "Garlic butter", category: "Dairy", unit: "g" },
   { name: "Corn kernels (for stuffed garlic bread)", category: "Vegetables", unit: "g" },
   { name: "Corn", category: "Vegetables", unit: "g" },
@@ -345,6 +374,7 @@ const baseInventoryItems = [
   { name: "Gravy sauce for momos", category: "Sauces", unit: "ml" },
   { name: "Pizza dough / base", category: "Bakery", unit: "g" },
   { name: "Pizza base", category: "Bakery", unit: "g" },
+  { name: "Pizza Base Piece", category: "Bakery", unit: "pcs" },
   { name: "Pizza sauce", category: "Sauces", unit: "ml" },
   { name: "Mozzarella cheese", category: "Dairy", unit: "g" },
   { name: "Pizza seasoning", category: "Spices", unit: "g" },
@@ -353,6 +383,9 @@ const baseInventoryItems = [
   { name: "Paneer tikka topping", category: "Dairy", unit: "g" },
   { name: "Mixed pizza vegetables", category: "Vegetables", unit: "g" },
   { name: "Mixed veggies (bell pepper, onion, tomato, corn)", category: "Vegetables", unit: "g" },
+  { name: "Red Velvet Lava Cake", category: "Dessert", unit: "pcs" },
+  { name: "Choco Lava Cake", category: "Dessert", unit: "pcs" },
+  { name: "Chocolate Sauce", category: "Sauces", unit: "ml" },
   { name: "Red velvet cake mix", category: "Bakery", unit: "g" },
   { name: "Chocolate cake mix", category: "Bakery", unit: "g" },
   { name: "Chocolate chips / chunks", category: "Bakery", unit: "g" },
@@ -373,7 +406,12 @@ const baseInventoryItems = [
 ];
 
 function normalizeInventoryName(name) {
-  return String(name || "").toLowerCase().trim();
+  return String(name || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 const existingInventoryNames = new Set(existingRawMaterials.map((item) => normalizeInventoryName(item.name)));
@@ -437,6 +475,555 @@ function createRecipe(itemId, ingredients) {
 }
 
 const recipeSeedEntries = [
+  createRecipe("infusion-signature-ice-tea", [
+    { name: "Tea Concentrate", amount: 120, unit: "ml" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Lemon Juice", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 2, unit: "g" }
+  ]),
+  createRecipe("watermelon-ice-tea", [
+    { name: "Tea Concentrate", amount: 100, unit: "ml" },
+    { name: "Watermelon Syrup", amount: 30, unit: "ml" },
+    { name: "Lemon Juice", amount: 8, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 2, unit: "g" }
+  ]),
+  createRecipe("peach-ice-tea", [
+    { name: "Tea Concentrate", amount: 100, unit: "ml" },
+    { name: "Peach Syrup", amount: 30, unit: "ml" },
+    { name: "Lemon Juice", amount: 8, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 2, unit: "g" }
+  ]),
+  createRecipe("lemon-ice-tea", [
+    { name: "Tea Concentrate", amount: 110, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 2, unit: "g" }
+  ]),
+  createRecipe("infusion-heritage-cold-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 5, unit: "g" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 60, unit: "g" },
+    { name: "Chocolate Syrup", amount: 15, unit: "ml" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("hazelnut-cold-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 5, unit: "g" },
+    { name: "Sugar Syrup", amount: 15, unit: "ml" },
+    { name: "Hazelnut Syrup", amount: 25, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 40, unit: "g" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("caramel-cold-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 5, unit: "g" },
+    { name: "Sugar Syrup", amount: 15, unit: "ml" },
+    { name: "Caramel Syrup", amount: 25, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 30, unit: "g" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("mocha-cold-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 5, unit: "g" },
+    { name: "Sugar Syrup", amount: 15, unit: "ml" },
+    { name: "Chocolate Syrup", amount: 25, unit: "ml" },
+    { name: "Cocoa Powder", amount: 5, unit: "g" },
+    { name: "Vanilla Ice Cream", amount: 30, unit: "g" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("chocolate-cold-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 4, unit: "g" },
+    { name: "Sugar Syrup", amount: 15, unit: "ml" },
+    { name: "Chocolate Syrup", amount: 30, unit: "ml" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("signature-coffee", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Coffee Powder", amount: 4, unit: "g" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Ice Cubes", amount: 80, unit: "g" }
+  ]),
+  createRecipe("guava-chilli-mojito", [
+    { name: "Guava Syrup", amount: 35, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" },
+    { name: "Chilli Powder", amount: 1, unit: "g" },
+    { name: "Black Salt", amount: 1, unit: "g" }
+  ]),
+  createRecipe("masala-lemonade-mojito", [
+    { name: "Lemon Juice", amount: 25, unit: "ml" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" },
+    { name: "Masala Mix", amount: 2, unit: "g" },
+    { name: "Black Salt", amount: 1, unit: "g" }
+  ]),
+  createRecipe("spicy-mango-mojito", [
+    { name: "Mango Syrup", amount: 35, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" },
+    { name: "Chilli Powder", amount: 1, unit: "g" },
+    { name: "Black Salt", amount: 1, unit: "g" }
+  ]),
+  createRecipe("green-apple-mojito", [
+    { name: "Green Apple Syrup", amount: 35, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" }
+  ]),
+  createRecipe("watermelon-mojito", [
+    { name: "Watermelon Syrup", amount: 35, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" }
+  ]),
+  createRecipe("cranberry-mojito", [
+    { name: "Cranberry Syrup", amount: 35, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" }
+  ]),
+  createRecipe("blue-curacao-mojito", [
+    { name: "Blue Curacao Syrup", amount: 30, unit: "ml" },
+    { name: "Lemon Juice", amount: 15, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 3, unit: "g" }
+  ]),
+  createRecipe("lime-mint-mojito", [
+    { name: "Lemon Juice", amount: 25, unit: "ml" },
+    { name: "Sugar Syrup", amount: 20, unit: "ml" },
+    { name: "Soda", amount: 180, unit: "ml" },
+    { name: "Ice Cubes", amount: 120, unit: "g" },
+    { name: "Mint Leaves", amount: 5, unit: "g" }
+  ]),
+  createRecipe("watermelon-slush", [
+    { name: "Watermelon Syrup", amount: 40, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 220, unit: "g" },
+    { name: "Water", amount: 80, unit: "ml" }
+  ]),
+  createRecipe("green-apple-slush", [
+    { name: "Green Apple Syrup", amount: 40, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 220, unit: "g" },
+    { name: "Water", amount: 80, unit: "ml" }
+  ]),
+  createRecipe("cranberry-slush", [
+    { name: "Cranberry Syrup", amount: 40, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 220, unit: "g" },
+    { name: "Water", amount: 80, unit: "ml" }
+  ]),
+  createRecipe("kala-khatta-slush", [
+    { name: "Kala Khatta Syrup", amount: 40, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 220, unit: "g" },
+    { name: "Water", amount: 80, unit: "ml" }
+  ]),
+  createRecipe("strawberry-slush", [
+    { name: "Strawberry Syrup", amount: 40, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 220, unit: "g" },
+    { name: "Water", amount: 80, unit: "ml" }
+  ]),
+  createRecipe("kunafa-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 80, unit: "g" },
+    { name: "Kunafa mix", amount: 40, unit: "g" },
+    { name: "Pistachio Crushed", amount: 10, unit: "g" },
+    { name: "Sugar Syrup", amount: 15, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("brownie-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 70, unit: "g" },
+    { name: "Brownies (pieces for shakes)", amount: 50, unit: "g" },
+    { name: "Chocolate Syrup", amount: 25, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("dark-chocolate-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Chocolate Ice Cream", amount: 70, unit: "g" },
+    { name: "Dark Chocolate Compound", amount: 35, unit: "g" },
+    { name: "Chocolate Syrup", amount: 20, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("kit-kat-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 70, unit: "g" },
+    { name: "KitKat Crushed", amount: 35, unit: "g" },
+    { name: "Chocolate Syrup", amount: 20, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("oreo-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 70, unit: "g" },
+    { name: "Oreo cookies (crumbled)", amount: 35, unit: "g" },
+    { name: "Chocolate Syrup", amount: 15, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("butterscotch-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Butterscotch Ice Cream", amount: 70, unit: "g" },
+    { name: "Butterscotch Syrup", amount: 25, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("mango-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 60, unit: "g" },
+    { name: "Mango Pulp", amount: 50, unit: "g" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("strawberry-shake", [
+    { name: "Chilled Milk", amount: 220, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 60, unit: "g" },
+    { name: "Strawberry Syrup", amount: 30, unit: "ml" },
+    { name: "Sugar Syrup", amount: 10, unit: "ml" },
+    { name: "Ice Cubes", amount: 50, unit: "g" }
+  ]),
+  createRecipe("infusion-heritage-melt", [
+    { name: "Bread Slice", amount: 2, unit: "pcs" },
+    { name: "Cheese slices", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 20, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Sweet Corn", amount: 20, unit: "g" },
+    { name: "Sandwich Sauce", amount: 25, unit: "g" },
+    { name: "Butter", amount: 10, unit: "g" }
+  ]),
+  createRecipe("paneer-tikka-melt", [
+    { name: "Bread Slice", amount: 2, unit: "pcs" },
+    { name: "Paneer blocks", amount: 60, unit: "g" },
+    { name: "Tikka Sauce", amount: 25, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Capsicum", amount: 20, unit: "g" },
+    { name: "Mozzarella cheese", amount: 25, unit: "g" },
+    { name: "Butter", amount: 10, unit: "g" }
+  ]),
+  createRecipe("trio-delight-sandwich", [
+    { name: "Bread Slice", amount: 2, unit: "pcs" },
+    { name: "Tomato", amount: 25, unit: "g" },
+    { name: "Cucumber", amount: 25, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Cheese slices", amount: 1, unit: "pcs" },
+    { name: "Sandwich Sauce", amount: 20, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("garden-fresh-sandwich", [
+    { name: "Bread Slice", amount: 2, unit: "pcs" },
+    { name: "Tomato", amount: 30, unit: "g" },
+    { name: "Cucumber", amount: 30, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Capsicum", amount: 20, unit: "g" },
+    { name: "Green Chutney", amount: 20, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("blush-bowl-pasta", [
+    { name: "Pasta", amount: 120, unit: "g" },
+    { name: "White sauce", amount: 70, unit: "g" },
+    { name: "Red sauce", amount: 60, unit: "g" },
+    { name: "Mozzarella cheese", amount: 30, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Sweet Corn", amount: 20, unit: "g" },
+    { name: "Cooking Oil", amount: 10, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("tomato-basil-pasta", [
+    { name: "Pasta", amount: 120, unit: "g" },
+    { name: "Red sauce", amount: 100, unit: "g" },
+    { name: "Mozzarella cheese", amount: 25, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Tomato", amount: 30, unit: "g" },
+    { name: "Cooking Oil", amount: 10, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("herbed-bechamel-pasta", [
+    { name: "Pasta", amount: 120, unit: "g" },
+    { name: "White sauce", amount: 110, unit: "g" },
+    { name: "Mozzarella cheese", amount: 25, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Sweet Corn", amount: 20, unit: "g" },
+    { name: "Cooking Oil", amount: 10, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("jalapeno-corn-stuffed-garlic-bread", [
+    { name: "Garlic Bread Base", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 60, unit: "g" },
+    { name: "Sweet Corn", amount: 35, unit: "g" },
+    { name: "Jalapeno", amount: 20, unit: "g" },
+    { name: "Garlic butter", amount: 25, unit: "g" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("cheesy-melt-garlic-bread", [
+    { name: "Garlic Bread Base", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 70, unit: "g" },
+    { name: "Garlic butter", amount: 25, unit: "g" },
+    { name: "Cheese Sauce", amount: 25, unit: "g" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("pure-garlic-bread", [
+    { name: "Garlic Bread Base", amount: 1, unit: "pcs" },
+    { name: "Garlic butter", amount: 35, unit: "g" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("infusion-velvet-cheese-fries", [
+    { name: "Frozen french fries", amount: 180, unit: "g" },
+    { name: "Cheese Sauce", amount: 60, unit: "g" },
+    { name: "Mozzarella cheese", amount: 35, unit: "g" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("honey-chilli-glazed-potato", [
+    { name: "Potato Bites", amount: 180, unit: "g" },
+    { name: "Honey chilli sauce", amount: 60, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Sesame Seeds", amount: 3, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("chilli-blaze-potato", [
+    { name: "Potato Bites", amount: 180, unit: "g" },
+    { name: "Chilli Sauce", amount: 55, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("fiery-peri-peri-fries", [
+    { name: "Frozen french fries", amount: 180, unit: "g" },
+    { name: "Peri peri masala", amount: 8, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("golden-crisp-fries", [
+    { name: "Frozen french fries", amount: 180, unit: "g" },
+    { name: "Salt", amount: 2, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("infusion-loaded-stack", [
+    { name: "Burger bun", amount: 1, unit: "pcs" },
+    { name: "Veg burger patty", amount: 1, unit: "pcs" },
+    { name: "Cheese slices", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 30, unit: "g" },
+    { name: "Lettuce", amount: 15, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Tomato", amount: 25, unit: "g" },
+    { name: "Burger Sauce", amount: 30, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("paneer-bliss-burger", [
+    { name: "Burger bun", amount: 1, unit: "pcs" },
+    { name: "Paneer Patty", amount: 1, unit: "pcs" },
+    { name: "Cheese slices", amount: 1, unit: "pcs" },
+    { name: "Lettuce", amount: 15, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Tomato", amount: 25, unit: "g" },
+    { name: "Burger Sauce", amount: 25, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("cheese-indulgence-burger", [
+    { name: "Burger bun", amount: 1, unit: "pcs" },
+    { name: "Veg burger patty", amount: 1, unit: "pcs" },
+    { name: "Cheese slices", amount: 2, unit: "pcs" },
+    { name: "Cheese Sauce", amount: 30, unit: "g" },
+    { name: "Burger Sauce", amount: 20, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("veg-essence-burger", [
+    { name: "Burger bun", amount: 1, unit: "pcs" },
+    { name: "Veg burger patty", amount: 1, unit: "pcs" },
+    { name: "Lettuce", amount: 15, unit: "g" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Tomato", amount: 25, unit: "g" },
+    { name: "Burger Sauce", amount: 20, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("spiced-aloo-burger", [
+    { name: "Aloo patty", amount: 1, unit: "pcs" },
+    { name: "Burger bun", amount: 1, unit: "pcs" },
+    { name: "Onion", amount: 20, unit: "g" },
+    { name: "Tomato", amount: 20, unit: "g" },
+    { name: "Burger Sauce", amount: 18, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("infusion-wok-hakka", [
+    { name: "Noodles", amount: 130, unit: "g" },
+    { name: "Cabbage", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Carrot", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Soy sauce", amount: 15, unit: "ml" },
+    { name: "Chilli Sauce", amount: 15, unit: "ml" },
+    { name: "Vinegar", amount: 8, unit: "ml" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("schezwan-blaze-noodles", [
+    { name: "Noodles", amount: 130, unit: "g" },
+    { name: "Cabbage", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Carrot", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Schezwan sauce", amount: 35, unit: "g" },
+    { name: "Soy sauce", amount: 10, unit: "ml" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" }
+  ]),
+  createRecipe("garlic-essence-noodles", [
+    { name: "Noodles", amount: 130, unit: "g" },
+    { name: "Garlic", amount: 12, unit: "g" },
+    { name: "Cabbage", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Soy sauce", amount: 12, unit: "ml" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("harvest-veg-noodles", [
+    { name: "Noodles", amount: 120, unit: "g" },
+    { name: "Cabbage", amount: 40, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Carrot", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Soy sauce", amount: 10, unit: "ml" },
+    { name: "Chilli Sauce", amount: 10, unit: "ml" },
+    { name: "Cooking Oil", amount: 12, unit: "ml" }
+  ]),
+  createRecipe("infusion-maxxed-maggi", [
+    { name: "Maggi Noodles Packet", amount: 1, unit: "pcs" },
+    { name: "Maggi Masala Packet", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 35, unit: "g" },
+    { name: "Sweet Corn", amount: 25, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Butter", amount: 10, unit: "g" }
+  ]),
+  createRecipe("cheese-luxe-maggi", [
+    { name: "Maggi Noodles Packet", amount: 1, unit: "pcs" },
+    { name: "Maggi Masala Packet", amount: 1, unit: "pcs" },
+    { name: "Mozzarella cheese", amount: 45, unit: "g" },
+    { name: "Cheese Sauce", amount: 25, unit: "g" },
+    { name: "Butter", amount: 10, unit: "g" }
+  ]),
+  createRecipe("tandoori-twist-maggi", [
+    { name: "Maggi Noodles Packet", amount: 1, unit: "pcs" },
+    { name: "Maggi Masala Packet", amount: 1, unit: "pcs" },
+    { name: "Tandoori Sauce", amount: 30, unit: "g" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Butter", amount: 10, unit: "g" }
+  ]),
+  createRecipe("veggie-comfort-maggi", [
+    { name: "Maggi Noodles Packet", amount: 1, unit: "pcs" },
+    { name: "Maggi Masala Packet", amount: 1, unit: "pcs" },
+    { name: "Onion", amount: 25, unit: "g" },
+    { name: "Capsicum", amount: 25, unit: "g" },
+    { name: "Carrot", amount: 20, unit: "g" },
+    { name: "Butter", amount: 8, unit: "g" }
+  ]),
+  createRecipe("just-maggi", [
+    { name: "Maggi Noodles Packet", amount: 1, unit: "pcs" },
+    { name: "Maggi Masala Packet", amount: 1, unit: "pcs" },
+    { name: "Butter", amount: 5, unit: "g" }
+  ]),
+  createRecipe("paneer-tikka-supreme", [
+    { name: "Pizza Base Piece", amount: 1, unit: "pcs" },
+    { name: "Pizza sauce", amount: 60, unit: "g" },
+    { name: "Mozzarella cheese", amount: 120, unit: "g" },
+    { name: "Paneer blocks", amount: 90, unit: "g" },
+    { name: "Tikka Sauce", amount: 35, unit: "g" },
+    { name: "Onion", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 35, unit: "g" },
+    { name: "Sweet Corn", amount: 25, unit: "g" },
+    { name: "Seasoning Mix", amount: 4, unit: "g" }
+  ]),
+  createRecipe("garden-harvest-pizza", [
+    { name: "Pizza Base Piece", amount: 1, unit: "pcs" },
+    { name: "Pizza sauce", amount: 60, unit: "g" },
+    { name: "Mozzarella cheese", amount: 110, unit: "g" },
+    { name: "Onion", amount: 35, unit: "g" },
+    { name: "Capsicum", amount: 35, unit: "g" },
+    { name: "Tomato", amount: 35, unit: "g" },
+    { name: "Sweet Corn", amount: 30, unit: "g" },
+    { name: "Jalapeno", amount: 15, unit: "g" },
+    { name: "Seasoning Mix", amount: 4, unit: "g" }
+  ]),
+  createRecipe("margherita-delight", [
+    { name: "Pizza Base Piece", amount: 1, unit: "pcs" },
+    { name: "Pizza sauce", amount: 60, unit: "g" },
+    { name: "Mozzarella cheese", amount: 130, unit: "g" },
+    { name: "Seasoning Mix", amount: 4, unit: "g" }
+  ]),
+  createRecipe("red-velvet-lava-cake", [
+    { name: "Red Velvet Lava Cake", amount: 1, unit: "pcs" },
+    { name: "Chocolate Sauce", amount: 20, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 40, unit: "g" }
+  ]),
+  createRecipe("choco-lava-cake", [
+    { name: "Choco Lava Cake", amount: 1, unit: "pcs" },
+    { name: "Chocolate Sauce", amount: 20, unit: "ml" },
+    { name: "Vanilla Ice Cream", amount: 30, unit: "g" }
+  ]),
+  createRecipe("sizzling-brownie-with-ice-cream", [
+    { name: "Brownies (pieces for shakes)", amount: 80, unit: "g" },
+    { name: "Vanilla Ice Cream", amount: 60, unit: "g" },
+    { name: "Chocolate Sauce", amount: 35, unit: "ml" },
+    { name: "Butter", amount: 5, unit: "g" },
+    { name: "Chocolate chips / chunks", amount: 8, unit: "g" }
+  ]),
+  createRecipe("hot-brownie", [
+    { name: "Brownies (pieces for shakes)", amount: 90, unit: "g" },
+    { name: "Chocolate Sauce", amount: 30, unit: "ml" },
+    { name: "Chocolate chips / chunks", amount: 8, unit: "g" }
+  ]),
+  createRecipe("kurkure-delight-momos", [
+    { name: "Momos", amount: 8, unit: "pcs" },
+    { name: "Kurkure crumbs / panko crumbs (for crispy momos)", amount: 40, unit: "g" },
+    { name: "Mayonnaise", amount: 35, unit: "g" },
+    { name: "Chilli Sauce", amount: 25, unit: "g" },
+    { name: "Cooking Oil", amount: 20, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("fusion-gravy-momos", [
+    { name: "Momos", amount: 8, unit: "pcs" },
+    { name: "Gravy sauce for momos", amount: 120, unit: "g" },
+    { name: "Onion", amount: 30, unit: "g" },
+    { name: "Capsicum", amount: 30, unit: "g" },
+    { name: "Chilli Sauce", amount: 25, unit: "g" },
+    { name: "Cooking Oil", amount: 15, unit: "ml" },
+    { name: "Seasoning Mix", amount: 3, unit: "g" }
+  ]),
+  createRecipe("golden-crunch-momos", [
+    { name: "Momos", amount: 8, unit: "pcs" },
+    { name: "Bread crumbs", amount: 40, unit: "g" },
+    { name: "Mayonnaise", amount: 30, unit: "g" },
+    { name: "Chilli Sauce", amount: 20, unit: "g" },
+    { name: "Cooking Oil", amount: 20, unit: "ml" }
+  ]),
   createRecipe("storia-coconut-water", [
     { name: "Storia Coconut Water", amount: 1, unit: "pcs" }
   ]),
@@ -470,8 +1057,8 @@ const recipeSeedEntries = [
   createRecipe("white-pineapple-monster", [
     { name: "Monster White Pineapple can", amount: 1, unit: "can" }
   ]),
-  createRecipe("redbull-250ml", [
-    { name: "Redbull 250ml", amount: 1, unit: "can" }
+  createRecipe("redbull-250ml-", [
+    { name: "Redbull 250 ml can", amount: 1, unit: "pcs" }
   ]),
   createRecipe("green-tea", [
     { name: "Green tea leaves", amount: 2, unit: "g" },
@@ -558,16 +1145,6 @@ const defaultRecipesBase = [
       { rawMaterialId: "coffee-powder", amount: 4, unit: "g" },
       { rawMaterialId: "water", amount: 180, unit: "ml" },
       { rawMaterialId: "sugar", amount: 5, unit: "g" }
-    ]
-  },
-  {
-    id: "margherita-delight",
-    itemId: "margherita-delight",
-    ingredients: [
-      { rawMaterialId: "bread-slice", amount: 2, unit: "pcs" },
-      { rawMaterialId: "cheese-slice", amount: 1, unit: "pcs" },
-      { rawMaterialId: "tomato-sauce", amount: 30, unit: "ml" },
-      { rawMaterialId: "veg-mix", amount: 50, unit: "g" }
     ]
   }
 ];

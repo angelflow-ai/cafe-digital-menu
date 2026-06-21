@@ -79,7 +79,8 @@ const orderItemSchema = new mongoose.Schema(
     unitPrice: Number,
     lineTotal: Number,
     finalLineTotal: Number,
-    addons: { type: mongoose.Schema.Types.Mixed, default: {} }
+    addons: { type: mongoose.Schema.Types.Mixed, default: {} },
+    addOns: { type: mongoose.Schema.Types.Mixed, default: [] }
   },
   { _id: false }
 );
@@ -209,7 +210,10 @@ function isDeletedInventoryItem(item) {
 function isLowStockItem(item) {
   const stock = Number(item?.stock || 0);
   const minStock = Number(item?.minStock || 0);
-  return stock <= minStock;
+  const unit = String(item?.unit || "pcs").toLowerCase();
+  const fallbackMinStock = unit === "g" || unit === "ml" ? 10000 : 10;
+  const threshold = minStock > 0 ? minStock : fallbackMinStock;
+  return stock <= threshold;
 }
 
 function resolveRawMaterialId(ingredient, rawMaterials = []) {
@@ -281,6 +285,26 @@ function normalizeSalesStatus(value) {
 
   const normalized = raw.replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
   return aliasMap[normalized] || normalized.replace(/\s+/g, "_");
+}
+
+function isExtraCheeseAddon(addon = {}) {
+  return normalizeRecipeReference(addon?.name || addon?.id) === "extra cheese";
+}
+
+function isBurgerMenuItem(menuItem = {}) {
+  const text = normalizeRecipeReference(`${menuItem.id || ""} ${menuItem.name || ""} ${menuItem.subcategory || ""} ${menuItem.subCategoryName || ""}`);
+  return text.includes("burger");
+}
+
+function isPizzaMenuItem(menuItem = {}) {
+  const text = normalizeRecipeReference(`${menuItem.id || ""} ${menuItem.name || ""} ${menuItem.subcategory || ""} ${menuItem.subCategoryName || ""}`);
+  return text.includes("pizza");
+}
+
+function getExtraCheesePriceForItem(menuItem = {}) {
+  if (isBurgerMenuItem(menuItem)) return 25;
+  if (isPizzaMenuItem(menuItem)) return 30;
+  return 0;
 }
 
 function isSafeMongoOrderId(value) {
@@ -605,6 +629,58 @@ export async function connectDatabase() {
   return true;
 }
 
+function getMenuItemSyncSubcategory(item = {}) {
+  return String(item.subCategoryName || item.subcategoryName || item.subcategory || item.subCategory || "").trim();
+}
+
+function isProjectManagedMenuImage(value) {
+  const image = String(value || "").trim();
+  return !image || image.startsWith("/assets/images/");
+}
+
+function shouldSyncSeedMenuImage(currentImage, seedImage) {
+  const nextImage = String(seedImage || "").trim();
+  if (!nextImage) return false;
+  const image = String(currentImage || "").trim();
+  if (image === nextImage) return false;
+  return isProjectManagedMenuImage(image);
+}
+
+async function syncSeedMenuImages(menuItemsToSeed = []) {
+  const seedItemsByIdentity = new Map();
+
+  for (const item of menuItemsToSeed) {
+    const cleanItem = validateMenuItem(item);
+    const subcategory = getMenuItemSyncSubcategory(cleanItem);
+    if (!cleanItem.name || !cleanItem.categoryId || !subcategory || !cleanItem.image) continue;
+    const key = `${cleanItem.name}\n${cleanItem.categoryId}\n${subcategory}`;
+    if (!seedItemsByIdentity.has(key)) seedItemsByIdentity.set(key, { ...cleanItem, subcategory });
+  }
+
+  const candidates = Array.from(seedItemsByIdentity.values());
+  let updated = 0;
+
+  for (const seedItem of candidates) {
+    const matchFilter = {
+      name: seedItem.name,
+      categoryId: seedItem.categoryId,
+      $or: [
+        { subcategory: seedItem.subcategory },
+        { subCategoryName: seedItem.subcategory },
+        { subCategoryId: seedItem.subCategoryId }
+      ]
+    };
+    const existing = await MenuItem.findOne(matchFilter, { _id: 1, image: 1, name: 1 }).lean();
+    if (!existing || !shouldSyncSeedMenuImage(existing.image, seedItem.image)) continue;
+    await MenuItem.findByIdAndUpdate(existing._id, { $set: { image: seedItem.image } }, { new: true, runValidators: true }).lean();
+    updated += 1;
+  }
+
+  if (updated > 0) {
+    console.log(`[Menu Image Sync] Updated ${updated} existing menu item image path${updated === 1 ? "" : "s"}.`);
+  }
+}
+
 export async function seedDatabase() {
   const persistedMemory = loadPersistedMemory();
   const categoryCount = await Category.countDocuments();
@@ -618,8 +694,8 @@ export async function seedDatabase() {
   for (const category of categoriesToSeed) {
     await Category.findOneAndUpdate(
       { id: category.id },
-      { $set: { ...category, sortOrder: Number(category.sortOrder || 0), icon: category.icon || "Utensils", isDeleted: Boolean(category.isDeleted), deletedAt: category.isDeleted ? category.deletedAt || new Date() : null } },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { $setOnInsert: { ...category, sortOrder: Number(category.sortOrder || 0), icon: category.icon || "Utensils", isDeleted: Boolean(category.isDeleted), deletedAt: category.isDeleted ? category.deletedAt || new Date() : null } },
+      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
     );
   }
 
@@ -627,19 +703,22 @@ export async function seedDatabase() {
     const cleanItem = validateMenuItem(item);
     await MenuItem.findOneAndUpdate(
       { id: cleanItem.id },
-      { $set: cleanItem },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
+      { $setOnInsert: cleanItem },
+      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
     );
   }
+
+  await MenuItem.updateMany({ $or: [{ active: { $exists: false } }, { active: null }] }, { $set: { active: true } });
+  await syncSeedMenuImages(menuItemsToSeed);
 
   if (itemCount === 0) {
     await MenuItem.updateOne(
       { id: "kit-kat-shake" },
-      { $set: { image: "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg" } }
+      { $set: { image: "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg" } }
     );
     await MenuItem.updateOne(
       { id: "paneer-tikka-melt" },
-      { $set: { image: "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg" } }
+      { $set: { image: "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg" } }
     );
   }
 
@@ -720,7 +799,7 @@ export const store = {
       deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      return Category.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.categories.findIndex((item) => item.id === clean.id);
     if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...clean };
@@ -731,7 +810,7 @@ export const store = {
   async deleteCategory(id) {
     const deletedAt = new Date();
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true }).lean();
+      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
     }
     const index = memory.categories.findIndex((item) => item.id === id);
     if (index < 0) return null;
@@ -741,7 +820,7 @@ export const store = {
   },
   async restoreCategory(id) {
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true }).lean();
+      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
     }
     const index = memory.categories.findIndex((item) => item.id === id);
     if (index < 0) return null;
@@ -760,7 +839,7 @@ export const store = {
       const filter = {};
       if (query.categoryId) filter.categoryId = query.categoryId;
       if (query.search) filter.name = { $regex: query.search, $options: "i" };
-      if (!query.includeInactive) filter.active = true;
+      if (!query.includeInactive) filter.active = { $ne: false };
       if (!query.includeDeleted) filter.isDeleted = { $ne: true };
       const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
       const visibleCategoryIds = await Category.find(categoryFilter).distinct("id");
@@ -771,7 +850,7 @@ export const store = {
       return MenuItem.find(filter).sort({ name: 1 }).lean();
     }
     return memory.menuItems
-      .filter((item) => (query.includeInactive ? true : item.active))
+      .filter((item) => (query.includeInactive ? true : item.active !== false && item.isActive !== false))
       .filter((item) => (query.includeDeleted ? true : item.isDeleted !== true))
       .filter((item) => (query.includeDeleted ? true : (memory.categories.find((category) => category.id === item.categoryId)?.isDeleted !== true)))
       .filter((item) => (!query.categoryId ? true : item.categoryId === query.categoryId))
@@ -779,8 +858,14 @@ export const store = {
       .sort((a, b) => a.name.localeCompare(b.name));
   },
   async menuItem(id) {
-    if (usingMongo()) return MenuItem.findOne({ id }).lean();
-    return memory.menuItems.find((item) => item.id === id);
+    if (usingMongo()) {
+      if (mongoose.Types.ObjectId.isValid(id)) {
+        const byObjectId = await MenuItem.findById(id).lean();
+        if (byObjectId) return byObjectId;
+      }
+      return MenuItem.findOne({ id }).lean();
+    }
+    return memory.menuItems.find((item) => item.id === id || String(item._id || "") === String(id));
   },
   async deletedMenuItems() {
     if (usingMongo()) return MenuItem.find({ isDeleted: true }).sort({ deletedAt: -1, name: 1 }).lean();
@@ -789,7 +874,7 @@ export const store = {
   async upsertMenuItem(payload) {
     const clean = validateMenuItem(payload);
     if (usingMongo()) {
-      return MenuItem.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      return MenuItem.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.menuItems.findIndex((item) => item.id === clean.id);
     if (index >= 0) memory.menuItems[index] = clean;
@@ -797,9 +882,52 @@ export const store = {
     savePersistedMemory(memory);
     return clean;
   },
+  async updateMenuItem(id, payload) {
+    if (usingMongo()) {
+      const existing = await this.menuItem(id);
+      if (!existing) return null;
+      const nextPayload = { ...existing, ...payload, id: payload.id || existing.id };
+      if (Object.prototype.hasOwnProperty.call(payload, "price") && !Object.prototype.hasOwnProperty.call(payload, "sizes")) {
+        const price = Number(payload.price);
+        if (!Number.isFinite(price)) throw new Error("Price must be a valid number.");
+        const existingSizes = Array.isArray(existing.sizes) ? existing.sizes : [];
+        nextPayload.sizes = existingSizes.map((size, index) => (index === 0 ? { ...size, price } : size));
+      }
+      const clean = validateMenuItem(nextPayload);
+      return MenuItem.findByIdAndUpdate(existing._id, { $set: clean }, { new: true, runValidators: true }).lean();
+    }
+    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
+    if (index < 0) return null;
+    const nextPayload = { ...memory.menuItems[index], ...payload, id: payload.id || memory.menuItems[index].id };
+    if (Object.prototype.hasOwnProperty.call(payload, "price") && !Object.prototype.hasOwnProperty.call(payload, "sizes")) {
+      const price = Number(payload.price);
+      if (!Number.isFinite(price)) throw new Error("Price must be a valid number.");
+      const existingSizes = Array.isArray(memory.menuItems[index].sizes) ? memory.menuItems[index].sizes : [];
+      nextPayload.sizes = existingSizes.map((size, sizeIndex) => (sizeIndex === 0 ? { ...size, price } : size));
+    }
+    const clean = validateMenuItem(nextPayload);
+    memory.menuItems[index] = clean;
+    savePersistedMemory(memory);
+    return clean;
+  },
+  async setMenuItemActive(id, active) {
+    const nextActive = active !== false;
+    if (usingMongo()) {
+      return MenuItem.findOneAndUpdate(
+        { id },
+        { $set: { active: nextActive, isDeleted: false, deletedAt: null } },
+        { new: true, runValidators: true }
+      ).lean();
+    }
+    const index = memory.menuItems.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isDeleted: false, deletedAt: null };
+    savePersistedMemory(memory);
+    return memory.menuItems[index];
+  },
   async deleteMenuItem(id) {
     const deletedAt = new Date();
-    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true }).lean();
+    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
     const index = memory.menuItems.findIndex((item) => item.id === id);
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
@@ -807,7 +935,7 @@ export const store = {
     return memory.menuItems[index];
   },
   async restoreMenuItem(id) {
-    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true }).lean();
+    if (usingMongo()) return MenuItem.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
     const index = memory.menuItems.findIndex((item) => item.id === id);
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: false, deletedAt: null };
@@ -820,14 +948,15 @@ export const store = {
     savePersistedMemory(memory);
     return { deletedCount: 1 };
   },
-  async rawMaterials() {
+  async rawMaterials(query = {}) {
     if (usingMongo()) {
-      return RawMaterial.find({ $and: [{ isDeleted: { $ne: true } }, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] })
+      const deletedFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
+      return RawMaterial.find({ $and: [deletedFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] })
         .sort({ category: 1, name: 1 })
         .lean();
     }
     return [...memory.rawMaterials]
-      .filter((item) => !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item))
+      .filter((item) => (query.includeDeleted ? true : !isDeletedInventoryItem(item)) && !isHiddenInventoryItem(item))
       .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
   },
   async rawMaterial(id) {
@@ -835,22 +964,31 @@ export const store = {
     return memory.rawMaterials.find((item) => item.id === id && !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item));
   },
   async upsertRawMaterial(payload) {
+    const stockValue = Number(payload.stock ?? payload.quantity ?? 0);
+    const minStockValue = Number(payload.minStock ?? payload.minimumStock ?? 0);
+    const costValue = Number(payload.costPerUnit ?? payload.purchasePrice ?? payload.price ?? 0);
     const clean = {
       id: String(payload.id || payload.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       name: String(payload.name || "").trim(),
       category: String(payload.category || "Inventory").trim(),
       unit: ["g", "ml", "pcs"].includes(payload.unit) ? payload.unit : "pcs",
-      stock: Number(payload.stock || 0),
-      minStock: Number(payload.minStock || 0),
-      costPerUnit: Number(payload.costPerUnit || 0),
-      active: payload.active !== false
+      stock: Number.isFinite(stockValue) ? stockValue : 0,
+      minStock: Number.isFinite(minStockValue) ? minStockValue : 0,
+      costPerUnit: Number.isFinite(costValue) ? costValue : 0,
+      active: payload.active !== false,
+      isDeleted: payload.isDeleted === true,
+      deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
+    if (!clean.name) throw new Error("Inventory item name is required.");
+    if (!["g", "ml", "pcs"].includes(clean.unit)) throw new Error("Inventory unit must be g, ml, or pcs.");
+    if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
     if (usingMongo()) {
-      return RawMaterial.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      return RawMaterial.findOneAndUpdate({ id: clean.id }, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.rawMaterials.findIndex((item) => item.id === clean.id);
     if (index >= 0) memory.rawMaterials[index] = clean;
     else memory.rawMaterials.push(clean);
+    savePersistedMemory(memory);
     return clean;
   },
   async deleteRawMaterial(id) {
@@ -858,7 +996,7 @@ export const store = {
       return RawMaterial.findOneAndUpdate(
         { id },
         { isDeleted: true, deletedAt: new Date() },
-        { new: true }
+        { new: true, runValidators: true }
       ).lean();
     }
     const index = memory.rawMaterials.findIndex((item) => item.id === id);
@@ -868,9 +1006,24 @@ export const store = {
         isDeleted: true,
         deletedAt: new Date().toISOString()
       };
+      savePersistedMemory(memory);
       return { modifiedCount: 1 };
     }
     return { modifiedCount: 0 };
+  },
+  async restoreRawMaterial(id) {
+    if (usingMongo()) {
+      return RawMaterial.findOneAndUpdate(
+        { id },
+        { $set: { isDeleted: false, deletedAt: null } },
+        { new: true, runValidators: true }
+      ).lean();
+    }
+    const index = memory.rawMaterials.findIndex((item) => item.id === id);
+    if (index < 0) return null;
+    memory.rawMaterials[index] = { ...memory.rawMaterials[index], isDeleted: false, deletedAt: null };
+    savePersistedMemory(memory);
+    return memory.rawMaterials[index];
   },
   async adjustRawMaterialStock(id, change, note, orderId) {
     return adjustRawMaterialStock(id, change, note, orderId);
@@ -928,16 +1081,18 @@ export const store = {
       ingredients
     };
     if (usingMongo()) {
-      return Recipe.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true }).lean();
+      return Recipe.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.recipes.findIndex((item) => item.id === clean.id);
     if (index >= 0) memory.recipes[index] = clean;
     else memory.recipes.push(clean);
+    savePersistedMemory(memory);
     return clean;
   },
   async deleteRecipe(id) {
     if (usingMongo()) return Recipe.deleteOne({ id });
     memory.recipes = memory.recipes.filter((item) => item.id !== id);
+    savePersistedMemory(memory);
     return { deletedCount: 1 };
   },
   async syncDefaultRecipes(defaultRecipes) {
@@ -1059,6 +1214,7 @@ export const store = {
     if (usingMongo()) return Order.create(order);
     const saved = { ...order, id: `order-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     memory.orders.push(saved);
+    savePersistedMemory(memory);
     return saved;
   },
   async createCocRequest(payload) {
@@ -1080,6 +1236,7 @@ export const store = {
       await Order.create({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
     } else {
       memory.orders.push({ ...order, id: request.id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      savePersistedMemory(memory);
     }
 
     return request;
@@ -1123,6 +1280,7 @@ export const store = {
       }
       const saved = { ...order, id: `order-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
       memory.orders.push(saved);
+      savePersistedMemory(memory);
       return saved;
     }
 
@@ -1143,10 +1301,11 @@ export const store = {
       if (cleanPayload.paymentStatus !== undefined) cleanPayload.paymentStatus = normalizeSalesStatus(cleanPayload.paymentStatus);
       return Order.findOneAndUpdate(buildOrderLookup(id), cleanPayload, { new: true }).lean();
     }
-    const index = memory.orders.findIndex((item) => item.id === id);
+    const index = memory.orders.findIndex((item) => item.id === id || item.orderId === id || String(item._id || "") === String(id));
     if (index < 0) return null;
     const updated = { ...memory.orders[index], ...payload, updatedAt: new Date().toISOString() };
     memory.orders[index] = updated;
+    savePersistedMemory(memory);
     return updated;
   },
   async deductOrderInventory(id) {
@@ -1162,9 +1321,10 @@ export const store = {
         { new: true }
       ).lean();
     }
-    const index = memory.orders.findIndex((item) => item.id === order.id);
+    const index = memory.orders.findIndex((item) => item.id === order.id || item.orderId === order.orderId || String(item._id || "") === String(order._id || ""));
     if (index >= 0) {
       memory.orders[index] = { ...memory.orders[index], deductionStatus: "deducted", warnings: order.warnings || [], updatedAt: new Date().toISOString() };
+      savePersistedMemory(memory);
       return memory.orders[index];
     }
     return order;
@@ -1196,7 +1356,8 @@ export const store = {
   },
   async deleteOrder(id) {
     if (usingMongo()) return Order.findOneAndDelete(buildOrderLookup(id));
-    memory.orders = memory.orders.filter((item) => item.id !== id);
+    memory.orders = memory.orders.filter((item) => item.id !== id && item.orderId !== id && String(item._id || "") !== String(id));
+    savePersistedMemory(memory);
     return { deletedCount: 1 };
   }
 };
@@ -1231,6 +1392,7 @@ function validateMenuItem(payload) {
 
   const subCategoryName = String(payload.subCategoryName || payload.subcategoryName || payload.subcategory || payload.subCategory || "").trim();
   const subCategoryId = String(payload.subCategoryId || payload.subcategoryId || subCategoryName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const image = String(payload.image || payload.photoUrl || payload.imageUrl || payload.photo || payload.img || "").trim();
 
   return {
     id: String(payload.id || payload.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -1240,7 +1402,7 @@ function validateMenuItem(payload) {
     subCategoryId,
     subCategoryName,
     subcategory: subCategoryName,
-    image: payload.image || "",
+    image,
     sizes: sizes.sort((a, b) => a.sortOrder - b.sortOrder),
     serveOptions,
     addons,
@@ -1291,17 +1453,29 @@ async function buildOrder(payload) {
     const selectedAddons = rawSelectedAddons
       .filter((addon) => addon && String(addon.name || "").trim())
       .map((addon) => ({
+        id: String(addon.id || addon.name || "").trim(),
         name: String(addon.name || "").trim(),
         price: Math.round(Number(addon.price || 0))
       }))
       .filter((addon) => Number.isFinite(addon.price) && addon.price >= 0);
-    const extraCheeseSelected = !!raw.addons?.extraCheese;
-    const extraCheesePrice = extraCheeseSelected ? Math.round(Number(raw.addons?.extraCheesePrice || 0)) : 0;
-    const selectedAddonTotal = selectedAddons.reduce((sum, addon) => sum + addon.price, 0);
-    const unitPrice = basePrice + extraCheesePrice + selectedAddonTotal;
+    const extraCheeseSelected = !!raw.addons?.extraCheese || selectedAddons.some(isExtraCheeseAddon);
+    const requiredExtraCheesePrice = extraCheeseSelected ? getExtraCheesePriceForItem(menuItem) : 0;
+    const extraCheeseInventoryDeduction = requiredExtraCheesePrice ? await resolveExtraCheeseInventoryDeduction(menuItem) : [];
+    const normalizedAddOns = selectedAddons
+      .filter((addon) => !isExtraCheeseAddon(addon))
+      .map((addon) => ({ ...addon, id: addon.id || slugify(addon.name) }));
+    if (requiredExtraCheesePrice > 0) {
+      normalizedAddOns.push({
+        id: "extra-cheese",
+        name: "Extra Cheese",
+        price: requiredExtraCheesePrice,
+        inventoryDeduction: extraCheeseInventoryDeduction
+      });
+    }
+    const selectedAddonTotal = normalizedAddOns.reduce((sum, addon) => sum + Number(addon.price || 0), 0);
+    const unitPrice = basePrice + selectedAddonTotal;
     const computedLineTotal = unitPrice * quantity;
-    const rawLineTotal = Number(raw.lineTotal ?? raw.finalLineTotal);
-    const lineTotal = Math.round(Number.isFinite(rawLineTotal) && rawLineTotal > 0 ? rawLineTotal : computedLineTotal);
+    const lineTotal = Math.round(computedLineTotal);
     items.push({
       itemId: menuItem.id,
       name: raw.name || menuItem.name,
@@ -1317,10 +1491,11 @@ async function buildOrder(payload) {
       lineTotal,
       finalLineTotal: lineTotal,
       addons: {
-        selectedAddons,
-        extraCheese: extraCheeseSelected,
-        extraCheesePrice
-      }
+        selectedAddons: normalizedAddOns,
+        extraCheese: requiredExtraCheesePrice > 0,
+        extraCheesePrice: requiredExtraCheesePrice
+      },
+      addOns: normalizedAddOns
     });
   }
 
@@ -1388,9 +1563,79 @@ async function getRawMaterial(id) {
   return memory.rawMaterials.find((item) => item.id === id);
 }
 
+async function getRawMaterials() {
+  if (usingMongo()) return RawMaterial.find({ isDeleted: { $ne: true } }).lean();
+  return memory.rawMaterials.filter((item) => item?.isDeleted !== true);
+}
+
+async function getRawMaterialByNameOrId(value) {
+  const normalized = normalizeInventoryName(value);
+  if (!normalized) return null;
+  const rawMaterials = await getRawMaterials();
+  return rawMaterials.find((item) => {
+    return normalizeInventoryName(item?.id) === normalized || normalizeInventoryName(item?.name) === normalized;
+  }) || null;
+}
+
 async function getRecipeForItem(itemId) {
-  if (usingMongo()) return Recipe.findOne({ itemId }).lean();
-  return memory.recipes.find((item) => item.itemId === itemId);
+  const normalizedItemId = String(itemId || "").trim();
+  const legacyItemId = normalizedItemId.replace(/-+$/, "");
+  const normalizeLegacyPackagedRecipe = (recipe) => {
+    if (normalizedItemId === "redbull-250ml-" && recipe?.itemId === "redbull-250ml") {
+      return {
+        ...recipe,
+        itemId: normalizedItemId,
+        ingredients: [{ rawMaterialId: "redbull-250-ml-can", amount: 1, unit: "pcs", serveType: "" }]
+      };
+    }
+    return recipe;
+  };
+
+  if (usingMongo()) {
+    const exact = await Recipe.findOne({ itemId: normalizedItemId }).lean();
+    if (exact) return exact;
+    if (legacyItemId && legacyItemId !== normalizedItemId) {
+      const legacy = await Recipe.findOne({ itemId: legacyItemId }).lean();
+      if (legacy) return normalizeLegacyPackagedRecipe(legacy);
+    }
+    return null;
+  }
+
+  const exact = memory.recipes.find((item) => item.itemId === normalizedItemId);
+  if (exact) return exact;
+  if (legacyItemId && legacyItemId !== normalizedItemId) {
+    const legacy = memory.recipes.find((item) => item.itemId === legacyItemId);
+    if (legacy) return normalizeLegacyPackagedRecipe(legacy);
+  }
+  return null;
+}
+
+async function resolveExtraCheeseInventoryDeduction(menuItem = {}) {
+  if (isBurgerMenuItem(menuItem)) {
+    const cheeseSlice = await getRawMaterialByNameOrId("Cheese Slice");
+    if (cheeseSlice) {
+      return [{ rawMaterialId: cheeseSlice.id, itemName: "Cheese Slice", quantity: 1, unit: "pcs" }];
+    }
+    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese");
+    if (mozzarella) {
+      return [{ rawMaterialId: mozzarella.id, itemName: "Mozzarella Cheese", quantity: 25, unit: "g" }];
+    }
+    return [{ itemName: "Mozzarella Cheese", quantity: 25, unit: "g" }];
+  }
+
+  if (isPizzaMenuItem(menuItem)) {
+    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese");
+    return [{ rawMaterialId: mozzarella?.id, itemName: "Mozzarella Cheese", quantity: 40, unit: "g" }];
+  }
+
+  return [];
+}
+
+function getOrderItemAddOns(item = {}) {
+  if (Array.isArray(item.addOns)) return item.addOns;
+  if (Array.isArray(item.addons?.selectedAddons)) return item.addons.selectedAddons;
+  if (Array.isArray(item.addons)) return item.addons;
+  return [];
 }
 
 async function adjustRawMaterialStock(rawMaterialId, change, note, orderId) {
@@ -1407,6 +1652,7 @@ async function adjustRawMaterialStock(rawMaterialId, change, note, orderId) {
   if (!material) throw new Error(`Inventory item not found: ${rawMaterialId}`);
   material.stock = Number(material.stock || 0) + Number(change || 0);
   memory.inventoryHistory.push({ rawMaterialId, change, note, orderId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  savePersistedMemory(memory);
   return {
     material,
     isLowStock: isLowStockItem(material)
@@ -1424,28 +1670,48 @@ async function deductInventoryForOrder(order) {
     const recipe = await getRecipeForItem(item.itemId);
     if (!recipe) {
       order.warnings.push(`Recipe missing for ${item.name || item.itemId}. Inventory deduction skipped for this item.`);
-      continue;
-    }
-    if (!recipe.ingredients?.length) {
+    } else if (!recipe.ingredients?.length) {
       order.warnings.push(`Recipe has no ingredients for ${item.name || item.itemId}. Inventory deduction skipped for this item.`);
-      continue;
-    }
-    for (const ingredient of recipe.ingredients) {
-      if (ingredient.serveType && ingredient.serveType !== item.serveType) continue;
-      const material = await getRawMaterial(ingredient.rawMaterialId);
-      if (!material) throw new Error(`Inventory item missing: ${ingredient.rawMaterialId}`);
-      const required = convertQuantity(ingredient.amount, ingredient.unit, material.unit) * item.quantity;
-      if (material.stock < required) {
-        throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
+    } else {
+      for (const ingredient of recipe.ingredients) {
+        if (ingredient.serveType && ingredient.serveType !== item.serveType) continue;
+        const material = await getRawMaterial(ingredient.rawMaterialId);
+        if (!material) throw new Error(`Inventory item missing: ${ingredient.rawMaterialId}`);
+        const required = convertQuantity(ingredient.amount, ingredient.unit, material.unit) * item.quantity;
+        if (material.stock < required) {
+          throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
+        }
+        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber})`, orderId);
+        if (result.isLowStock) {
+          order.lowStockItems.push({
+            name: material.name,
+            stock: result.material.stock,
+            minStock: material.minStock,
+            unit: material.unit
+          });
+        }
       }
-      const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber})`, orderId);
-      if (result.isLowStock) {
-        order.lowStockItems.push({
-          name: material.name,
-          stock: result.material.stock,
-          minStock: material.minStock,
-          unit: material.unit
-        });
+    }
+
+    for (const addon of getOrderItemAddOns(item)) {
+      for (const deduction of addon?.inventoryDeduction || []) {
+        const material = deduction.rawMaterialId
+          ? await getRawMaterial(deduction.rawMaterialId)
+          : await getRawMaterialByNameOrId(deduction.itemName || deduction.name);
+        if (!material) throw new Error(`Inventory item missing: ${deduction.itemName || deduction.rawMaterialId}`);
+        const required = convertQuantity(deduction.quantity, deduction.unit, material.unit) * item.quantity;
+        if (material.stock < required) {
+          throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
+        }
+        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber}) - ${addon.name}`, orderId);
+        if (result.isLowStock) {
+          order.lowStockItems.push({
+            name: material.name,
+            stock: result.material.stock,
+            minStock: material.minStock,
+            unit: material.unit
+          });
+        }
       }
     }
   }

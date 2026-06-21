@@ -80,7 +80,9 @@
           "price": 48
         }
       ],
-      "active": true
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null
     },
     {
       "id": "green-tea",
@@ -634,7 +636,7 @@
       "subCategoryId": "milk-shakes",
       "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
-      "image": "/uploads/7e1a3e07-9f17-404c-b06d-1e5c2eb51133.jpg",
+      "image": "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -693,7 +695,7 @@
       "subCategoryId": "milk-shakes",
       "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
-      "image": "/uploads/df08208f-8b69-4ff4-939e-ba7b0ee22768.jpg",
+      "image": "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -786,7 +788,7 @@
       "subCategoryId": "milk-shakes",
       "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
-      "image": "/uploads/be460614-dd1b-4640-9582-0dc5b5d9b87a.jpg",
+      "image": "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Double Chocolate).jpg",
       "sizes": [
         {
           "id": "regular",
@@ -811,7 +813,7 @@
       "subCategoryId": "milk-shakes",
       "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
-      "image": "/uploads/37fa3608-dac2-4f02-a805-82edfef18be8.webp",
+      "image": "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Coffee).webp",
       "sizes": [
         {
           "id": "regular",
@@ -836,7 +838,7 @@
       "subCategoryId": "",
       "subCategoryName": "",
       "subcategory": "",
-      "image": "/uploads/f32c4f11-bbdb-4836-b265-e4467a64e470.jpg",
+      "image": "/assets/images/Coconut Water/Storia Coconut Water.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -878,7 +880,7 @@
       "subCategoryId": "sandwich",
       "subCategoryName": "Sandwich",
       "subcategory": "Sandwich",
-      "image": "/uploads/dcefaf29-5a83-4d43-b296-6ac086f021c8.jpg",
+      "image": "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1519,31 +1521,6 @@
       "active": true
     },
     {
-      "id": "persistence-test-burger",
-      "name": "Infusion Loaded Stack",
-      "categoryId": "snacks",
-      "description": "Infusion Loaded Stack",
-      "subCategoryId": "burger",
-      "subCategoryName": "Burger",
-      "subcategory": "Burger",
-      "image": "/uploads/50af6a4e-4bc1-46dc-8d9b-864074badb11.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 99,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null
-    },
-    {
       "id": "strawberry-coolberg",
       "name": "Strawberry Coolberg",
       "categoryId": "cold-drinks",
@@ -1551,7 +1528,7 @@
       "subCategoryId": "coolberg",
       "subCategoryName": "Coolberg",
       "subcategory": "Coolberg",
-      "image": "/uploads/25bc3ad5-1d58-4ad8-a53f-ff33c866ceea.png",
+      "image": "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png",
       "sizes": [
         {
           "id": "regular",
@@ -1576,7 +1553,7 @@
       "subCategoryId": "coolberg",
       "subCategoryName": "Coolberg",
       "subcategory": "Coolberg",
-      "image": "/uploads/386e71b3-bb2f-4254-b264-95bdb3faae1d.jpg",
+      "image": "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1601,7 +1578,7 @@
       "subCategoryId": "coolberg",
       "subCategoryName": "Coolberg",
       "subcategory": "Coolberg",
-      "image": "/uploads/18a07f00-9b46-4ec3-8a55-3cd028aa48e1.jpg",
+      "image": "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1626,7 +1603,7 @@
       "subCategoryId": "coolberg",
       "subCategoryName": "Coolberg",
       "subcategory": "Coolberg",
-      "image": "/uploads/a23a3e8b-d30d-479c-ac9f-1ba7619dd7aa.webp",
+      "image": "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp",
       "sizes": [
         {
           "id": "regular",
@@ -1651,7 +1628,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/87751f04-4a34-46aa-98bd-847574fa0146.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1676,7 +1653,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/2d4b271c-b1c5-460d-b032-9f0ccf53f2de.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1701,7 +1678,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/b2083273-7759-4e6a-9588-a51456fdb760.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1726,7 +1703,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/05d16901-6be0-4b25-ae3f-84c2eca6d6f0.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1751,7 +1728,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/127071af-0bf5-4229-b6b9-decafdbdbeeb.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1776,7 +1753,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/19614428-7335-4a3c-937e-60325b5ceebf.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -1801,7 +1778,7 @@
       "subCategoryId": "energy-drinks",
       "subCategoryName": "Energy Drinks",
       "subcategory": "Energy Drinks",
-      "image": "/uploads/644e4d6b-9c31-421f-bf86-779e2970e2cd.jpg",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg",
       "sizes": [
         {
           "id": "regular",
@@ -3499,16 +3476,6 @@
       "active": true
     },
     {
-      "id": "peri-peri-seasoning",
-      "name": "Peri‑peri seasoning",
-      "category": "Spices",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true
-    },
-    {
       "id": "peri-peri-masala",
       "name": "Peri peri masala",
       "category": "Spices",
@@ -3957,6 +3924,36 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true
+    },
+    {
+      "id": "red-velvet-lava-cake",
+      "name": "Red Velvet Lava Cake",
+      "category": "Dessert",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true
+    },
+    {
+      "id": "choco-lava-cake",
+      "name": "Choco Lava Cake",
+      "category": "Dessert",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true
+    },
+    {
+      "id": "chocolate-sauce",
+      "name": "Chocolate Sauce",
+      "category": "Sauces",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true
     }
   ],
   "recipes": [
@@ -3967,17 +3964,14 @@
         {
           "rawMaterialId": "coffee-powder",
           "amount": 15,
-          "unit": "g"
+          "unit": "g",
+          "serveType": ""
         },
         {
           "rawMaterialId": "water",
-          "amount": 100,
-          "unit": "ml"
-        },
-        {
-          "rawMaterialId": "sugar",
-          "amount": 10,
-          "unit": "g"
+          "amount": 150,
+          "unit": "ml",
+          "serveType": ""
         }
       ]
     },
@@ -4203,13 +4197,13 @@
       ]
     },
     {
-      "id": "redbull-250ml",
-      "itemId": "redbull-250ml",
+      "id": "redbull-250ml-",
+      "itemId": "redbull-250ml-",
       "ingredients": [
         {
-          "rawMaterialId": "redbull-250ml",
+          "rawMaterialId": "redbull-250-ml-can",
           "amount": 1,
-          "unit": "ml"
+          "unit": "pcs"
         }
       ]
     },
@@ -4346,6 +4340,100 @@
         {
           "rawMaterialId": "sugar",
           "amount": 7,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "red-velvet-lava-cake",
+      "itemId": "red-velvet-lava-cake",
+      "ingredients": [
+        {
+          "rawMaterialId": "red-velvet-lava-cake",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "chocolate-sauce",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "amount": 40,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "choco-lava-cake",
+      "itemId": "choco-lava-cake",
+      "ingredients": [
+        {
+          "rawMaterialId": "choco-lava-cake",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "chocolate-sauce",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "amount": 30,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "sizzling-brownie-with-ice-cream",
+      "itemId": "sizzling-brownie-with-ice-cream",
+      "ingredients": [
+        {
+          "rawMaterialId": "brownies-pieces-for-shakes",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-sauce",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-chips-chunks",
+          "amount": 8,
+          "unit": "g"
+        }
+      ]
+    },
+    {
+      "id": "hot-brownie",
+      "itemId": "hot-brownie",
+      "ingredients": [
+        {
+          "rawMaterialId": "brownies-pieces-for-shakes",
+          "amount": 90,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-sauce",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chocolate-chips-chunks",
+          "amount": 8,
           "unit": "g"
         }
       ]
