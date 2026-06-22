@@ -98,7 +98,7 @@ export const menuItems = [
   // Pasta
   { id: "blush-bowl-pasta", name: "Blush Bowl Pasta (Pink Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Blush Bowl Pasta (Pink Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true },
   { id: "tomato-basil-pasta", name: "Tomato Basil Pasta (Red Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Tomato Basil Pasta (Red Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true },
-  { id: "herbed-bechamel-pasta", name: "Herbed Bechamel Pasta (White Sauce Pasta)", categoryId: "snacks", description: "", image: "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
+  { id: "herbed-bechamel-pasta", name: "Herbed Béchamel Pasta (White Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true },
 
   // Garlic Bread
   { id: "jalapeno-corn-stuffed-garlic-bread", name: "Jalapeno Corn Stuffed Garlic Bread", categoryId: "snacks", description: "", image: "/assets/images/Snacks/Garlic Bread/Jalapeño Corn Stuffed Garlic Bread.jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }], active: true },

@@ -656,6 +656,137 @@ function shouldSyncSeedMenuImage(currentImage, seedImage) {
   return isProjectManagedMenuImage(image);
 }
 
+const requiredPastaItems = [
+  { id: "blush-bowl-pasta", name: "Blush Bowl Pasta (Pink Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Blush Bowl Pasta (Pink Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 168 }], active: true, isActive: true, isDeleted: false, deletedAt: null },
+  { id: "tomato-basil-pasta", name: "Tomato Basil Pasta (Red Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Tomato Basil Pasta (Red Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 148 }], active: true, isActive: true, isDeleted: false, deletedAt: null },
+  { id: "herbed-bechamel-pasta", name: "Herbed Béchamel Pasta (White Sauce Pasta)", categoryId: "snacks", subcategory: "Pasta", description: "", image: "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg", sizes: [{ id: "one", name: "Regular", label: "Regular", price: 138 }], active: true, isActive: true, isDeleted: false, deletedAt: null }
+];
+
+const managedMenuImagePaths = new Map([
+  ["storia-coconut-water", "/assets/images/Coconut Water/Storia Coconut Water.jpg"],
+  ["strawberry-coolberg", "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png"],
+  ["peach-coolberg", "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg"],
+  ["cranberry-coolberg", "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg"],
+  ["jugaaro-coolberg", "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp"],
+  ["ultra-white-monster", "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg"],
+  ["ultra-original-monster", "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg"],
+  ["ultra-pink-monster", "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg"],
+  ["bad-apple-monster", "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg"],
+  ["rio-punch-monster", "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg"],
+  ["white-pineapple-monster", "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg"],
+  ["redbull-250ml-", "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg"],
+  ["paneer-tikka-melt", "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg"],
+  ["kit-kat-shake", "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg"],
+  ["kunafa-shake", "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg"],
+  ["prab-protein-milk-shake-coffee", "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Coffee).webp"],
+  ["prab-protein-milk-shake-double-chocolate", "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Double Chocolate).jpg"],
+  ["herbed-bechamel-pasta", "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg"],
+  ["infusion-loaded-stack", "/assets/images/Snacks/Burger/Infusion Loaded Stack.jpg"]
+]);
+
+function firstSizePriceFilter(price) {
+  return {
+    $or: [
+      { "sizes.0.price": price },
+      { price }
+    ]
+  };
+}
+
+export async function repairMenuData() {
+  const summary = { duplicatesRemoved: 0, itemsRepaired: 0, itemsCreated: 0 };
+
+  for (const [id, image] of managedMenuImagePaths.entries()) {
+    const result = await MenuItem.updateOne(
+      { id, image: { $ne: image } },
+      { $set: { image } },
+      { runValidators: true }
+    );
+    summary.itemsRepaired += result.modifiedCount || 0;
+  }
+
+  const pastaMetadata = {
+    categoryId: "snacks",
+    subcategory: "Pasta",
+    subCategoryName: "Pasta",
+    subCategoryId: "pasta",
+    active: true,
+    isActive: true,
+    isDeleted: false,
+    deletedAt: null
+  };
+
+  for (const item of requiredPastaItems) {
+    const cleanItem = validateMenuItem(item);
+    const existing = await MenuItem.findOne({ id: cleanItem.id }, { _id: 1 }).lean();
+    if (!existing) {
+      await MenuItem.create(cleanItem);
+      summary.itemsCreated += 1;
+      continue;
+    }
+    const result = await MenuItem.updateOne(
+      { id: cleanItem.id },
+      { $set: { ...pastaMetadata, name: cleanItem.name, image: cleanItem.image } },
+      { runValidators: true }
+    );
+    summary.itemsRepaired += result.modifiedCount || 0;
+  }
+
+  const deletedAt = new Date();
+  const duplicateResult = await MenuItem.updateMany(
+    {
+      $or: [
+        { id: "persistence-test-burger" },
+        { image: /^\/uploads\/50af/i },
+        { name: /^Infusion Loaded Stack$/i, id: { $ne: "infusion-loaded-stack" } },
+        { name: /^Infusion Loaded Stack$/i, id: { $ne: "infusion-loaded-stack" }, ...firstSizePriceFilter(99) }
+      ]
+    },
+    { $set: { active: false, isActive: false, isDeleted: true, deletedAt } },
+    { runValidators: true }
+  );
+  summary.duplicatesRemoved = duplicateResult.modifiedCount || 0;
+
+  const loadedStack = validateMenuItem({
+    id: "infusion-loaded-stack",
+    name: "Infusion Loaded Stack",
+    categoryId: "snacks",
+    subcategory: "Burger",
+    description: "",
+    image: "/assets/images/Snacks/Burger/Infusion Loaded Stack.jpg",
+    sizes: [{ id: "one", name: "Regular", label: "Regular", price: 188 }],
+    active: true,
+    isActive: true,
+    isDeleted: false,
+    deletedAt: null
+  });
+  const existingLoadedStack = await MenuItem.findOne({ id: loadedStack.id }, { _id: 1 }).lean();
+  if (!existingLoadedStack) {
+    await MenuItem.create(loadedStack);
+    summary.itemsCreated += 1;
+  } else {
+    const result = await MenuItem.updateOne(
+      { id: loadedStack.id },
+      {
+        $set: {
+          name: loadedStack.name,
+          categoryId: loadedStack.categoryId,
+          subcategory: loadedStack.subcategory,
+          subCategoryName: loadedStack.subCategoryName,
+          subCategoryId: loadedStack.subCategoryId,
+          image: loadedStack.image,
+          isDeleted: false,
+          deletedAt: null
+        }
+      },
+      { runValidators: true }
+    );
+    summary.itemsRepaired += result.modifiedCount || 0;
+  }
+
+  return summary;
+}
+
 async function syncSeedMenuImages(menuItemsToSeed = []) {
   const seedItemsByIdentity = new Map();
 
@@ -720,6 +851,10 @@ export async function seedDatabase() {
 
   await MenuItem.updateMany({ $or: [{ active: { $exists: false } }, { active: null }] }, { $set: { active: true } });
   await syncSeedMenuImages(menuItemsToSeed);
+  const menuRepairSummary = await repairMenuData();
+  if (menuRepairSummary.duplicatesRemoved || menuRepairSummary.itemsRepaired || menuRepairSummary.itemsCreated) {
+    console.log(`[Menu Repair] ${JSON.stringify(menuRepairSummary)}`);
+  }
 
   if (itemCount === 0) {
     await MenuItem.updateOne(

@@ -1036,8 +1036,9 @@ export const menuItems = [
   },
   {
     "id": "herbed-bechamel-pasta",
-    "name": "Herbed Bechamel Pasta (White Sauce Pasta)",
+    "name": "Herbed Béchamel Pasta (White Sauce Pasta)",
     "categoryId": "snacks",
+    "subcategory": "Pasta",
     "description": "",
     "image": "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg",
     "sizes": [
