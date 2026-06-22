@@ -58,6 +58,7 @@ const menuItemSchema = new mongoose.Schema(
     addons: { type: mongoose.Schema.Types.Mixed, default: [] },
     featured: { type: Boolean, default: false },
     active: { type: Boolean, default: true },
+    isActive: { type: Boolean, default: true },
     isDeleted: { type: Boolean, default: false },
     deletedAt: { type: Date, default: null }
   },
@@ -848,7 +849,10 @@ export const store = {
       const filter = {};
       if (query.categoryId) filter.categoryId = query.categoryId;
       if (query.search) filter.name = { $regex: query.search, $options: "i" };
-      if (!query.includeInactive) filter.active = { $ne: false };
+      if (!query.includeInactive) {
+        filter.active = { $ne: false };
+        filter.isActive = { $ne: false };
+      }
       if (!query.includeDeleted) filter.isDeleted = { $ne: true };
       const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
       const visibleCategoryIds = await Category.find(categoryFilter).distinct("id");
@@ -920,13 +924,13 @@ export const store = {
     if (usingMongo()) {
       return MenuItem.findOneAndUpdate(
         buildMenuItemLookup(id),
-        { $set: { active: nextActive, isDeleted: false, deletedAt: null } },
+        { $set: { active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null } },
         { new: true, runValidators: true }
       ).lean();
     }
     const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
     if (index < 0) return null;
-    memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isDeleted: false, deletedAt: null };
+    memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
     return memory.menuItems[index];
   },
@@ -1398,6 +1402,7 @@ function validateMenuItem(payload) {
   const subCategoryName = String(payload.subCategoryName || payload.subcategoryName || payload.subcategory || payload.subCategory || "").trim();
   const subCategoryId = String(payload.subCategoryId || payload.subcategoryId || subCategoryName).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   const image = String(payload.image || payload.photoUrl || payload.imageUrl || payload.photo || payload.img || "").trim();
+  const isActive = payload.active !== false && payload.isActive !== false;
 
   return {
     id: String(payload.id || payload.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -1412,7 +1417,8 @@ function validateMenuItem(payload) {
     serveOptions,
     addons,
     featured: Boolean(payload.featured),
-    active: payload.active !== false,
+    active: isActive,
+    isActive,
     isDeleted: payload.isDeleted === true,
     deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
   };

@@ -633,7 +633,16 @@ app.post(["/api/menu", "/api/menu-items"], requireAdmin, async (req, res, next) 
   }
 });
 
-app.patch(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, res, next) => {
+const menuItemUpdateRoutes = ["/api/menu/:id", "/api/menu-items/:id"];
+const menuItemActiveRoutes = ["/api/menu/:id/active", "/api/menu-items/:id/active"];
+
+function readActiveToggle(body = {}) {
+  if (Object.prototype.hasOwnProperty.call(body, "active")) return body.active !== false;
+  if (Object.prototype.hasOwnProperty.call(body, "isActive")) return body.isActive !== false;
+  return true;
+}
+
+async function updateMenuItemRoute(req, res, next) {
   try {
     const item = await store.updateMenuItem(req.params.id, req.body || {});
     if (!item) return res.status(404).json({ message: "Menu item not found." });
@@ -641,17 +650,22 @@ app.patch(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, re
   } catch (error) {
     next(error);
   }
-});
+}
 
-app.patch(["/api/menu/:id/active", "/api/menu-items/:id/active"], requireAdmin, async (req, res, next) => {
+async function setMenuItemActiveRoute(req, res, next) {
   try {
-    const item = await store.setMenuItemActive(req.params.id, req.body?.active !== false);
+    const item = await store.setMenuItemActive(req.params.id, readActiveToggle(req.body || {}));
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
     next(error);
   }
-});
+}
+
+app.patch(menuItemUpdateRoutes, requireAdmin, updateMenuItemRoute);
+app.put(menuItemUpdateRoutes, requireAdmin, updateMenuItemRoute);
+app.patch(menuItemActiveRoutes, requireAdmin, setMenuItemActiveRoute);
+app.put(menuItemActiveRoutes, requireAdmin, setMenuItemActiveRoute);
 
 app.patch(["/api/menu/:id/restore", "/api/menu-items/:id/restore"], requireAdmin, async (req, res, next) => {
   try {
@@ -675,6 +689,14 @@ app.delete(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, r
   } catch (error) {
     next(error);
   }
+});
+
+app.use((req, _res, next) => {
+  const isMenuMutation = ["PATCH", "PUT"].includes(req.method) && /^\/api\/menu(?:-items)?\//.test(req.path);
+  if (process.env.NODE_ENV !== "production" && isMenuMutation) {
+    console.warn(`[dev] Unmatched menu mutation route: ${req.method} ${req.originalUrl}`);
+  }
+  next();
 });
 
 app.post("/api/uploads", requireAdmin, (req, res, next) => {
