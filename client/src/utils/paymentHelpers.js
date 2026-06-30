@@ -44,17 +44,10 @@ function formatUpiAmount(amount) {
   if (!Number.isFinite(numericAmount)) {
     throw new Error("Payment amount is invalid. Please refresh and try again.");
   }
-  return Number.isInteger(numericAmount) ? String(numericAmount) : numericAmount.toFixed(2);
+  return numericAmount.toFixed(2);
 }
 
-function buildSafePaymentNote(orderId) {
-  const shortOrderId = String(orderId || "")
-    .replace(/[^a-z0-9]/gi, "")
-    .slice(0, 16);
-  return `InfusionSaga Order ${shortOrderId}`.trim();
-}
-
-export function buildUpiString({ upiId, payeeName, amount, orderId }) {
+export function buildUpiString({ upiId, payeeName, amount }) {
   const trustedUpiId = String(upiId || "").trim();
   const trustedPayeeName = String(payeeName || "").trim();
   const amountStr = formatUpiAmount(amount);
@@ -62,8 +55,7 @@ export function buildUpiString({ upiId, payeeName, amount, orderId }) {
     pa: trustedUpiId,
     pn: trustedPayeeName,
     am: amountStr,
-    cu: "INR",
-    tn: buildSafePaymentNote(orderId)
+    cu: "INR"
   };
 
   return `upi://pay?${Object.entries(params)

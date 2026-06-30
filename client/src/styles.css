@@ -639,6 +639,22 @@ textarea {
   font-weight: 600;
 }
 
+.upi-copy-btn {
+  margin-top: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f172a;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.upi-copy-btn:hover {
+  background: #f8fafc;
+}
+
 .upi-actions {
   display: flex;
   justify-content: center;
@@ -695,6 +711,94 @@ textarea {
 .upi-order-summary-header {
   font-weight: 700;
   color: #0f172a;
+}
+
+.upi-test-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 18px;
+  color: #0f172a;
+}
+
+.upi-test-card {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  padding: 18px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.upi-test-card h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.upi-test-meta {
+  margin-top: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.upi-test-meta p {
+  margin: 4px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.upi-test-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.upi-test-item {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.upi-test-open-btn,
+.upi-test-copy-btn {
+  width: 100%;
+  border-radius: 999px;
+  padding: 12px 14px;
+  font-weight: 900;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.upi-test-open-btn {
+  border: 0;
+  background: #059669;
+  color: #fff;
+}
+
+.upi-test-copy-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #0f172a;
+}
+
+.upi-test-item code {
+  display: block;
+  border-radius: 10px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-all;
 }
 
 @media (max-width: 767px) {

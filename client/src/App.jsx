@@ -40,6 +40,7 @@ import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import AboutCafe from "./pages/AboutCafe";
+import CustomerUpiTest from "./pages/CustomerUpiTest";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
@@ -755,6 +756,7 @@ function App() {
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
   if (normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
+  if (normalizedRoute === "/customer-upi-test") return <CustomerUpiTest />;
   if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/biller/forgot-password") return <BillerApp navigate={navigate} />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
@@ -1903,6 +1905,7 @@ function RecentlyDeletedPanel({ categories, deletedCategories, deletedItems, del
 function PaymentModal({ data, onClose, onIHavePaid }) {
   const [submitting, setSubmitting] = useState(false);
   const [dynamicQrSrc, setDynamicQrSrc] = useState(null);
+  const [upiCopied, setUpiCopied] = useState(false);
   const safeItems = Array.isArray(data?.items) ? data.items : [];
 
   if (!data || typeof data !== "object") {
@@ -1929,10 +1932,9 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
     upiLink = buildUpiString({
       upiId: PAYMENT_CONFIG.UPI_ID,
       payeeName: PAYMENT_CONFIG.PAYEE_NAME,
-      amount: data.total,
-      orderId: data.orderId || ""
+      amount: data.total
     });
-    if (import.meta.env.DEV) console.log("UPI payment link", upiLink);
+    if (import.meta.env.DEV) console.log("Generated minimal UPI URL:", upiLink);
   } catch (error) {
     paymentError = error.message || "Payment amount is invalid. Please refresh and try again.";
   }
@@ -1966,6 +1968,28 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
     } catch (e) {
       try { window.location.href = upiLink; } catch (e2) { window.open(upiLink, "_self"); }
       console.warn("UPI intent failed", e);
+    }
+  }
+
+  async function copyUpiId() {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(PAYMENT_CONFIG.UPI_ID);
+      } else {
+        const input = document.createElement("textarea");
+        input.value = PAYMENT_CONFIG.UPI_ID;
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        document.body.removeChild(input);
+      }
+      setUpiCopied(true);
+      window.setTimeout(() => setUpiCopied(false), 1600);
+    } catch (error) {
+      console.warn("Failed to copy UPI ID", error);
     }
   }
 
@@ -2029,6 +2053,9 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
               )}
             </div>
             <p className="upi-id">{PAYMENT_CONFIG.UPI_ID}</p>
+            <button type="button" onClick={copyUpiId} className="upi-copy-btn">
+              {upiCopied ? "Copied" : "Copy UPI ID"}
+            </button>
           </div>
 
           {/* Action Buttons */}
