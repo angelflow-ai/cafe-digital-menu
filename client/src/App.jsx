@@ -27,7 +27,6 @@ import "./styles.css";
 import QRCode from "qrcode";
 import PrintableReceipt, { normalizeReceiptOrder } from "./PrintableReceipt";
 import logoUrl from "./assets/infusion-saga-logo.png";
-import paymentQrUrl from "./assets/infusion-qr.jpeg";
 import ordersStore from "./ordersStore";
 import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
@@ -53,6 +52,7 @@ import paymentService from "./services/paymentService";
 import authService from "./services/authService";
 import menuService from "./services/menuService";
 import inventoryService from "./services/inventoryService";
+import { PAYMENT_CONFIG } from "./config/paymentConfig";
 
 // Subcategory config persistence helpers
 const SUBCATEGORY_CONFIG_KEY = "subCategories";
@@ -548,12 +548,6 @@ function slugifyValue(value) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
 }
-
-const TEST_UPI_CONFIG = {
-  upiId: import.meta.env.VITE_TEST_UPI_ID || "gpay-11244829036@okbizaxis",
-  payeeName: import.meta.env.VITE_TEST_UPI_PAYEE_NAME || "THE INFUSION SAGA",
-  staticQrImage: import.meta.env.VITE_PAYMENT_QR || paymentQrUrl
-};
 
 function isPendingVerificationOrder(order) {
   return getBillerOrderClassification(order).isPendingVerification;
@@ -1933,8 +1927,8 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
   let paymentError = "";
   try {
     upiLink = buildUpiString({
-      upiId: TEST_UPI_CONFIG.upiId,
-      payeeName: TEST_UPI_CONFIG.payeeName,
+      upiId: PAYMENT_CONFIG.UPI_ID,
+      payeeName: PAYMENT_CONFIG.PAYEE_NAME,
       amount: data.total,
       orderId: data.orderId || ""
     });
@@ -2030,18 +2024,11 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
                   className="upi-qr-image"
                   onError={() => console.error("Dynamic QR image failed to render")}
                 />
-              ) : TEST_UPI_CONFIG.staticQrImage ? (
-                <img
-                  src={TEST_UPI_CONFIG.staticQrImage}
-                  alt="UPI QR (Static)"
-                  className="upi-qr-image"
-                  onError={() => console.error("Static QR image failed to load:", TEST_UPI_CONFIG.staticQrImage)}
-                />
               ) : (
                 <p style={{ color: "#475569", fontSize: "12px" }}>QR unavailable. Use Pay with UPI App instead.</p>
               )}
             </div>
-            <p className="upi-id">{TEST_UPI_CONFIG.upiId}</p>
+            <p className="upi-id">{PAYMENT_CONFIG.UPI_ID}</p>
           </div>
 
           {/* Action Buttons */}
