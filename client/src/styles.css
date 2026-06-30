@@ -767,6 +767,13 @@ textarea {
   padding: 12px;
 }
 
+.upi-test-item h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 900;
+  color: #0f172a;
+}
+
 .upi-test-open-btn,
 .upi-test-copy-btn {
   width: 100%;
@@ -789,16 +796,22 @@ textarea {
   color: #0f172a;
 }
 
-.upi-test-item code {
-  display: block;
+.upi-test-url-box {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 10px;
   background: #0f172a;
+}
+
+.upi-test-url-box code {
+  display: block;
+  min-width: max-content;
   color: #e2e8f0;
   padding: 10px;
   font-size: 12px;
   line-height: 1.45;
-  white-space: normal;
-  word-break: break-all;
+  white-space: nowrap;
 }
 
 @media (max-width: 767px) {

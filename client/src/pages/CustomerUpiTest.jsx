@@ -61,6 +61,7 @@ export default function CustomerUpiTest() {
         <div className="upi-test-list">
           {TEST_LINKS.map((item) => (
             <article key={item.label} className="upi-test-item">
+              <h2>{item.label}</h2>
               <button
                 type="button"
                 className="upi-test-open-btn"
@@ -70,7 +71,9 @@ export default function CustomerUpiTest() {
               >
                 {item.label}
               </button>
-              <code>{item.url}</code>
+              <div className="upi-test-url-box" tabIndex={0} aria-label={`${item.label} full UPI URL`}>
+                <code>{item.url}</code>
+              </div>
               <button
                 type="button"
                 className="upi-test-copy-btn"
@@ -82,6 +85,7 @@ export default function CustomerUpiTest() {
           ))}
 
           <article className="upi-test-item">
+            <h2>Copy UPI ID</h2>
             <button
               type="button"
               className="upi-test-open-btn"
@@ -89,7 +93,9 @@ export default function CustomerUpiTest() {
             >
               {copiedKey === "upi-id" ? "Copied UPI ID" : "Copy UPI ID"}
             </button>
-            <code>{UPI_ID}</code>
+            <div className="upi-test-url-box" tabIndex={0} aria-label="Full UPI ID">
+              <code>{UPI_ID}</code>
+            </div>
           </article>
         </div>
       </section>
