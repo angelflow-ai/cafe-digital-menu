@@ -1929,12 +1929,19 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
     );
   }
 
-  const upiLink = buildUpiString({
-    upiId: TEST_UPI_CONFIG.upiId,
-    payeeName: TEST_UPI_CONFIG.payeeName,
-    amount: data.total,
-    orderId: data.orderId || ""
-  });
+  let upiLink = "";
+  let paymentError = "";
+  try {
+    upiLink = buildUpiString({
+      upiId: TEST_UPI_CONFIG.upiId,
+      payeeName: TEST_UPI_CONFIG.payeeName,
+      amount: data.total,
+      orderId: data.orderId || ""
+    });
+    if (import.meta.env.DEV) console.log("UPI payment link", upiLink);
+  } catch (error) {
+    paymentError = error.message || "Payment amount is invalid. Please refresh and try again.";
+  }
 
   // Generate dynamic QR on mount/update
   useEffect(() => {
@@ -1952,6 +1959,10 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
   }, [upiLink]);
 
   function openUpiApp() {
+    if (paymentError) {
+      alert(paymentError);
+      return;
+    }
     if (!upiLink) {
       alert("UPI link is not ready. Please check UPI ID configuration.");
       return;
@@ -1962,6 +1973,24 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
       try { window.location.href = upiLink; } catch (e2) { window.open(upiLink, "_self"); }
       console.warn("UPI intent failed", e);
     }
+  }
+
+  if (paymentError) {
+    return (
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm">
+        <div className="relative z-10 mx-auto flex w-full max-w-4xl flex-col items-center gap-6 p-4 pt-6 pb-12 sm:pt-10 sm:pb-10">
+          <div className="upi-modal-container">
+            <div className="upi-modal-header">
+              <h2>Payment unavailable</h2>
+              <p>{paymentError}</p>
+            </div>
+            <div className="upi-actions">
+              <button onClick={onClose} className="upi-close-btn">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   async function clickPaid() {
