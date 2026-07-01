@@ -40,7 +40,6 @@ import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import AboutCafe from "./pages/AboutCafe";
-import CustomerUpiTest from "./pages/CustomerUpiTest";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
@@ -756,7 +755,6 @@ function App() {
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
   if (normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
-  if (normalizedRoute === "/customer-upi-test") return <CustomerUpiTest />;
   if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/biller/forgot-password") return <BillerApp navigate={navigate} />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
@@ -1954,23 +1952,6 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
     generateDynamicQr();
   }, [upiLink]);
 
-  function openUpiApp() {
-    if (paymentError) {
-      alert(paymentError);
-      return;
-    }
-    if (!upiLink) {
-      alert("UPI link is not ready. Please check UPI ID configuration.");
-      return;
-    }
-    try {
-      window.location.href = upiLink;
-    } catch (e) {
-      try { window.location.href = upiLink; } catch (e2) { window.open(upiLink, "_self"); }
-      console.warn("UPI intent failed", e);
-    }
-  }
-
   async function copyUpiId() {
     try {
       if (navigator.clipboard?.writeText) {
@@ -2032,14 +2013,9 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
             <div className="upi-amount">{rupees(data.total)}</div>
           </div>
 
-          {/* Pay with UPI App Button */}
-          <button onClick={openUpiApp} className="upi-primary-btn">
-            Pay with UPI App
-          </button>
-
           {/* QR Code Card */}
           <div className="upi-qr-card">
-            <p>Scan this QR or tap Pay with UPI App.</p>
+            <p>Scan this QR using any UPI app, or copy the UPI ID to pay manually.</p>
             <div className="qr-center">
               {dynamicQrSrc ? (
                 <img
@@ -2049,7 +2025,7 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
                   onError={() => console.error("Dynamic QR image failed to render")}
                 />
               ) : (
-                <p style={{ color: "#475569", fontSize: "12px" }}>QR unavailable. Use Pay with UPI App instead.</p>
+                <p style={{ color: "#475569", fontSize: "12px" }}>QR unavailable. Copy the UPI ID to pay manually.</p>
               )}
             </div>
             <p className="upi-id">{PAYMENT_CONFIG.UPI_ID}</p>
