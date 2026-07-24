@@ -859,10 +859,18 @@ function CustomerApp({ navigate, counterMode = false }) {
               if (import.meta.env.DEV) {
                 console.log("[CustomerApp] Synced outlet context from URL:", urlSlug, targetOutlet._id || targetOutlet.id);
               }
+            } else {
+              setAppError(`Outlet "${urlSlug}" not found.`);
+              setLoading(false);
             }
+          } else {
+            setAppError("Failed to load outlets list.");
+            setLoading(false);
           }
         } catch (error) {
           console.error("Failed to sync outlet context from URL:", error);
+          setAppError("Outlet service is currently unavailable. Please try again later.");
+          setLoading(false);
         }
       })();
     }
@@ -3073,7 +3081,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
             ) : (
               <div className="rounded-3xl border border-stone-200 bg-stone-50/80 p-3 text-center">
                 <p className="text-xs font-semibold text-stone-500">
-                  Selected Table: <span className="font-black text-stone-950">{tableNumber}</span> (detected from URL)
+                  Selected Table: <span className="font-black text-stone-950">{tableNumber}</span>
                 </p>
               </div>
             )}

@@ -1269,10 +1269,13 @@ export const store = {
     const cleanId = String(id || "").trim();
     if (!cleanId) return null;
     if (usingMongo()) {
-      if (!mongoose.Types.ObjectId.isValid(cleanId)) return null;
-      return Outlet.findById(cleanId).lean();
+      if (mongoose.Types.ObjectId.isValid(cleanId)) {
+        const outlet = await Outlet.findById(cleanId).lean();
+        if (outlet) return outlet;
+      }
+      return Outlet.findOne({ $or: [{ id: cleanId }, { slug: cleanId }] }).lean();
     }
-    return (memory.outlets || []).find((outlet) => String(outlet._id || outlet.id || "") === cleanId) || null;
+    return (memory.outlets || []).find((outlet) => String(outlet._id || outlet.id || "") === cleanId || outlet.slug === cleanId) || null;
   },
   async createOutlet(payload) {
     const clean = normalizeOutletPayload(payload);
