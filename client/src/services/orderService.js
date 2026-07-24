@@ -1,4 +1,4 @@
-import { api, API } from "./apiClient";
+import { api, API, withOutletParams } from "./apiClient";
 
 export async function createOrder(payload) {
   return api("/orders", { method: "POST", body: JSON.stringify(payload) });
@@ -34,8 +34,9 @@ export async function listOrderHistory(query = "") {
   return api(`/orders/history${queryString ? `?${queryString}` : ""}`);
 }
 
-export async function listCocRequests() {
-  return api(`/coc-requests`);
+export async function listCocRequests(query = "") {
+  const qs = query ? `?${query}` : "";
+  return api(`/coc-requests${qs}`);
 }
 
 export async function patchCocRequest(id, payload = {}) {
@@ -43,7 +44,7 @@ export async function patchCocRequest(id, payload = {}) {
 }
 
 export function ordersStreamUrl() {
-  return `${API}/orders/stream`;
+  return `${API}${withOutletParams("/orders/stream")}`;
 }
 
 export default {

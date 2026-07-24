@@ -19,11 +19,11 @@ function notify() {
   });
 }
 
-export async function loadInventory() {
+export async function loadInventory(query = "") {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
   try {
-    const res = await api("/inventory");
+    const res = await api(`/inventory${query ? `?${query}` : ""}`);
     inventory = res || [];
     notify();
     try { sync.saveInventory(inventory); } catch (e) {}
@@ -40,6 +40,10 @@ export async function loadInventory() {
       console.warn("inventoryStore: inventory access is unauthorized", err.message || err);
     } else {
       console.error("inventoryStore: failed to load inventory", err);
+      try {
+        inventory = sync.getInventoryFromStorage() || [];
+        notify();
+      } catch (e) {}
     }
     return inventory;
   }

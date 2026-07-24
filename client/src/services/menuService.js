@@ -61,12 +61,14 @@ export async function permanentlyDeleteCategory(id) {
   return api(`/categories/${id}?permanent=true`, { method: "DELETE" });
 }
 
-export async function getRecipes() {
-  return api(`/recipes`);
+export async function getRecipes(query = "") {
+  const qs = query ? `?${query}` : "";
+  return api(`/recipes${qs}`);
 }
 
-export async function getReports() {
-  return api(`/reports`);
+export async function getReports(query = "") {
+  const qs = query ? `?${query}` : "";
+  return api(`/reports${qs}`);
 }
 
 export async function createRecipe(payload) {

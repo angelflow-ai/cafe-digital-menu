@@ -10,13 +10,15 @@ import { fileURLToPath } from "node:url";
 import Twilio from "twilio";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
-import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store } from "./db.js";
+import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store, usingMongo, getCurrentOutletId } from "./db.js";
 import { defaultRecipes } from "./seed.js";
+import outletService from "./services/outletService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 app.set("trust proxy", 1);
+
 const uploadsDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
 const allowedUploadMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]);
@@ -38,7 +40,8 @@ const upload = multer({
     callback(null, true);
   }
 });
-const port = Number(process.env.PORT || 5000);
+
+const port = Number(process.env.PORT || 4000);
 const clientDist = path.join(__dirname, "../../client/dist");
 
 const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN ? Twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN) : null;
@@ -118,12 +121,15 @@ async function findPublicOrder(identifier) {
   return null;
 }
 
-function sendSseEvent(name, data) {
+function sendSseEvent(name, data, targetOutletId = null) {
   const payload = typeof data === "string" ? data : JSON.stringify(data);
-  for (const res of sseClients) {
+  for (const client of sseClients) {
+    if (targetOutletId && client.outletId && String(client.outletId) !== String(targetOutletId)) {
+      continue;
+    }
     try {
-      res.write(`event: ${name}\n`);
-      res.write(`data: ${payload}\n\n`);
+      client.res.write(`event: ${name}\n`);
+      client.res.write(`data: ${payload}\n\n`);
     } catch (err) {
       // ignore
     }
@@ -155,8 +161,38 @@ app.use(
     credentials: true
   })
 );
+
 app.use(express.json({ limit: "2mb" }));
 app.use("/uploads", express.static(uploadsDir));
+
+const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 465),
+      secure: process.env.SMTP_SECURE === "true",
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    })
+  : null;
+
+const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "theinfusionsaga@theinfusionsaga.com";
+const passwordResetOtps = new Map();
+
+async function findUserByEmail(email) {
+  return findStaffAccountByEmail(email);
+}
+
+async function sendEmail({ to, subject, text, html }) {
+  if (!emailTransporter) {
+    throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, and EMAIL_FROM before sending auth emails.");
+  }
+
+  await emailTransporter.sendMail({ from: emailFrom, to, subject, text, html });
+  return { sent: true };
+}
+
 app.use(
   session({
     name: "infusion.sid",
@@ -245,35 +281,6 @@ async function getAuthenticatedUser(req) {
   return tokenUser;
 }
 
-
-const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
-  ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    })
-  : null;
-
-const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "theinfusionsaga@theinfusionsaga.com";
-const passwordResetOtps = new Map();
-
-async function findUserByEmail(email) {
-  return findStaffAccountByEmail(email);
-}
-
-async function sendEmail({ to, subject, text, html }) {
-  if (!emailTransporter) {
-    throw new Error("SMTP is not configured. Set SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, and EMAIL_FROM before sending auth emails.");
-  }
-
-  await emailTransporter.sendMail({ from: emailFrom, to, subject, text, html });
-  return { sent: true };
-}
-
 async function requireAdmin(req, res, next) {
   try {
     const user = await getAuthenticatedUser(req);
@@ -357,7 +364,7 @@ function isAllowedEmailForRole(email, role) {
   return allowed.length === 0 || allowed.includes(normalizeEmail(email));
 }
 
-app.get("/api/health", (_req, res) => res.json({ ok: true }));
+app.get("/api/health", (_req, res) => res.json({ ok: true, usingMongo: usingMongo(), mongoError: globalThis.mongoConnectionError || null }));
 
 function createLoginResponse(user, req, res) {
   if (!user) {
@@ -707,6 +714,62 @@ app.post("/api/uploads", requireAdmin, (req, res, next) => {
   });
 });
 
+app.get("/api/outlets", async (req, res, next) => {
+  try {
+    res.json(await outletService.getAllOutlets({ includeInactive: req.query.includeInactive === "true" }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/outlets/slug/:slug", async (req, res, next) => {
+  try {
+    const outlet = await outletService.getOutletBySlug(req.params.slug);
+    if (!outlet) return res.status(404).json({ message: "Outlet not found." });
+    return res.json(outlet);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/outlets/:id", async (req, res, next) => {
+  try {
+    const outlet = await outletService.getOutletById(req.params.id);
+    if (!outlet) return res.status(404).json({ message: "Outlet not found." });
+    return res.json(outlet);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/outlets", requireAdmin, async (req, res, next) => {
+  try {
+    res.status(201).json(await outletService.createOutlet(req.body));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.patch("/api/outlets/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const outlet = await outletService.updateOutlet(req.params.id, req.body);
+    if (!outlet) return res.status(404).json({ message: "Outlet not found." });
+    return res.json(outlet);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/outlets/:id", requireAdmin, async (req, res, next) => {
+  try {
+    const result = await outletService.deleteOutlet(req.params.id);
+    if (!result || result.deletedCount === 0) return res.status(404).json({ message: "Outlet not found." });
+    return res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.get("/api/orders", requireStaff, async (req, res, next) => {
   try {
     const requestedLimit = Number(req.query.limit || 100);
@@ -715,7 +778,7 @@ app.get("/api/orders", requireStaff, async (req, res, next) => {
       ? req.query.status.split(",").map((value) => String(value).trim()).filter(Boolean)
       : [];
 
-    res.json(await store.orders({ limit: safeLimit, status: statuses.join(",") }));
+    res.json(await store.orders({ ...req.query, limit: safeLimit, status: statuses.join(",") }));
   } catch (error) {
     next(error);
   }
@@ -728,7 +791,7 @@ app.post("/api/orders", async (req, res, next) => {
     res.status(201).json(order);
     scheduleOrderReadySms(order);
     try {
-      sendSseEvent("order:created", { id: order._id || order.id, orderId: order.orderId, createdAt: order.createdAt || new Date().toISOString() });
+      sendSseEvent("order:created", { id: order._id || order.id, orderId: order.orderId, createdAt: order.createdAt || new Date().toISOString() }, order.outletId);
     } catch (e) {
       // ignore
     }
@@ -756,28 +819,36 @@ app.post("/api/orders/public/:id/retry", async (req, res, next) => {
     const updated = await store.updateOrder(order._id || order.id, { paymentStatus: "pending_verification", status: "pending" });
     cacheOrder(updated);
     res.json(updated);
-    try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }); } catch (e) {}
+    try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }, updated.outletId); } catch (e) {}
   } catch (error) {
     next(error);
   }
 });
 
-// Server-Sent Events endpoint for orders
-app.get("/api/orders/stream", (req, res) => {
+// Server-Sent Events endpoint for orders (scoped by outletId)
+app.get("/api/orders/stream", async (req, res) => {
   res.setHeader("Content-Type", "text/event-stream;charset=utf-8");
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
   // Allow event stream for cross-origin when CORS is configured
   res.flushHeaders?.();
 
-  sseClients.add(res);
+  let outletId = null;
+  try {
+    outletId = await getCurrentOutletId(req.query);
+  } catch (err) {
+    console.error("Failed to resolve outletId for SSE stream:", err);
+  }
+
+  const clientInfo = { res, outletId };
+  sseClients.add(clientInfo);
 
   // send initial ping
   res.write(`event: hello\n`);
   res.write(`data: ${JSON.stringify({ time: new Date().toISOString() })}\n\n`);
 
   req.on("close", () => {
-    sseClients.delete(res);
+    sseClients.delete(clientInfo);
   });
 });
 
@@ -810,7 +881,7 @@ app.patch("/api/orders/:id/status", requireStaff, async (req, res, next) => {
     cacheOrder(updated);
     res.json(updated);
     try {
-      sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus });
+      sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus }, updated.outletId);
     } catch (e) {
       // ignore
     }
@@ -834,16 +905,16 @@ app.post("/api/coc-requests", async (req, res, next) => {
     const request = await store.createCocRequest(req.body);
     res.status(201).json(request);
     try {
-      sendSseEvent("coc:created", { id: request.id, createdAt: request.createdAt });
+      sendSseEvent("coc:created", { id: request.id, createdAt: request.createdAt }, request.outletId);
     } catch (e) {}
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/coc-requests", requireStaff, async (_req, res, next) => {
+app.get("/api/coc-requests", requireStaff, async (req, res, next) => {
   try {
-    res.json(await store.cocRequests());
+    res.json(await store.cocRequests(req.query));
   } catch (error) {
     next(error);
   }
@@ -858,7 +929,7 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
     res.json(order);
     scheduleOrderReadySms(order);
     try {
-      sendSseEvent("order:updated", { id: order._id || order.id, orderId: order.orderId, status: order.status, paymentStatus: order.paymentStatus });
+      sendSseEvent("order:updated", { id: order._id || order.id, orderId: order.orderId, status: order.status, paymentStatus: order.paymentStatus }, order.outletId);
     } catch (e) {}
   } catch (error) {
     next(error);
@@ -867,7 +938,7 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
 
 app.get("/api/inventory", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.rawMaterials({ includeDeleted: req.query.includeDeleted === "true" }));
+    res.json(await store.rawMaterials({ ...req.query, includeDeleted: req.query.includeDeleted === "true" }));
   } catch (error) {
     next(error);
   }
@@ -875,7 +946,7 @@ app.get("/api/inventory", requireAdmin, async (req, res, next) => {
 
 app.post("/api/inventory", requireAdmin, async (req, res, next) => {
   try {
-    const payload = normalizeInventoryUnitPayload(req.body);
+    const payload = { ...normalizeInventoryUnitPayload(req.body), ...req.query };
     res.json(await store.upsertRawMaterial(payload));
   } catch (error) {
     next(error);
@@ -884,7 +955,7 @@ app.post("/api/inventory", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/inventory/:id", requireAdmin, async (req, res, next) => {
   try {
-    const payload = { ...normalizeInventoryUnitPayload(req.body), id: req.params.id };
+    const payload = { ...normalizeInventoryUnitPayload(req.body), ...req.query, id: req.params.id };
     const item = await store.upsertRawMaterial(payload);
     if (!item) return res.status(404).json({ message: "Inventory item not found." });
     return res.json(item);
@@ -895,7 +966,7 @@ app.patch("/api/inventory/:id", requireAdmin, async (req, res, next) => {
 
 app.delete("/api/inventory/:id", requireAdmin, async (req, res, next) => {
   try {
-    const item = await store.deleteRawMaterial(req.params.id);
+    const item = await store.deleteRawMaterial(req.params.id, req.query);
     if (!item) return res.status(404).json({ message: "Inventory item not found." });
     return res.json(item);
   } catch (error) {
@@ -905,7 +976,7 @@ app.delete("/api/inventory/:id", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/inventory/:id/restore", requireAdmin, async (req, res, next) => {
   try {
-    const item = await store.restoreRawMaterial(req.params.id);
+    const item = await store.restoreRawMaterial(req.params.id, req.query);
     if (!item) return res.status(404).json({ message: "Inventory item not found." });
     return res.json(item);
   } catch (error) {
@@ -915,15 +986,22 @@ app.patch("/api/inventory/:id/restore", requireAdmin, async (req, res, next) => 
 
 app.post("/api/inventory/:id/purchase", requireAdmin, async (req, res, next) => {
   try {
-    const { quantity, unit, note } = req.body;
-    const material = await store.rawMaterial(req.params.id);
+    const { quantity, unit, note, purchasePrice } = req.body;
+    const material = await store.rawMaterial(req.params.id, req.query);
     if (!material) return res.status(404).json({ message: "Inventory item not found." });
     const amount = Number(quantity || 0);
     if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: "Invalid purchase quantity." });
     const actualUnit = String(unit || material.unit).trim().toLowerCase();
-    const result = await store.adjustRawMaterialStock(req.params.id, amount, note || "Stock purchase", req.params.id);
+    const result = await store.adjustRawMaterialStock(
+      req.params.id,
+      amount,
+      note || "Stock purchase",
+      req.params.id,
+      req.query,
+      purchasePrice ? Number(purchasePrice) : null
+    );
     res.json({
-      material: result.material || (await store.rawMaterial(req.params.id)),
+      material: result.material || (await store.rawMaterial(req.params.id, req.query)),
       isLowStock: result.isLowStock || false
     });
   } catch (error) {
@@ -931,9 +1009,9 @@ app.post("/api/inventory/:id/purchase", requireAdmin, async (req, res, next) => 
   }
 });
 
-app.get("/api/recipes", requireAdmin, async (_req, res, next) => {
+app.get("/api/recipes", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.recipes());
+    res.json(await store.recipes(req.query));
   } catch (error) {
     next(error);
   }
@@ -941,7 +1019,7 @@ app.get("/api/recipes", requireAdmin, async (_req, res, next) => {
 
 app.post("/api/recipes", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.upsertRecipe(req.body));
+    res.json(await store.upsertRecipe({ ...req.body, ...req.query }));
   } catch (error) {
     next(error);
   }
@@ -949,7 +1027,7 @@ app.post("/api/recipes", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   try {
-    const payload = { ...req.body, id: req.params.id };
+    const payload = { ...req.body, ...req.query, id: req.params.id };
     const item = await store.upsertRecipe(payload);
     if (!item) return res.status(404).json({ message: "Recipe not found." });
     return res.json(item);
@@ -960,7 +1038,7 @@ app.patch("/api/recipes/:id", requireAdmin, async (req, res, next) => {
 
 app.delete("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   try {
-    const result = await store.deleteRecipe(req.params.id);
+    const result = await store.deleteRecipe(req.params.id, req.query);
     if (!result || result.deletedCount === 0) return res.status(404).json({ message: "Recipe not found." });
     return res.json(result);
   } catch (error) {
@@ -968,17 +1046,17 @@ app.delete("/api/recipes/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
-app.post("/api/recipes/sync-defaults", requireAdmin, async (_req, res, next) => {
+app.post("/api/recipes/sync-defaults", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.syncDefaultRecipes(defaultRecipes));
+    res.json(await store.syncDefaultRecipes(defaultRecipes, { ...req.body, ...req.query }));
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/reports", requireAdmin, async (_req, res, next) => {
+app.get("/api/reports", requireAdmin, async (req, res, next) => {
   try {
-    const [orders, rawMaterials] = await Promise.all([store.orders(), store.rawMaterials()]);
+    const [orders, rawMaterials] = await Promise.all([store.orders(req.query), store.rawMaterials(req.query)]);
     const completedOrders = orders.filter((order) => isCompletedSale(order));
     const totalSales = completedOrders.reduce((sum, order) => sum + Number(order.total || 0), 0);
     const totalOrders = completedOrders.length;
@@ -1003,7 +1081,7 @@ app.get("/api/reports", requireAdmin, async (_req, res, next) => {
 app.get("/api/reports/daily", requireAdmin, async (req, res, next) => {
   try {
     const date = req.query.date || new Date().toISOString().slice(0, 10);
-    const report = await store.reportsDaily(date);
+    const report = await store.reportsDaily(date, req.query);
     res.json(report);
   } catch (error) {
     next(error);
@@ -1013,7 +1091,7 @@ app.get("/api/reports/daily", requireAdmin, async (req, res, next) => {
 app.get("/api/reports/monthly", requireAdmin, async (req, res, next) => {
   try {
     const yearMonth = req.query.date || new Date().toISOString().slice(0, 7);
-    const report = await store.reportsMonthly(`${yearMonth}-01`);
+    const report = await store.reportsMonthly(`${yearMonth}-01`, req.query);
     res.json(report);
   } catch (error) {
     next(error);
@@ -1024,7 +1102,7 @@ app.get("/api/orders/history", requireAdmin, async (req, res, next) => {
   try {
     const requestedLimit = Number(req.query.limit || 100);
     const safeLimit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 500) : 100;
-    res.json(await store.orders({ limit: safeLimit }));
+    res.json(await store.orders({ ...req.query, limit: safeLimit }));
   } catch (error) {
     next(error);
   }
@@ -1051,7 +1129,7 @@ app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
     cacheOrder(updated);
     res.json(updated);
     try {
-      sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus });
+      sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status, paymentStatus: updated.paymentStatus }, updated.outletId);
     } catch (e) {
       // ignore
     }

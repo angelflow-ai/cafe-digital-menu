@@ -10,6 +10,7 @@
     "client": "npm run dev --prefix client",
     "install:all": "npm install && npm install --prefix server && npm install --prefix client",
     "build": "npm run build --prefix client",
+    "check-db": "node --check server/src/db.js",
     "test:order-flow": "node scripts/verify-order-flow.mjs"
   },
   "devDependencies": {

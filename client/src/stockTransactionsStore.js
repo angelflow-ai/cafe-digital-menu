@@ -21,14 +21,15 @@ export function getTransactions() {
   return transactions;
 }
 
-export function addTransaction(itemName, quantity, unit, note = "") {
+export function addTransaction(itemName, quantity, unit, note = "", purchasePrice = null) {
   const transaction = {
     id: Date.now().toString(),
     itemName,
     quantityAdded: quantity,
     unit,
     timestamp: new Date().toISOString(),
-    note
+    note,
+    purchasePrice
   };
   
   transactions = [transaction, ...transactions];

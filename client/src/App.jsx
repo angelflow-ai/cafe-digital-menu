@@ -13,6 +13,7 @@ import {
   Minus,
   Pencil,
   Plus,
+  Printer,
   Search,
   ShoppingCart,
   SlidersHorizontal,
@@ -53,6 +54,7 @@ import authService from "./services/authService";
 import menuService from "./services/menuService";
 import inventoryService from "./services/inventoryService";
 import { PAYMENT_CONFIG } from "./config/paymentConfig";
+import { useOutlet } from "./context/OutletContext";
 
 // Subcategory config persistence helpers
 const SUBCATEGORY_CONFIG_KEY = "subCategories";
@@ -753,8 +755,8 @@ function App() {
   }
 
   const normalizedRoute = route.replace(/\/+$/, "");
+  if (normalizedRoute === "" || normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
   if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
-  if (normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
   if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} />;
   if (normalizedRoute === "/biller/forgot-password") return <BillerApp navigate={navigate} />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
@@ -790,6 +792,18 @@ function App() {
 }
 
 function CustomerApp({ navigate, counterMode = false }) {
+  const [activeOutlet, setActiveOutlet] = useState(() => {
+    try {
+      const match = window.location.pathname.match(/\/menu\/([^/]+)/i);
+      if (match) {
+        const cached = JSON.parse(sessionStorage.getItem("infusion-selected-outlet") || "null");
+        if (cached?.slug === match[1]) return cached;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [activeCategory, setActiveCategoryId] = useState("all");
@@ -828,6 +842,31 @@ function CustomerApp({ navigate, counterMode = false }) {
     }
     setQuickAccessMode(null);
   }
+
+  // Sync selected outlet context from the URL path
+  useEffect(() => {
+    const match = window.location.pathname.match(/\/menu\/([^/]+)/i);
+    if (match) {
+      const urlSlug = match[1];
+      (async () => {
+        try {
+          const outletsList = await api("/outlets");
+          if (Array.isArray(outletsList)) {
+            const targetOutlet = outletsList.find(o => o.slug === urlSlug);
+            if (targetOutlet) {
+              sessionStorage.setItem("infusion-selected-outlet", JSON.stringify(targetOutlet));
+              setActiveOutlet(targetOutlet);
+              if (import.meta.env.DEV) {
+                console.log("[CustomerApp] Synced outlet context from URL:", urlSlug, targetOutlet._id || targetOutlet.id);
+              }
+            }
+          }
+        } catch (error) {
+          console.error("Failed to sync outlet context from URL:", error);
+        }
+      })();
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -884,6 +923,12 @@ function CustomerApp({ navigate, counterMode = false }) {
   }, []);
 
   useEffect(() => {
+    const hasUrlOutlet = (() => {
+      const match = window.location.pathname.match(/\/menu\/([^/]+)/i);
+      return Boolean(match);
+    })();
+    if (hasUrlOutlet && !activeOutlet) return;
+
     async function fetchData() {
       setLoading(true);
       try {
@@ -942,7 +987,7 @@ function CustomerApp({ navigate, counterMode = false }) {
       window.removeEventListener("ownerDataUpdated", handleOwnerDataUpdated);
       window.removeEventListener("storage", handleStorage);
     };
-  }, []);
+  }, [activeOutlet]);
 
   useEffect(() => {
     saveCartToStorage(cart);
@@ -1160,12 +1205,19 @@ function CustomerApp({ navigate, counterMode = false }) {
   }
 
   async function placeOrder(customer) {
+    const outletId = activeOutlet?._id || activeOutlet?.id;
+    const outletSlug = activeOutlet?.slug;
+
     if (customer.paymentMethod === "cash") {
       try {
-        const request = await orderService.createCocRequest({
+        const payload = {
           ...customer,
           items: cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }) => ({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }))
-        });
+        };
+        if (outletId) payload.outletId = outletId;
+        if (outletSlug) payload.outletSlug = outletSlug;
+
+        const request = await orderService.createCocRequest(payload);
         setCart([]);
         setCartOpen(false);
         const pendingOrder = preparePrintableOrder({
@@ -1181,9 +1233,16 @@ function CustomerApp({ navigate, counterMode = false }) {
         return;
       } catch (error) {
         if (demoMode.isDemoModeEnabled()) {
+          const payload = {
+            ...customer,
+            items: cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }) => ({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }))
+          };
+          if (outletId) payload.outletId = outletId;
+          if (outletSlug) payload.outletSlug = outletSlug;
+
           const order = demoMode.createDemoOrder(
-            customer,
-            cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }) => ({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }))
+            payload,
+            payload.items
           );
           demoMode.addDemoOrder(order);
           setCart([]);
@@ -1197,7 +1256,7 @@ function CustomerApp({ navigate, counterMode = false }) {
     }
 
     if (customer.paymentMethod === "online") {
-      setPendingPaymentData({
+      const pendingData = {
         customerName: customer.customerName,
         phone: customer.phone,
         tableNumber: customer.tableNumber,
@@ -1205,15 +1264,23 @@ function CustomerApp({ navigate, counterMode = false }) {
         items: cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }) => ({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons })),
         subtotal: cartTotals.total,
         total: cartTotals.total
-      });
+      };
+      if (outletId) pendingData.outletId = outletId;
+      if (outletSlug) pendingData.outletSlug = outletSlug;
+
+      setPendingPaymentData(pendingData);
       setPaymentModalOpen(true);
       return;
     }
 
-    const order = preparePrintableOrder(await orderService.createOrder({
+    const orderPayload = {
       ...customer,
       items: cart.map(({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }) => ({ itemId, sizeId, quantity, serveType, unitPrice, basePrice, lineTotal, name, addons }))
-    }));
+    };
+    if (outletId) orderPayload.outletId = outletId;
+    if (outletSlug) orderPayload.outletSlug = outletSlug;
+
+    const order = preparePrintableOrder(await orderService.createOrder(orderPayload));
     setCart([]);
     setCartOpen(false);
     setOrderPlaced(order);
@@ -1246,6 +1313,8 @@ function CustomerApp({ navigate, counterMode = false }) {
           paymentStatus: "pending_verification",
           status: "pending"
         };
+        if (pendingPaymentData.outletId) payload.outletId = pendingPaymentData.outletId;
+        if (pendingPaymentData.outletSlug) payload.outletSlug = pendingPaymentData.outletSlug;
         await orderService.createOrder(payload);
       }
 
@@ -2860,11 +2929,18 @@ function getCartFallbackIcon(line) {
 function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter }) {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [tableNumber, setTableNumber] = useState("");
+  const [tableNumber, setTableNumber] = useState(() => {
+    const match = window.location.pathname.match(/\/table\/([^/]+)/i);
+    return match ? match[1] : "";
+  });
   const [paymentMethod, setPaymentMethod] = useState("");
   const tables = Array.from({ length: 17 }, (_, i) => i + 1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const hasUrlTable = (() => {
+    const match = window.location.pathname.match(/\/table\/([^/]+)/i);
+    return Boolean(match);
+  })();
 
   function isValidName(value) {
     return /^[A-Za-z ]+$/.test(value.trim());
@@ -2971,28 +3047,36 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               inputMode="numeric"
               maxLength={10}
             />
-            <div className="space-y-2 rounded-3xl border border-stone-300 bg-white/85 p-3">
-              <div className="rounded-2xl bg-amber-100/80 px-3 py-2 ring-1 ring-amber-200/80">
-                <p className="text-center text-sm font-black text-stone-950">Choose Your Table</p>
-                <p className="mt-1 text-center text-[11px] font-bold text-stone-600">See your Table No. near scanner</p>
+            {!hasUrlTable ? (
+              <div className="space-y-2 rounded-3xl border border-stone-300 bg-white/85 p-3">
+                <div className="rounded-2xl bg-amber-100/80 px-3 py-2 ring-1 ring-amber-200/80">
+                  <p className="text-center text-sm font-black text-stone-950">Choose Your Table</p>
+                  <p className="mt-1 text-center text-[11px] font-bold text-stone-600">See your Table No. near scanner</p>
+                </div>
+                <div className="grid grid-cols-5 gap-2">
+                  {tables.map((number) => (
+                    <label key={number} className={`flex min-h-9 cursor-pointer items-center justify-center rounded-full border px-2 py-1.5 text-center text-sm font-black transition ${tableNumber === String(number) ? "border-black bg-black text-white shadow-sm" : "border-stone-300 bg-white text-stone-900 shadow-sm"}`}>
+                      <input
+                        type="radio"
+                        name="tableNumber"
+                        value={number}
+                        checked={tableNumber === String(number)}
+                        onChange={() => setTableNumber(String(number))}
+                        required
+                        className="sr-only"
+                      />
+                      {number}
+                    </label>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {tables.map((number) => (
-                  <label key={number} className={`flex min-h-9 cursor-pointer items-center justify-center rounded-full border px-2 py-1.5 text-center text-sm font-black transition ${tableNumber === String(number) ? "border-black bg-black text-white shadow-sm" : "border-stone-300 bg-white text-stone-900 shadow-sm"}`}>
-                    <input
-                      type="radio"
-                      name="tableNumber"
-                      value={number}
-                      checked={tableNumber === String(number)}
-                      onChange={() => setTableNumber(String(number))}
-                      required
-                      className="sr-only"
-                    />
-                    {number}
-                  </label>
-                ))}
+            ) : (
+              <div className="rounded-3xl border border-stone-200 bg-stone-50/80 p-3 text-center">
+                <p className="text-xs font-semibold text-stone-500">
+                  Selected Table: <span className="font-black text-stone-950">{tableNumber}</span> (detected from URL)
+                </p>
               </div>
-            </div>
+            )}
             <div className="space-y-2 rounded-3xl border border-stone-200 bg-white/80 p-3">
               <p className="text-sm font-black">Payment Method</p>
               <div className="grid grid-cols-2 gap-2">
@@ -3096,6 +3180,7 @@ function OwnerApp({ navigate, initialTab = "items" }) {
 }
 
 function BillerApp({ navigate }) {
+  const { availableOutlets, currentOutlet, selectOutlet, loadOutlets } = useOutlet();
   const [biller, setBiller] = useState(null);
   const [orders, setOrders] = useState([]);
   const [cocRequests, setCocRequests] = useState([]);
@@ -3107,8 +3192,61 @@ function BillerApp({ navigate }) {
   const [lastSync, setLastSync] = useState(null);
   const [billerTab, setBillerTab] = useState("orders");
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [outletError, setOutletError] = useState("");
   const mobileNavRef = useRef(null);
   const loadPromiseRef = useRef(null);
+
+  console.log("[BillerApp Render TRACE]", {
+    rawPathname: window.location.pathname,
+    outletsCount: availableOutlets?.length || 0,
+    currentOutletSlug: currentOutlet?.slug || "none",
+    outletError
+  });
+
+  useEffect(() => {
+    if (!availableOutlets || !availableOutlets.length) {
+      loadOutlets().catch(() => {});
+    }
+  }, [availableOutlets, loadOutlets]);
+
+  useEffect(() => {
+    console.log("[BillerApp Matching Effect Run]", {
+      availableOutletsCount: availableOutlets?.length || 0,
+      currentOutletSlug: currentOutlet?.slug || "none",
+      pathname: window.location.pathname
+    });
+
+    // Only execute matching once outlets are loaded to avoid false mismatches
+    if (!availableOutlets || !availableOutlets.length) return;
+
+    const match = window.location.pathname.match(/^\/biller\/([^/]+)/);
+    if (match) {
+      const slug = match[1];
+      if (slug !== "forgot-password") {
+        const targetOutlet = availableOutlets.find((o) => o.slug === slug);
+        console.log("[BillerApp Matching Lookup Result]", {
+          slug,
+          targetOutletFound: Boolean(targetOutlet),
+          targetOutletSlug: targetOutlet?.slug || "none",
+          targetOutletId: targetOutlet?._id || targetOutlet?.id || "none"
+        });
+
+        if (targetOutlet) {
+          setOutletError("");
+          if (targetOutlet.slug !== currentOutlet?.slug) {
+            console.log("[BillerApp Matching Selecting Outlet]", {
+              selecting: targetOutlet.slug
+            });
+            selectOutlet(targetOutlet);
+          }
+        } else {
+          setOutletError(`Outlet "${slug}" not found.`);
+        }
+      }
+    } else {
+      setOutletError("Outlet not specified. Please verify the URL.");
+    }
+  }, [availableOutlets, currentOutlet, selectOutlet]);
 
   async function load() {
     if (loadPromiseRef.current) return loadPromiseRef.current;
@@ -3209,10 +3347,6 @@ function BillerApp({ navigate }) {
     setPageLoading(true);
     setLoadError("");
 
-    const unsub = ordersStore.subscribe((data) => {
-      if (isActive) setOrders(data || []);
-    });
-
     const runLoad = async () => {
       try {
         const loadPromise = load();
@@ -3235,9 +3369,8 @@ function BillerApp({ navigate }) {
 
     return () => {
       isActive = false;
-      unsub();
     };
-  }, [biller]);
+  }, [biller, currentOutlet]);
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -3270,7 +3403,7 @@ function BillerApp({ navigate }) {
     function setupStream() {
       if (!isActive || es) return;
       try {
-        es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
+        es = new EventSource(orderService.ordersStreamUrl(), { withCredentials: true });
         const handleUpdate = () => {
           setLastSync(new Date().toISOString());
           if (streamLoadTimer) clearTimeout(streamLoadTimer);
@@ -3300,7 +3433,26 @@ function BillerApp({ navigate }) {
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       try { if (es) es.close(); } catch (e) {}
     };
-  }, [biller]);
+  }, [biller, currentOutlet]);
+
+  if (outletError) {
+    return (
+      <OwnerShell>
+        <div className="mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-md place-items-center py-4 sm:min-h-[calc(100vh-4rem)]">
+          <div className="w-full rounded-[2rem] bg-white p-6 text-center shadow-glass">
+            <h1 className="text-2xl font-black text-red-600">Error</h1>
+            <p className="mt-3 text-sm font-semibold text-stone-600">{outletError}</p>
+            <button
+              onClick={() => navigate("/")}
+              className="mt-6 w-full rounded-full bg-black px-5 py-3 font-black text-white"
+            >
+              Back to Cafe
+            </button>
+          </div>
+        </div>
+      </OwnerShell>
+    );
+  }
 
   if (authLoading || pageLoading) return <OwnerShell><p className="font-bold">Loading biller data...</p></OwnerShell>;
   if (!biller) return <Login role="biller" onLogin={setBiller} navigate={navigate} />;
@@ -3398,6 +3550,7 @@ function OwnerShell({ children }) {
 }
 
 function Login({ onLogin, navigate, role }) {
+  const { currentOutlet } = useOutlet();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -3421,12 +3574,30 @@ function Login({ onLogin, navigate, role }) {
   }
 
   const roleLabel = role === "biller" ? "Biller" : "Owner";
+  const outletName = role === "biller" && currentOutlet?.name
+    ? currentOutlet.name.replace(/^The Infusion Saga\s*-\s*/i, "")
+    : "";
+
+  console.log("[Biller Login Render Debug]", {
+    role,
+    currentOutletId: currentOutlet?._id || currentOutlet?.id || "none",
+    currentOutletName: currentOutlet?.name || "none",
+    currentOutletSlug: currentOutlet?.slug || "none",
+    outletNameText: outletName
+  });
 
   return (
     <OwnerShell>
       <div className="mx-auto grid min-h-[calc(100dvh-2rem)] w-full max-w-5xl place-items-center py-4 sm:min-h-[calc(100vh-4rem)] sm:py-0">
         <form onSubmit={submit} className="w-full max-w-[22rem] rounded-[1.5rem] bg-white p-5 shadow-glass sm:max-w-md sm:rounded-[2rem] sm:p-6">
-          <button type="button" onClick={() => navigate("/")} className="mb-5 text-sm font-black text-stone-500">Back to cafe</button>
+          <div className="mb-5 flex items-center justify-between">
+            <button type="button" onClick={() => navigate("/")} className="text-sm font-black text-stone-500">Back to cafe</button>
+            {outletName && (
+              <div className="text-right">
+                <span className="text-sm font-black text-stone-700">{outletName}</span>
+              </div>
+            )}
+          </div>
           <h1 className="text-2xl font-black sm:text-3xl">{roleLabel} login</h1>
           <p className="mt-2 text-sm font-semibold text-stone-600">Use your registered {roleLabel.toLowerCase()} email and password to sign in.</p>
           <div className="mt-5 space-y-3 sm:mt-6">
@@ -3497,6 +3668,92 @@ function ForgotPassword({ navigate, role }) {
   );
 }
 
+function OutletQrManager() {
+  const { availableOutlets, loadOutlets } = useOutlet();
+  const outlets = availableOutlets || [];
+  const [selectedOutletSlug, setSelectedOutletSlug] = useState("near-skit");
+  const [qrCodes, setQrCodes] = useState({});
+
+  useEffect(() => {
+    if (!outlets.length) {
+      loadOutlets().catch(() => {});
+    }
+  }, [outlets.length, loadOutlets]);
+
+  const activeOutlet = outlets.find((o) => o.slug === selectedOutletSlug) || {
+    name: selectedOutletSlug === "near-skit" ? "The Infusion Saga - Near SKIT" : "The Infusion Saga - Near High Street",
+    slug: selectedOutletSlug
+  };
+
+  const tableCount = activeOutlet.slug === "near-high-street" ? 25 : 17;
+
+  useEffect(() => {
+    let isMounted = true;
+    async function generateCodes() {
+      const origin = window.location.origin;
+      const codes = {};
+      for (let i = 1; i <= tableCount; i++) {
+        const tableNum = `T${i}`;
+        const url = `${origin}/menu/${activeOutlet.slug}/table/${tableNum}`;
+        try {
+          codes[tableNum] = await createQrDataUrl(url, { width: 300, margin: 2 });
+        } catch (e) {
+          console.error(`Failed to generate QR for ${tableNum}:`, e);
+        }
+      }
+      if (isMounted) setQrCodes(codes);
+    }
+    generateCodes();
+    return () => { isMounted = false; };
+  }, [activeOutlet.slug, tableCount]);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white p-6 shadow-sm">
+        <div>
+          <h2 className="text-2xl font-black">Outlets & Table QR Codes</h2>
+          <p className="text-sm text-stone-500">Generate, view, and print table QR codes for each outlet.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedOutletSlug}
+            onChange={(e) => setSelectedOutletSlug(e.target.value)}
+            className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-2.5 font-bold text-stone-800 shadow-sm"
+          >
+            <option value="near-skit">Near SKIT (17 Tables)</option>
+            <option value="near-high-street">Near High Street (25 Tables)</option>
+          </select>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 rounded-xl bg-black px-5 py-2.5 font-black text-white shadow hover:bg-stone-800"
+          >
+            <Printer size={18} /> Print All QR Cards
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {Array.from({ length: tableCount }, (_, i) => `T${i + 1}`).map((tableNo) => {
+          const qrData = qrCodes[tableNo];
+          const tableUrl = `${window.location.origin}/menu/${activeOutlet.slug}/table/${tableNo}`;
+          return (
+            <div key={tableNo} className="flex flex-col items-center rounded-3xl border-2 border-stone-200 bg-white p-6 text-center shadow-md">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-stone-400">{activeOutlet.name}</span>
+              <h3 className="mt-1 text-3xl font-black text-stone-900">Table {tableNo}</h3>
+              {qrData ? (
+                <img src={qrData} alt={`QR Code for Table ${tableNo}`} className="my-4 h-48 w-48 rounded-xl border border-stone-100 p-2 shadow-inner" />
+              ) : (
+                <div className="my-4 flex h-48 w-48 items-center justify-center rounded-xl bg-stone-100 text-xs font-bold text-stone-400">Generating...</div>
+              )}
+              <p className="break-all text-[11px] font-mono text-stone-500">{tableUrl}</p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
@@ -3521,21 +3778,109 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const mobileNavRef = useRef(null);
   const loadPromiseRef = useRef(null);
 
+  const { availableOutlets, loadOutlets } = useOutlet();
+
+  useEffect(() => {
+    if (!availableOutlets || !availableOutlets.length) {
+      loadOutlets().catch(() => {});
+    }
+  }, [availableOutlets, loadOutlets]);
+
+  const outlets = (availableOutlets && availableOutlets.length) ? availableOutlets : [
+    { name: "The Infusion Saga - Near SKIT", slug: "near-skit", id: "6a5cadad7aed56a342c4ea44", _id: "6a5cadad7aed56a342c4ea44" },
+    { name: "The Infusion Saga - Near High Street", slug: "near-high-street", id: "6a5f4bc63024c53065d4ac5f", _id: "6a5f4bc63024c53065d4ac5f" }
+  ];
+
+  const [selectedOutletFilter, setSelectedOutletFilter] = useState(() => {
+    return sessionStorage.getItem("ownerSelectedOutletFilter") || "all";
+  });
+
+  const activeOutletObj = useMemo(() => {
+    if (selectedOutletFilter === "all") return null;
+    return outlets.find(o => o.slug === selectedOutletFilter);
+  }, [outlets, selectedOutletFilter]);
+
+  const activeOutletId = activeOutletObj?._id || activeOutletObj?.id;
+
+  // Sync selected outlet context for API client requests
+  useEffect(() => {
+    if (activeOutletObj) {
+      sessionStorage.setItem("infusion-selected-outlet", JSON.stringify(activeOutletObj));
+    } else {
+      sessionStorage.removeItem("infusion-selected-outlet");
+    }
+  }, [activeOutletObj]);
+
+  const filteredRawMaterials = useMemo(() => {
+    if (selectedOutletFilter === "all") return rawMaterials;
+    return rawMaterials.filter(item => {
+      if (item.outletId?.slug === selectedOutletFilter) return true;
+      const oid = item.outletId?._id || item.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [rawMaterials, selectedOutletFilter, outlets]);
+
+  const filteredLocalInventoryItems = useMemo(() => {
+    if (selectedOutletFilter === "all") return localInventoryItems;
+    return localInventoryItems.filter(item => {
+      if (item.outletId?.slug === selectedOutletFilter) return true;
+      const oid = item.outletId?._id || item.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [localInventoryItems, selectedOutletFilter, outlets]);
+
+  const filteredRecipes = useMemo(() => {
+    if (selectedOutletFilter === "all") return recipes;
+    return recipes.filter(r => {
+      if (r.outletId?.slug === selectedOutletFilter) return true;
+      const oid = r.outletId?._id || r.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [recipes, selectedOutletFilter, outlets]);
+
+  const filteredOrders = useMemo(() => {
+    if (selectedOutletFilter === "all") return orders;
+    return orders.filter(o => {
+      if (o.outletId?.slug === selectedOutletFilter) return true;
+      const oid = o.outletId?._id || o.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [orders, selectedOutletFilter, outlets]);
+
+  const filteredCocRequests = useMemo(() => {
+    if (selectedOutletFilter === "all") return cocRequests;
+    return cocRequests.filter(r => {
+      if (r.outletId?.slug === selectedOutletFilter) return true;
+      const oid = r.outletId?._id || r.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [cocRequests, selectedOutletFilter, outlets]);
+
   async function load() {
     if (loadPromiseRef.current) return loadPromiseRef.current;
     loadPromiseRef.current = (async () => {
     try {
       const [freshOrders, freshInventory, allInventoryData, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
-        orderService.listOrders("limit=500").catch(() => sync.getOrdersFromStorage()),
-        inventoryStore.loadInventory().catch(() => sync.getInventoryFromStorage()),
-        inventoryService.getInventoryItems({ includeDeleted: true }).catch(() => []),
-        menuService.getCategories(),
-        menuService.getMenu({ includeInactive: true }),
-        menuService.getCategories({ includeDeleted: true }),
-        menuService.getMenu({ includeInactive: true, includeDeleted: true }),
-        orderService.listCocRequests().catch(() => []),
-        menuService.getRecipes().catch(() => []),
-        menuService.getReports().catch(() => ({}))
+        orderService.listOrders("limit=500&outletId=all&outletSlug=all").catch(() => sync.getOrdersFromStorage()),
+        inventoryStore.loadInventory("outletId=all&outletSlug=all").catch(() => sync.getInventoryFromStorage()),
+        inventoryService.getInventoryItems({ includeDeleted: true, outletId: "all", outletSlug: "all" }).catch(() => []),
+        menuService.getCategories().catch(() => []),
+        menuService.getMenu({ includeInactive: true }).catch(() => []),
+        menuService.getCategories({ includeDeleted: true }).catch(() => []),
+        menuService.getMenu({ includeInactive: true, includeDeleted: true }).catch(() => []),
+        orderService.listCocRequests("outletId=all&outletSlug=all").catch(() => []),
+        menuService.getRecipes("outletId=all&outletSlug=all").catch(() => []),
+        menuService.getReports("outletId=all&outletSlug=all").catch(() => ({}))
       ]);
       const safeOrders = Array.isArray(freshOrders) ? freshOrders : [];
       const safeInventory = Array.isArray(freshInventory) ? freshInventory : [];
@@ -3610,7 +3955,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     function setupStream() {
       if (!isActive || es) return;
       try {
-        es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
+        es = new EventSource(orderService.ordersStreamUrl(), { withCredentials: true });
         const handleUpdate = () => {
           setLastSync(new Date().toISOString());
           if (streamLoadTimer) clearTimeout(streamLoadTimer);
@@ -3805,8 +4150,8 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const deletedCount = (deletedItems?.length || 0) + (deletedCategories?.length || 0) + deletedSubcategoryCount + deletedInventoryItems.length;
 
   const inventoryAttentionItems = useMemo(() => {
-    const serverItems = Array.isArray(rawMaterials) ? rawMaterials : [];
-    const localItems = Array.isArray(localInventoryItems) ? localInventoryItems : [];
+    const serverItems = Array.isArray(filteredRawMaterials) ? filteredRawMaterials : [];
+    const localItems = Array.isArray(filteredLocalInventoryItems) ? filteredLocalInventoryItems : [];
     const mergedItems = [...serverItems, ...localItems];
     const seen = new Set();
 
@@ -3817,7 +4162,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
       seen.add(key);
       return true;
     });
-  }, [rawMaterials, localInventoryItems]);
+  }, [filteredRawMaterials, filteredLocalInventoryItems]);
 
   const lowStockCount = inventoryAttentionItems.filter((item) => {
     const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
@@ -3841,7 +4186,9 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     { key: "lowstock", label: "Low Stock" },
     { key: "reports", label: "Reports" },
     { key: "history", label: "Order History" },
-    { key: "profit", label: "Total Profit" }
+    { key: "profit", label: "Total Profit" },
+    { key: "compare", label: "Compare Outlets" },
+    { key: "outlets", label: "Outlets & QR Codes" }
   ];
 
   const visibleItems = [...items]
@@ -3855,7 +4202,28 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-stone-500">{owner}</p>
-            <h1 className="text-3xl font-black tracking-tight">Owner Dashboard</h1>
+            <div className="flex flex-wrap items-center gap-4">
+              <h1 className="text-3xl font-black tracking-tight">Owner Dashboard</h1>
+              {tab !== "outlets" && tab !== "compare" && (
+                <div className="flex items-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2 shadow-sm">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-stone-400">Outlet:</span>
+                  <select
+                    value={selectedOutletFilter}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSelectedOutletFilter(val);
+                      sessionStorage.setItem("ownerSelectedOutletFilter", val);
+                    }}
+                    className="bg-transparent text-sm font-black text-stone-900 outline-none cursor-pointer pr-1"
+                  >
+                    <option value="all">All Outlets</option>
+                    {outlets.map(o => (
+                      <option key={o.slug} value={o.slug}>{o.name.replace("The Infusion Saga - ", "")}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             {lastSync && <p className="mt-1 text-xs text-stone-500">Last sync: {new Date(lastSync).toLocaleString()}</p>}
           </div>
           <div className="flex items-center gap-2 md:hidden">
@@ -3945,14 +4313,17 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             </div>
           </div>
         )}
-        <div className="mb-4 hidden md:flex flex-wrap gap-2">
+        <div 
+          className="mb-4 hidden md:flex flex-row flex-nowrap overflow-x-auto whitespace-nowrap gap-2 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        >
           {ownerTabs.map((tabItem) => {
             const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
             return (
               <button
                 key={tabItem.key}
                 onClick={() => setTab(tabItem.key)}
-                className={`rounded-full px-4 py-2.5 text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : isLowStockAlertButton ? "bg-red-600 text-white shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-white text-stone-900"}`}
+                className={`flex-shrink-0 rounded-full px-4 py-2.5 text-sm font-black transition border border-stone-200/60 ${tab === tabItem.key ? "bg-black text-white border-black" : isLowStockAlertButton ? "bg-red-600 text-white border-red-600 shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-white text-stone-900 hover:bg-stone-50"}`}
               >
                 {tabItem.label}
                 {isLowStockAlertButton && attentionCount > 0 ? <span className="ml-2 inline-flex min-w-6 items-center justify-center rounded-full bg-white/15 px-2 py-0.5 text-[11px] font-black">{attentionCount}</span> : null}
@@ -4042,14 +4413,16 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             onRequestPermanentDelete={setPendingDelete}
           />
         )}
-        {tab === "biller" && <BillerPage orders={orders} cocRequests={cocRequests} items={items} categories={categories} onSaved={load} initialTab={initialBillerTab} />}
-        {tab === "inventory" && <InventoryAdmin rawMaterials={rawMaterials} onSaved={load} onInventoryChanged={setLocalInventoryItems} />}
-        {tab === "stock" && <AddStockPage rawMaterials={rawMaterials} onSaved={load} />}
-        {tab === "recipes" && <RecipeMapping items={items} rawMaterials={rawMaterials} recipes={recipes} onSaved={load} />}
-        {tab === "lowstock" && <LowStockAlerts rawMaterials={rawMaterials} />}
-        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={orders} rawMaterials={rawMaterials} recipes={recipes} />}
-        {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(orders, cocRequests)} />}
-        {tab === "profit" && <TotalProfitPage orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
+        {tab === "biller" && <BillerPage orders={filteredOrders} cocRequests={filteredCocRequests} items={items} categories={categories} onSaved={load} initialTab={initialBillerTab} />}
+        {tab === "inventory" && <InventoryAdmin rawMaterials={filteredRawMaterials} onSaved={load} onInventoryChanged={setLocalInventoryItems} selectedOutletFilter={selectedOutletFilter} activeOutletId={activeOutletId} outlets={outlets} />}
+        {tab === "stock" && <AddStockPage rawMaterials={filteredRawMaterials} onSaved={load} selectedOutletFilter={selectedOutletFilter} activeOutletId={activeOutletId} outlets={outlets} />}
+        {tab === "recipes" && <RecipeMapping items={items} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} onSaved={load} selectedOutletFilter={selectedOutletFilter} activeOutletId={activeOutletId} />}
+        {tab === "lowstock" && <LowStockAlerts rawMaterials={filteredRawMaterials} localInventoryItems={filteredLocalInventoryItems} />}
+        {tab === "reports" && <ReportsPage reports={reports} items={items} orders={filteredOrders} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} />}
+        {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(filteredOrders, filteredCocRequests)} />}
+        {tab === "profit" && <TotalProfitPage orders={filteredOrders} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} items={items} />}
+        {tab === "compare" && <CompareOutlets orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
+        {tab === "outlets" && <OutletQrManager />}
       </div>
       <ConfirmDialog
         open={Boolean(pendingDelete)}
@@ -4645,7 +5018,7 @@ function CocAdmin({ cocRequests, onSaved }) {
   );
 }
 
-function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChanged }) {
+function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChanged, selectedOutletFilter, activeOutletId, outlets = [] }) {
   const [inventoryItems, setInventoryItems] = useState([]);
 
   function normalizeServerInventoryItem(item) {
@@ -4697,13 +5070,17 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     function handleInventoryUpdated(event) {
       const latestItems = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
       setInventoryItems(latestItems);
+      if (onInventoryChanged) onInventoryChanged(latestItems);
     }
 
     function handleStorage(event) {
       if (event.key && event.key !== INVENTORY_ITEMS_KEY) return;
-      setInventoryItems(loadLocalInventoryItems());
+      const latestItems = loadLocalInventoryItems();
+      setInventoryItems(latestItems);
+      if (onInventoryChanged) onInventoryChanged(latestItems);
     }
     
+    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: loadLocalInventoryItems() }));
     window.addEventListener("inventoryUpdated", handleInventoryUpdated);
     window.addEventListener("storage", handleStorage);
     
@@ -4772,7 +5149,8 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
         costPerUnit: purchasePriceValue,
         purchasePrice: purchasePriceValue,
         supplier: form.supplier.trim(),
-        active: true
+        active: true,
+        ...(activeOutletId ? { outletId: activeOutletId } : {})
       };
 
       const saved = editingItem
@@ -4868,7 +5246,17 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   }
 
   const inventoryStoreItems = useMemo(() => Array.isArray(rawMaterials) ? rawMaterials.map(normalizeServerInventoryItem).filter(Boolean) : [], [rawMaterials]);
-  const renderedInventory = useMemo(() => mergeInventoryItems(inventoryStoreItems, inventoryItems), [inventoryStoreItems, inventoryItems]);
+  const filteredLocalItems = useMemo(() => {
+    if (selectedOutletFilter === "all") return inventoryItems;
+    return inventoryItems.filter(item => {
+      if (item.outletId?.slug === selectedOutletFilter) return true;
+      const oid = item.outletId?._id || item.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [inventoryItems, selectedOutletFilter, outlets]);
+  const renderedInventory = useMemo(() => mergeInventoryItems(inventoryStoreItems, filteredLocalItems), [inventoryStoreItems, filteredLocalItems]);
 
   if (import.meta.env.DEV) {
     console.log("INVENTORY API COUNT", inventoryStoreItems.length);
@@ -4893,37 +5281,43 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
   if (import.meta.env.DEV) {
     console.log("INVENTORY FILTERED COUNT", filteredItems.length);
-    console.log("INVENTORY RENDER COUNT", renderedInventory.length);
   }
 
   return (
     <section className="space-y-5">
       <div className="flex flex-col gap-5 lg:hidden">
-        <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>
-            {editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}
+        {selectedOutletFilter === "all" ? (
+          <div className="rounded-[1.5rem] bg-white p-4 shadow-sm text-center sm:p-5">
+            <h2 className="text-xl font-black mb-2">Manage Item</h2>
+            <p className="text-xs font-bold text-stone-500">Please select a specific outlet from the top dropdown to add or edit inventory items.</p>
           </div>
-          <div className="space-y-3">
-            <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-            <div className="grid w-full grid-cols-1 gap-3">
-              <input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} />
-              <select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}>
-                <option value="">Select unit</option>
-                <option value="kg">kg</option>
-                <option value="gram">gram</option>
-                <option value="litre">litre</option>
-                <option value="ml">ml</option>
-                <option value="pcs">pcs</option>
-              </select>
+        ) : (
+          <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>
+              {editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}
             </div>
-            <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
-            <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
-            <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
-            {message && (<p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>)}
-            <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
-          </div>
-        </form>
+            <div className="space-y-3">
+              <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+              <div className="grid w-full grid-cols-1 gap-3">
+                <input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} />
+                <select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}>
+                  <option value="">Select unit</option>
+                  <option value="kg">kg</option>
+                  <option value="gram">gram</option>
+                  <option value="litre">litre</option>
+                  <option value="ml">ml</option>
+                  <option value="pcs">pcs</option>
+                </select>
+              </div>
+              <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
+              <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
+              <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
+              {message && (<p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>)}
+              <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
+            </div>
+          </form>
+        )}
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-[1.5rem] bg-white p-4 shadow-sm"><p className="text-xs font-bold text-stone-500">Total Items</p><p className="mt-2 text-2xl font-black">{activeItems.length}</p></div>
@@ -4935,7 +5329,9 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
         <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-xl font-black">Inventory items</h2>
-            <button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button>
+            {selectedOutletFilter !== "all" && (
+              <button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button>
+            )}
           </div>
           <div className="mb-4 flex flex-col gap-3 sm:flex-row">
             <input placeholder="Search by item name..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="field w-full flex-1 bg-stone-50" />
@@ -4960,15 +5356,17 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
                     <span className={`rounded-full px-3 py-1 text-xs font-black ${statusClass}`}>{status}</span>
                   </div>
                   <p className="mt-2 text-sm text-stone-500">Min stock: {item.minStock} {item.unit} • Supplier: {item.supplier || "-"}</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">-</button>
-                    <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">+</button>
-                    <button onClick={() => handleEdit(item)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">Edit</button>
-                    <button type="button" onClick={() => handleDelete(item)} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 shadow-sm">Delete</button>
-                  </div>
+                  {selectedOutletFilter !== "all" && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">-</button>
+                      <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">+</button>
+                      <button onClick={() => handleEdit(item)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">Edit</button>
+                      <button type="button" onClick={() => handleDelete(item)} className="rounded-full bg-rose-50 px-3 py-2 text-xs font-black text-rose-700 shadow-sm">Delete</button>
+                    </div>
+                  )}
                 </article>
               );
-            }) : <p className="rounded-[1.25rem] border border-dashed border-stone-200 bg-stone-50 p-4 text-sm text-stone-500">No inventory items found. Click “New item” to add one.</p>}
+            }) : <p className="rounded-[1.25rem] border border-dashed border-stone-200 bg-stone-50 p-4 text-sm text-stone-500">No inventory items found.</p>}
           </div>
         </div>
       </div>
@@ -4983,23 +5381,83 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
         <div className="mt-5 grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
           <div className="min-w-0 rounded-[1.5rem] bg-white p-3 shadow-sm sm:p-4 lg:p-5">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="text-xl font-black">Inventory items</h2><button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button></div>
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-xl font-black">Inventory items</h2>
+              {selectedOutletFilter !== "all" && (
+                <button onClick={handleCancel} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">+ New item</button>
+              )}
+            </div>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row"><input placeholder="Search by item name..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="field w-full flex-1 bg-stone-50" /><select value={filterStatus} onChange={(event) => setFilterStatus(event.target.value)} className="field w-full bg-stone-50 sm:max-w-[220px]"><option value="all">All items</option><option value="in">In Stock</option><option value="low">Low Stock</option><option value="out">Out of Stock</option></select></div>
-            <div className="overflow-x-auto"><table className="w-full min-w-[780px] table-fixed text-left text-sm lg:min-w-0"><thead><tr className="border-b text-[11px] uppercase tracking-wide text-stone-500"><th className="w-[30%] py-3 pr-3">Item Name</th><th className="w-[8%] whitespace-nowrap">Stock</th><th className="w-[8%] whitespace-nowrap pl-2 pr-3">Min Stock</th><th className="w-[9%] whitespace-nowrap px-3">Status</th><th className="w-[8%] whitespace-nowrap pl-4 pr-2">Price</th><th className="w-[10%] whitespace-nowrap">Supplier</th><th className="w-[12%] whitespace-nowrap">Last Updated</th><th className="w-[15%] text-right">Actions</th></tr></thead><tbody>{filteredItems.length > 0 ? filteredItems.map((item) => { const status = getStockStatus(item.quantity, item.minStock, item); const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600"; return (<tr key={item.id} className="border-b last:border-0"><td className="py-3 pr-3 font-black align-top">{item.name}</td><td className="align-top text-sm text-stone-700">{item.quantity} {item.unit}</td><td className="align-top pl-2 pr-3 text-sm text-stone-700">{item.minStock} {item.unit}</td><td className="align-top px-3"><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td><td className="align-top pl-4 pr-2 text-sm text-stone-700">{rupees(item.purchasePrice || 0)}</td><td className="align-top text-xs text-stone-500">{item.supplier || "-"}</td><td className="align-top text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td><td className="align-top text-right"><div className="flex gap-1 justify-end"><button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button><button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button><button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button><button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button></div></td></tr>); }) : <tr><td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found. Click "New item" to add one.</td></tr>}</tbody></table></div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[780px] table-fixed text-left text-sm lg:min-w-0">
+                <thead>
+                  <tr className="border-b text-[11px] uppercase tracking-wide text-stone-500">
+                    <th className="w-[30%] py-3 pr-3">Item Name</th>
+                    <th className="w-[8%] whitespace-nowrap">Stock</th>
+                    <th className="w-[8%] whitespace-nowrap pl-2 pr-3">Min Stock</th>
+                    <th className="w-[9%] whitespace-nowrap px-3">Status</th>
+                    <th className="w-[8%] whitespace-nowrap pl-4 pr-2">Price</th>
+                    <th className="w-[10%] whitespace-nowrap">Supplier</th>
+                    <th className="w-[12%] whitespace-nowrap">Last Updated</th>
+                    <th className="w-[15%] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredItems.length > 0 ? filteredItems.map((item) => {
+                    const status = getStockStatus(item.quantity, item.minStock, item);
+                    const statusClass = status === "Out of Stock" ? "text-red-600" : status === "Low Stock" ? "text-orange-600" : "text-emerald-600";
+                    return (
+                      <tr key={item.id} className="border-b last:border-0">
+                        <td className="py-3 pr-3 font-black align-top">{item.name}</td>
+                        <td className="align-top text-sm text-stone-700">{item.quantity} {item.unit}</td>
+                        <td className="align-top pl-2 pr-3 text-sm text-stone-700">{item.minStock} {item.unit}</td>
+                        <td className="align-top px-3"><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td>
+                        <td className="align-top pl-4 pr-2 text-sm text-stone-700">{rupees(item.purchasePrice || 0)}</td>
+                        <td className="align-top text-xs text-stone-500">{item.supplier || "-"}</td>
+                        <td className="align-top text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td>
+                        <td className="align-top text-right">
+                          {selectedOutletFilter !== "all" ? (
+                            <div className="flex gap-1 justify-end">
+                              <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Decrease stock"><Minus size={14} /></button>
+                              <button onClick={() => handleIncreaseStock(item.id)} className="rounded-full p-2 hover:bg-stone-100" title="Increase stock"><Plus size={14} /></button>
+                              <button onClick={() => handleEdit(item)} className="rounded-full p-2 hover:bg-stone-100" title="Edit"><Pencil size={14} /></button>
+                              <button type="button" onClick={(event) => { event.stopPropagation(); handleDelete(item); }} className="rounded-full p-2 hover:bg-red-50" title="Delete" aria-label={`Delete ${item.name}`}><Trash2 size={14} /></button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-stone-400 font-semibold">Read-only</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  }) : (
+                    <tr>
+                      <td colSpan="8" className="py-6 text-center text-sm text-stone-500">No inventory items found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
-            <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>{editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}</div>
-            <div className="space-y-3">
-              <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
-              <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"><input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /><select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option value="">Select unit</option><option value="kg">kg</option><option value="gram">gram</option><option value="litre">litre</option><option value="ml">ml</option><option value="pcs">pcs</option></select></div>
-              <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
-              <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
-              <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
-              {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>}
-              <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
+          {selectedOutletFilter === "all" ? (
+            <div className="rounded-[1.5rem] bg-white p-5 shadow-sm text-center h-fit">
+              <h2 className="text-xl font-black mb-2">Manage Item</h2>
+              <p className="text-xs font-bold text-stone-500">Please select a specific outlet from the top dropdown to add or edit inventory items.</p>
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="w-full max-w-full overflow-hidden rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
+              <div className="mb-4 flex items-center justify-between gap-3"><h2 className="text-xl font-black">{editingItem ? "Edit item" : "Add item"}</h2>{editingItem && <button type="button" onClick={handleCancel} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Cancel</button>}</div>
+              <div className="space-y-3">
+                <input required className="field w-full bg-stone-50" placeholder="Item name" value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+                <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2"><input required type="number" className="field w-full bg-stone-50" placeholder="Quantity" value={form.quantity} onChange={(event) => setForm({ ...form, quantity: event.target.value })} /><select required className="field w-full bg-stone-50" value={form.unit} onChange={(event) => setForm({ ...form, unit: event.target.value })}><option value="">Select unit</option><option value="kg">kg</option><option value="gram">gram</option><option value="litre">litre</option><option value="ml">ml</option><option value="pcs">pcs</option></select></div>
+                <input required type="number" className="field w-full bg-stone-50" placeholder="Min stock level" value={form.minStock} onChange={(event) => setForm({ ...form, minStock: event.target.value })} />
+                <input required={!editingItem} type="number" className="field w-full bg-stone-50" placeholder="Purchase price" value={form.purchasePrice} onChange={(event) => setForm({ ...form, purchasePrice: event.target.value })} />
+                <input className="field w-full bg-stone-50" placeholder="Supplier (optional)" value={form.supplier} onChange={(event) => setForm({ ...form, supplier: event.target.value })} />
+                {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>{message}</p>}
+                <button disabled={saving || !!validateForm(!editingItem)} className="mt-1 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : editingItem ? "Update item" : "Add item"}</button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
 
@@ -5016,11 +5474,12 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   );
 }
 
-function AddStockPage({ rawMaterials, onSaved }) {
+function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutletId, outlets = [] }) {
   const [localItems, setLocalItems] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [note, setNote] = useState("");
+  const [purchasePrice, setPurchasePrice] = useState("");
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [saving, setSaving] = useState(false);
@@ -5053,7 +5512,18 @@ function AddStockPage({ rawMaterials, onSaved }) {
   }, []);
 
   // Combine backend and local inventory
-  const activeLocalItems = localItems.filter((item) => item?.isDeleted !== true);
+  const filteredLocalItems = useMemo(() => {
+    if (selectedOutletFilter === "all") return localItems;
+    return localItems.filter(item => {
+      if (item.outletId?.slug === selectedOutletFilter) return true;
+      const oid = item.outletId?._id || item.outletId;
+      if (!oid) return false;
+      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
+      return itemOutlet?.slug === selectedOutletFilter;
+    });
+  }, [localItems, selectedOutletFilter, outlets]);
+
+  const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true);
   const allItems = [...(rawMaterials || []), ...activeLocalItems];
 
   useEffect(() => {
@@ -5089,7 +5559,11 @@ function AddStockPage({ rawMaterials, onSaved }) {
         setLocalItems(saveLocalInventoryItems(updatedItems));
       } else {
         // Try backend API for server-managed materials
-        const result = await inventoryService.purchaseInventory(selectedId, { quantity: Number(quantity), note });
+        const body = { quantity: Number(quantity), note, purchasePrice: purchasePrice ? Number(purchasePrice) : null };
+        if (activeOutletId) {
+          body.outletId = activeOutletId;
+        }
+        const result = await inventoryService.purchaseInventory(selectedId, body);
         if (!result?.material?.id) throw new Error("Stock update did not return the updated inventory item.");
         setLocalItems(removeLocalInventoryItemsByIds([result.material.id]));
       }
@@ -5101,7 +5575,8 @@ function AddStockPage({ rawMaterials, onSaved }) {
           selectedItem.name,
           Number(quantity),
           selectedItem.unit || "pcs",
-          note
+          note,
+          purchasePrice ? Number(purchasePrice) : null
         );
         // Dispatch event for immediate UI update
         window.dispatchEvent(new CustomEvent("stockTransactionAdded"));
@@ -5109,6 +5584,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
       
       setQuantity("");
       setNote("");
+      setPurchasePrice("");
       setMessage("Stock updated successfully.");
       setMessageType("success");
       if (onSaved) await onSaved();
@@ -5142,6 +5618,9 @@ function AddStockPage({ rawMaterials, onSaved }) {
                     <div className="flex-1">
                       <p className="font-black text-stone-900">{transaction.itemName}</p>
                       <p className="mt-2 text-sm font-bold text-emerald-700">+{transaction.quantityAdded} {transaction.unit}</p>
+                      {transaction.purchasePrice != null && (
+                        <p className="mt-1 text-xs font-semibold text-stone-700">Purchase Price: ₹{Number(transaction.purchasePrice).toFixed(2)}</p>
+                      )}
                       <p className="mt-1 text-xs text-stone-500">{formattedDate} • {formattedTime}</p>
                       {transaction.note && (
                         <p className="mt-2 text-xs text-stone-600 italic">{transaction.note}</p>
@@ -5161,7 +5640,12 @@ function AddStockPage({ rawMaterials, onSaved }) {
       </div>
       
       {/* Right Panel: Quick Add Stock Form */}
-      {allItems.length === 0 ? (
+      {selectedOutletFilter === "all" ? (
+        <div className="rounded-[1.5rem] bg-white p-5 shadow-sm text-center h-fit">
+          <h3 className="font-black mb-3">Quick add stock</h3>
+          <p className="text-xs font-bold text-stone-500">Please select a specific outlet from the top dropdown to add stock.</p>
+        </div>
+      ) : allItems.length === 0 ? (
         <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
           <div className="rounded-3xl bg-stone-50 p-4 text-center">
             <p className="text-sm font-bold text-stone-600">No inventory items found. Create items in the Inventory tab first.</p>
@@ -5185,6 +5669,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
               })}
             </select>
             <input required className="field bg-stone-50" type="number" min="0" step="any" placeholder="Quantity to add" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
+            <input className="field bg-stone-50" type="number" min="0" step="any" placeholder="Purchase Price (optional)" value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} />
             <textarea className="field min-h-20 resize-none bg-stone-50" placeholder="Note (optional)" value={note} onChange={(event) => setNote(event.target.value)} />
             {message && (
               <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>
@@ -5199,7 +5684,7 @@ function AddStockPage({ rawMaterials, onSaved }) {
   );
 }
 
-function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
+function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFilter, activeOutletId }) {
   const recipeItems = useMemo(() => (Array.isArray(items) ? items.filter((item) => !isPackagedMenuItem(item)) : []), [items]);
   const [selectedItemId, setSelectedItemId] = useState(recipeItems[0]?.id || "");
   const [ingredients, setIngredients] = useState([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
@@ -5261,7 +5746,11 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
       const invalid = cleanIngredients.find((ingredient) => !ingredient.rawMaterialId || !Number.isFinite(ingredient.amount) || ingredient.amount <= 0 || !["g", "ml", "pcs"].includes(ingredient.unit));
       if (invalid) throw new Error("Each ingredient needs a raw material, positive amount, and unit.");
       const recipeId = selectedItemId;
-      const saved = await menuService.patchRecipe(recipeId, { id: recipeId, itemId: selectedItemId, ingredients: cleanIngredients });
+      const payload = { id: recipeId, itemId: selectedItemId, ingredients: cleanIngredients };
+      if (activeOutletId) {
+        payload.outletId = activeOutletId;
+      }
+      const saved = await menuService.patchRecipe(recipeId, payload);
       if (!saved?.id) throw new Error("Recipe save did not return the saved mapping.");
       setMessage("Recipe saved.");
       setMessageType("success");
@@ -5269,7 +5758,11 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
     } catch (err) {
       if (err.message.includes("not found")) {
         try {
-          const saved = await menuService.createRecipe({ id: selectedItemId, itemId: selectedItemId, ingredients: cleanIngredients });
+          const payload = { id: selectedItemId, itemId: selectedItemId, ingredients: cleanIngredients };
+          if (activeOutletId) {
+            payload.outletId = activeOutletId;
+          }
+          const saved = await menuService.createRecipe(payload);
           if (!saved?.id) throw new Error("Recipe save did not return the saved mapping.");
           setMessage("Recipe saved.");
           setMessageType("success");
@@ -5324,6 +5817,15 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
   }
 
   const selectedItem = recipeItems.find((item) => item.id === selectedItemId);
+
+  if (selectedOutletFilter === "all") {
+    return (
+      <div className="rounded-[1.5rem] bg-white p-6 text-center shadow-sm">
+        <h2 className="text-xl font-black mb-2">Recipe mapping</h2>
+        <p className="text-sm font-bold text-stone-500">Please select a specific outlet from the top dropdown to manage recipe mappings.</p>
+      </div>
+    );
+  }
 
   return (
     <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -5391,23 +5893,8 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved }) {
   );
 }
 
-function LowStockAlerts({ rawMaterials }) {
-  const [localItems, setLocalItems] = useState([]);
-
-  useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("inventoryItems") || "[]");
-    setLocalItems(saved);
-    
-    function handleInventoryUpdated(event) {
-      const items = event.detail || JSON.parse(localStorage.getItem("inventoryItems") || "[]");
-      setLocalItems(items);
-    }
-    
-    window.addEventListener("inventoryUpdated", handleInventoryUpdated);
-    return () => window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
-  }, []);
-
-  const allMaterials = [...(rawMaterials || []), ...localItems].filter((material) => !isHiddenInventoryItem(material));
+function LowStockAlerts({ rawMaterials, localInventoryItems = [] }) {
+  const allMaterials = [...(rawMaterials || []), ...(localInventoryItems || [])].filter((material) => !isHiddenInventoryItem(material));
   const lowMaterials = allMaterials.filter((material) => {
     const qty = material.stock !== undefined ? material.stock : material.quantity || 0;
     return Number(qty) <= getInventoryLowStockThreshold(material);
@@ -5481,6 +5968,17 @@ function ReportsPage({ reports, items, orders = [], rawMaterials = [], recipes =
   const enrichedTopItems = topItems.map((record) => ({ ...record, name: savedItems.find((item) => item.id === record.itemId)?.name || record.itemId }));
   const { totalSales: todaySales, inventoryCostUsed: todayInventoryCostUsed, totalProfit } = calculateTodayTotalProfit(savedOrders, rawMaterials, recipes, savedItems);
 
+  const calculatedInventoryValue = useMemo(() => {
+    return rawMaterials.reduce((sum, item) => sum + Number(item.stock ?? item.quantity ?? 0) * Number(item.costPerUnit || 0), 0);
+  }, [rawMaterials]);
+
+  const calculatedLowStockCount = useMemo(() => {
+    return rawMaterials.filter((item) => {
+      const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
+      return quantity > 0 && quantity <= getInventoryLowStockThreshold(item);
+    }).length;
+  }, [rawMaterials]);
+
   return (
     <section className="space-y-5">
       <div className="mt-5 grid gap-5 lg:mt-0 lg:grid-cols-[1fr_360px]">
@@ -5501,11 +5999,11 @@ function ReportsPage({ reports, items, orders = [], rawMaterials = [], recipes =
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Inventory value</p>
-              <p className="mt-3 text-3xl font-black">{rupees(savedReports.inventoryValue || 0)}</p>
+              <p className="mt-3 text-3xl font-black">{rupees(calculatedInventoryValue || 0)}</p>
             </div>
             <div className="rounded-[1.5rem] bg-stone-50 p-5">
               <p className="text-sm font-semibold text-stone-500">Low stock count</p>
-              <p className="mt-3 text-3xl font-black">{savedReports.lowStockCount || 0}</p>
+              <p className="mt-3 text-3xl font-black">{calculatedLowStockCount || 0}</p>
             </div>
           </div>
         </div>
@@ -5989,6 +6487,189 @@ function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [], items =
             <li>✗ Cancelled, payment-rejected, or unpaid orders are excluded</li>
           </ul>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function CompareOutlets({ orders, rawMaterials, recipes, items }) {
+  const outlets = [
+    { id: "6a5cadad7aed56a342c4ea44", name: "Near SKIT" },
+    { id: "6a5f4bc63024c53065d4ac5f", name: "Near High Street" }
+  ];
+
+  const comparisonData = outlets.map(outlet => {
+    // Filter orders
+    const outletOrders = orders.filter(o => {
+      const oid = o.outletId?._id || o.outletId;
+      return String(oid || "") === String(outlet.id);
+    });
+
+    // Completed orders
+    const completedOrders = outletOrders.filter(o => isCompletedSale(o));
+    const totalOrders = completedOrders.length;
+
+    // Total sales
+    const totalSales = completedOrders.reduce((sum, o) => sum + Number(o.total || 0), 0);
+
+    // Average order value
+    const avgOrderValue = totalOrders > 0 ? (totalSales / totalOrders) : 0;
+
+    // Filter raw materials
+    const outletRawMaterials = rawMaterials.filter(item => {
+      const oid = item.outletId?._id || item.outletId;
+      return String(oid || "") === String(outlet.id);
+    });
+
+    // Low stock count
+    const lowStockCount = outletRawMaterials.filter((item) => {
+      if (!item || item.isDeleted === true) return false;
+      const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
+      return quantity > 0 && quantity <= getInventoryLowStockThreshold(item);
+    }).length;
+
+    // Out of stock count
+    const outOfStockCount = outletRawMaterials.filter((item) => {
+      if (!item || item.isDeleted === true) return false;
+      const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
+      return quantity <= 0;
+    }).length;
+
+    // Total profit
+    const { totalProfit } = calculateTodayTotalProfit(outletOrders, outletRawMaterials, recipes, items);
+
+    return {
+      ...outlet,
+      totalOrders,
+      totalSales,
+      avgOrderValue,
+      lowStockCount,
+      outOfStockCount,
+      totalProfit
+    };
+  });
+
+  // Helper to determine the winner for each metric
+  const getWinner = (metric) => {
+    const val0 = comparisonData[0][metric];
+    const val1 = comparisonData[1][metric];
+    if (val0 === val1) return null;
+    return val0 > val1 ? 0 : 1;
+  };
+
+  const winners = {
+    totalOrders: getWinner("totalOrders"),
+    totalSales: getWinner("totalSales"),
+    avgOrderValue: getWinner("avgOrderValue"),
+    totalProfit: getWinner("totalProfit"),
+    lowStockCount: getWinner("lowStockCount") === null ? null : (getWinner("lowStockCount") === 0 ? 1 : 0), // lower is better
+    outOfStockCount: getWinner("outOfStockCount") === null ? null : (getWinner("outOfStockCount") === 0 ? 1 : 0) // lower is better
+  };
+
+  return (
+    <section className="space-y-6">
+      <div className="rounded-[1.5rem] bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-black mb-4">Outlet Performance Comparison</h2>
+        <p className="text-sm text-stone-500 mb-6">Real-time side-by-side analysis of key metrics for both operational outlets.</p>
+        
+        <div className="grid gap-6 md:grid-cols-2">
+          {comparisonData.map((outlet, index) => {
+            const totalScore = (winners.totalOrders === index ? 1 : 0) + 
+                               (winners.totalSales === index ? 1 : 0) + 
+                               (winners.totalProfit === index ? 1 : 0);
+            const isTopOutlet = totalScore >= 2;
+
+            return (
+              <div key={outlet.id} className={`rounded-[1.5rem] p-6 border-2 transition ${isTopOutlet ? "border-emerald-500/30 bg-emerald-50/20 shadow-sm" : "border-stone-200 bg-stone-50/30"}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-black text-stone-900">{outlet.name}</h3>
+                  {isTopOutlet && (
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 uppercase tracking-wider animate-pulse">🏆 Top Performer</span>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between border-b border-stone-100 pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Total Revenue</span>
+                    <span className="text-base font-black text-stone-900">{rupees(outlet.totalSales)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-stone-100 pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Total Orders</span>
+                    <span className="text-base font-black text-stone-900">{outlet.totalOrders}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-stone-100 pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Total Profit</span>
+                    <span className="text-base font-black text-emerald-700">{rupees(outlet.totalProfit)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-stone-100 pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Average Order Value</span>
+                    <span className="text-base font-black text-stone-900">{rupees(outlet.avgOrderValue)}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-stone-100 pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Low Stock Items</span>
+                    <span className={`text-base font-black ${outlet.lowStockCount > 0 ? "text-amber-600" : "text-stone-900"}`}>{outlet.lowStockCount}</span>
+                  </div>
+                  <div className="flex justify-between pb-2">
+                    <span className="text-sm text-stone-500 font-semibold">Out of Stock Items</span>
+                    <span className={`text-base font-black ${outlet.outOfStockCount > 0 ? "text-red-600" : "text-stone-900"}`}>{outlet.outOfStockCount}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="rounded-[1.5rem] bg-white p-6 shadow-sm overflow-x-auto">
+        <h3 className="text-lg font-black mb-4">Detailed Metrics Table</h3>
+        <table className="w-full min-w-[600px] text-left text-sm">
+          <thead>
+            <tr className="border-b text-xs uppercase text-stone-500">
+              <th className="py-3">Metric</th>
+              <th>Near SKIT</th>
+              <th>Near High Street</th>
+              <th>Margin / Difference</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              { label: "Total Revenue", key: "totalSales", format: rupees, winnerKey: "totalSales" },
+              { label: "Total Orders", key: "totalOrders", format: v => v, winnerKey: "totalOrders" },
+              { label: "Total Profit", key: "totalProfit", format: rupees, winnerKey: "totalProfit" },
+              { label: "Average Order Value", key: "avgOrderValue", format: rupees, winnerKey: "avgOrderValue" },
+              { label: "Low Stock Items", key: "lowStockCount", format: v => v, winnerKey: "lowStockCount" },
+              { label: "Out of Stock Items", key: "outOfStockCount", format: v => v, winnerKey: "outOfStockCount" }
+            ].map(metric => {
+              const val0 = comparisonData[0][metric.key];
+              const val1 = comparisonData[1][metric.key];
+              const diff = val0 - val1;
+              const formattedDiff = metric.format(Math.abs(diff));
+              const winnerIdx = winners[metric.winnerKey];
+
+              return (
+                <tr key={metric.key} className="border-b last:border-0 hover:bg-stone-50/50 transition">
+                  <td className="py-4 font-semibold text-stone-700">{metric.label}</td>
+                  <td className={`font-black ${winnerIdx === 0 ? "text-emerald-600 font-extrabold" : "text-stone-900"}`}>
+                    {metric.format(val0)}
+                    {winnerIdx === 0 && <span className="ml-1.5 text-xs text-emerald-600">▲ Higher</span>}
+                  </td>
+                  <td className={`font-black ${winnerIdx === 1 ? "text-emerald-600 font-extrabold" : "text-stone-900"}`}>
+                    {metric.format(val1)}
+                    {winnerIdx === 1 && <span className="ml-1.5 text-xs text-emerald-600">▲ Higher</span>}
+                  </td>
+                  <td className="font-bold text-stone-600">
+                    {diff === 0 ? (
+                      <span className="text-stone-400">Equal</span>
+                    ) : (
+                      <span>
+                        {diff > 0 ? "Near SKIT" : "Near High Street"} is higher by {formattedDiff}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </section>
   );

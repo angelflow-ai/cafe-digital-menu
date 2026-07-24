@@ -29,13 +29,94 @@ function resolveApiRoot() {
 const API_ROOT = resolveApiRoot();
 const API = `${API_ROOT}/api`;
 const AUTH_TOKEN_STORAGE_KEY = "infusion-auth-token";
+const SELECTED_OUTLET_STORAGE_KEY = "infusion-selected-outlet";
 
 const inFlight = new Map();
 const LOGIN_RETRY_DELAY_MS = 700;
 const DEFAULT_RETRY_DELAY_MS = 200;
 
+function pathWithoutQuery(path) {
+  return String(path || "").split("?")[0];
+}
+
 function isLoginRequest(path) {
-  return path === "/auth/owner/login" || path === "/auth/biller/login";
+  const cleanPath = pathWithoutQuery(path);
+  return cleanPath === "/auth/owner/login" || cleanPath === "/auth/biller/login";
+}
+
+function readSelectedOutletContext() {
+  try {
+    const outlet = JSON.parse(sessionStorage.getItem(SELECTED_OUTLET_STORAGE_KEY) || "null");
+    const outletId = outlet?._id || outlet?.id || "";
+    const outletSlug = outlet?.slug || "";
+    return { outletId, outletSlug };
+  } catch (error) {
+    return { outletId: "", outletSlug: "" };
+  }
+}
+
+function shouldAttachOutletContext(path) {
+  const cleanPath = pathWithoutQuery(path);
+  if (cleanPath.startsWith("/orders/public")) return false;
+  return (
+    cleanPath === "/orders" ||
+    cleanPath.startsWith("/orders/") ||
+    cleanPath === "/orders/history" ||
+    cleanPath === "/orders/stream" ||
+    cleanPath === "/coc-requests" ||
+    cleanPath.startsWith("/coc-requests/") ||
+    cleanPath === "/inventory" ||
+    cleanPath.startsWith("/inventory/") ||
+    cleanPath === "/recipes" ||
+    cleanPath.startsWith("/recipes/") ||
+    cleanPath === "/reports" ||
+    cleanPath.startsWith("/reports/") ||
+    cleanPath === "/categories" ||
+    cleanPath.startsWith("/categories/") ||
+    cleanPath === "/menu" ||
+    cleanPath.startsWith("/menu/") ||
+    cleanPath === "/menu-items" ||
+    cleanPath.startsWith("/menu-items/")
+  );
+}
+
+export function withOutletParams(path) {
+  if (!shouldAttachOutletContext(path)) return path;
+  const { outletId, outletSlug } = readSelectedOutletContext();
+  if (!outletId && !outletSlug) return path;
+  const [pathOnly, queryString = ""] = String(path || "").split("?");
+  const params = new URLSearchParams(queryString);
+  if (outletId && !params.has("outletId")) params.set("outletId", outletId);
+  if (outletSlug && !params.has("outletSlug")) params.set("outletSlug", outletSlug);
+  const nextQuery = params.toString();
+  return `${pathOnly}${nextQuery ? `?${nextQuery}` : ""}`;
+}
+
+function withOutletRequestContext(path, options = {}) {
+  if (!shouldAttachOutletContext(path)) return { path, options };
+  const { outletId, outletSlug } = readSelectedOutletContext();
+  if (!outletId && !outletSlug) return { path, options };
+
+  const nextOptions = { ...options };
+  const method = (nextOptions.method || "GET").toUpperCase();
+  if (["POST", "PUT", "PATCH"].includes(method) && nextOptions.body) {
+    try {
+      const isFormData = typeof FormData !== "undefined" && nextOptions.body instanceof FormData;
+      if (!isFormData) {
+        const body = typeof nextOptions.body === "string" ? JSON.parse(nextOptions.body || "{}") : nextOptions.body;
+        if (body && typeof body === "object" && !Array.isArray(body)) {
+          const nextBody = { ...body };
+          if (outletId && !nextBody.outletId) nextBody.outletId = outletId;
+          if (outletSlug && !nextBody.outletSlug) nextBody.outletSlug = outletSlug;
+          nextOptions.body = typeof nextOptions.body === "string" ? JSON.stringify(nextBody) : nextBody;
+        }
+      }
+    } catch (error) {
+      // Keep the original body if it is not JSON. The query string still carries outlet context.
+    }
+  }
+
+  return { path: withOutletParams(path), options: nextOptions };
 }
 
 function getNetworkErrorMessage(error) {
@@ -160,6 +241,9 @@ function requestKey(method, path, body) {
 }
 
 export async function api(path, options = {}) {
+  const scopedRequest = withOutletRequestContext(path, options);
+  path = scopedRequest.path;
+  options = scopedRequest.options;
   const method = (options.method || "GET").toUpperCase();
   let body = null;
   if (typeof options.body === "string") {
@@ -209,4 +293,4 @@ export async function api(path, options = {}) {
 
 export { API, API_ROOT };
 
-export default { api, API, API_ROOT };
+export default { api, API, API_ROOT, withOutletParams };

@@ -1,10 +1,19 @@
-const ORDERS_KEY = "infusion-orders";
 const INVENTORY_KEY = "infusion-inventory";
 const IS_DEV = import.meta.env.DEV;
 
+export function getOrdersKey() {
+  try {
+    const outlet = JSON.parse(sessionStorage.getItem("infusion-selected-outlet") || "null");
+    const slug = outlet?.slug || "";
+    return slug ? `infusion-orders-${slug}` : "infusion-orders";
+  } catch (e) {
+    return "infusion-orders";
+  }
+}
+
 export function saveOrders(orders) {
   try {
-    localStorage.setItem(ORDERS_KEY, JSON.stringify(orders || []));
+    localStorage.setItem(getOrdersKey(), JSON.stringify(orders || []));
   } catch (e) {}
   try {
     window.dispatchEvent(new CustomEvent("ordersUpdated", { detail: orders }));
@@ -16,9 +25,10 @@ export function saveOrders(orders) {
 
 export function getOrdersFromStorage() {
   try {
-    return JSON.parse(localStorage.getItem(ORDERS_KEY) || "null") || [];
+    return JSON.parse(localStorage.getItem(getOrdersKey()) || "null") || [];
   } catch (e) { return []; }
 }
+
 
 export function saveInventory(inventory) {
   try {
@@ -40,4 +50,4 @@ export function emitOrderChangeLog(action, data) {
   }
 }
 
-export default { saveOrders, getOrdersFromStorage, saveInventory, getInventoryFromStorage, emitOrderChangeLog };
+export default { getOrdersKey, saveOrders, getOrdersFromStorage, saveInventory, getInventoryFromStorage, emitOrderChangeLog };

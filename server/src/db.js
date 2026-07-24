@@ -10,6 +10,53 @@ const __dirname = path.dirname(__filename);
 const persistenceFile = path.join(__dirname, "persisted-store.json");
 const authPersistenceFile = path.join(__dirname, "persisted-auth.json");
 
+export const DEFAULT_OUTLET_SLUG = "near-skit";
+export const DEFAULT_OUTLETS = [
+  {
+    name: "The Infusion Saga - Near SKIT",
+    slug: DEFAULT_OUTLET_SLUG,
+    isActive: true
+  },
+  {
+    name: "The Infusion Saga - Near High Street",
+    slug: "near-high-street",
+    isActive: true
+  }
+];
+
+const outletReference = {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "Outlet",
+  default: null,
+  index: true
+};
+
+const outletSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, lowercase: true, trim: true, index: true },
+    address: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    upiId: { type: String, default: "" },
+    qrImage: { type: String, default: "" },
+    isActive: { type: Boolean, default: true },
+    openingTime: { type: String, default: "" },
+    closingTime: { type: String, default: "" }
+  },
+  { timestamps: true }
+);
+
+const tableSchema = new mongoose.Schema(
+  {
+    outletId: outletReference,
+    tableNumber: { type: String, required: true, trim: true },
+    tableNo: { type: String, default: "" },
+    name: { type: String, default: "" },
+    isActive: { type: Boolean, default: true }
+  },
+  { timestamps: true }
+);
+
 const sizeSchema = new mongoose.Schema(
   {
     id: { type: String, required: true },
@@ -88,12 +135,15 @@ const orderItemSchema = new mongoose.Schema(
 
 const orderSchema = new mongoose.Schema(
   {
+    outletId: outletReference,
     orderId: { type: String, required: true, unique: true },
     customerName: { type: String, required: true },
     phone: { type: String, required: true },
     tableNumber: { type: String, required: true },
     tableNo: { type: String, required: true },
     paymentMethod: { type: String, enum: ["online", "cash", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
+    orderType: { type: String, default: "" },
+    source: { type: String, default: "" },
     notes: { type: String, default: "" },
     items: [orderItemSchema],
     total: { type: Number, required: true },
@@ -110,7 +160,8 @@ const orderSchema = new mongoose.Schema(
 
 const rawMaterialSchema = new mongoose.Schema(
   {
-    id: { type: String, unique: true, required: true },
+    outletId: outletReference,
+    id: { type: String, required: true, index: true },
     name: { type: String, required: true },
     category: { type: String, default: "Inventory" },
     unit: { type: String, enum: ["g", "ml", "pcs"], required: true },
@@ -136,7 +187,8 @@ const recipeIngredientSchema = new mongoose.Schema(
 
 const recipeSchema = new mongoose.Schema(
   {
-    id: { type: String, unique: true, required: true },
+    outletId: outletReference,
+    id: { type: String, required: true, index: true },
     itemId: { type: String, required: true },
     ingredients: { type: [recipeIngredientSchema], default: [] }
   },
@@ -145,10 +197,12 @@ const recipeSchema = new mongoose.Schema(
 
 const inventoryHistorySchema = new mongoose.Schema(
   {
+    outletId: outletReference,
     rawMaterialId: { type: String, required: true },
     change: { type: Number, required: true },
     note: { type: String, default: "" },
-    orderId: { type: String, default: "" }
+    orderId: { type: String, default: "" },
+    purchasePrice: { type: Number, default: null }
   },
   { timestamps: true }
 );
@@ -170,8 +224,13 @@ const staffAccountSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+rawMaterialSchema.index({ outletId: 1, id: 1 }, { unique: true });
+recipeSchema.index({ outletId: 1, id: 1 }, { unique: true });
+
 export const Category = mongoose.model("Category", categorySchema);
 export const MenuItem = mongoose.model("MenuItem", menuItemSchema);
+export const Outlet = mongoose.model("Outlet", outletSchema);
+export const Table = mongoose.model("Table", tableSchema);
 export const Order = mongoose.model("Order", orderSchema);
 export const RawMaterial = mongoose.model("RawMaterial", rawMaterialSchema);
 export const Recipe = mongoose.model("Recipe", recipeSchema);
@@ -198,6 +257,63 @@ function normalizeInventoryName(value) {
     .replace(/[^a-z0-9]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function slugifyOutlet(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function slugify(value) {
+  return slugifyOutlet(value);
+}
+
+function normalizeOutletPayload(payload = {}, existing = {}) {
+  const name = String(payload.name ?? existing.name ?? "").trim();
+  const slug = slugifyOutlet(payload.slug ?? existing.slug ?? name);
+  if (!name) throw new Error("Outlet name is required.");
+  if (!slug) throw new Error("Outlet slug is required.");
+
+  return {
+    name,
+    slug,
+    address: String(payload.address ?? existing.address ?? "").trim(),
+    phone: String(payload.phone ?? existing.phone ?? "").trim(),
+    upiId: String(payload.upiId ?? existing.upiId ?? "").trim(),
+    qrImage: String(payload.qrImage ?? existing.qrImage ?? "").trim(),
+    isActive: payload.isActive ?? existing.isActive ?? true,
+    openingTime: String(payload.openingTime ?? existing.openingTime ?? "").trim(),
+    closingTime: String(payload.closingTime ?? existing.closingTime ?? "").trim()
+  };
+}
+
+function getRequestOutletValue(source = {}, key) {
+  if (!source) return undefined;
+  if (Object.prototype.hasOwnProperty.call(source, key)) return source[key];
+  if (source.body && Object.prototype.hasOwnProperty.call(source.body, key)) return source.body[key];
+  if (source.query && Object.prototype.hasOwnProperty.call(source.query, key)) return source.query[key];
+  if (source.params && Object.prototype.hasOwnProperty.call(source.params, key)) return source.params[key];
+  return undefined;
+}
+
+function normalizeOutletId(outlet) {
+  const id = outlet?._id || outlet?.id || outlet;
+  return id ? String(id) : "";
+}
+
+function applyDefaultOutletToMemoryRecord(record, defaultOutletId) {
+  if (!record || record.outletId || !defaultOutletId) return false;
+  record.outletId = defaultOutletId;
+  record.updatedAt = record.updatedAt || new Date().toISOString();
+  return true;
+}
+
+function matchesOutlet(record, outletId) {
+  if (!outletId) return true;
+  return String(record?.outletId || "") === String(outletId);
 }
 
 function isHiddenInventoryItem(item) {
@@ -382,9 +498,11 @@ function normalizePersistedMemory(raw = {}) {
   const fallbackRecipes = Array.isArray(raw.recipes) && raw.recipes.length ? raw.recipes : seedRecipes;
 
   return {
+    outlets: Array.isArray(raw.outlets) ? raw.outlets.map((item) => ({ ...item })) : [],
     categories: fallbackCategories.map((item) => ({ ...item })),
     menuItems: fallbackMenuItems.map((item) => ({ ...item, sizes: Array.isArray(item.sizes) ? item.sizes.map((size) => ({ ...size })) : [] })),
     orders: Array.isArray(raw.orders) ? raw.orders.map((item) => ({ ...item })) : [],
+    tables: Array.isArray(raw.tables) ? raw.tables.map((item) => ({ ...item })) : [],
     rawMaterials: fallbackRawMaterials.filter((item) => !isHiddenInventoryItem(item)).map((item) => ({ ...item })),
     recipes: fallbackRecipes.map((item) => ({ ...item })),
     inventoryHistory: Array.isArray(raw.inventoryHistory) ? raw.inventoryHistory.map((item) => ({ ...item })) : []
@@ -405,9 +523,11 @@ function loadPersistedMemory() {
 function savePersistedMemory(memoryState) {
   try {
     fs.writeFileSync(persistenceFile, JSON.stringify({
+      outlets: memoryState.outlets || [],
       categories: memoryState.categories || [],
       menuItems: memoryState.menuItems || [],
       orders: memoryState.orders || [],
+      tables: memoryState.tables || [],
       rawMaterials: memoryState.rawMaterials || [],
       recipes: memoryState.recipes || [],
       inventoryHistory: memoryState.inventoryHistory || []
@@ -437,8 +557,178 @@ function savePersistedStaffAccounts(accounts) {
 }
 
 const memory = loadPersistedMemory();
+memory.cocRequests = (memory.orders || []).filter(o => o.orderType === "COC" && o.status === "pending");
 
 export const usingMongo = () => mongoose.connection.readyState === 1;
+
+export async function seedDefaultOutlets() {
+  if (usingMongo()) {
+    const existingOld = await Outlet.findOne({ slug: "high-street-capital-mall" });
+    const existingNew = await Outlet.findOne({ slug: "near-high-street" });
+    if (existingOld && !existingNew) {
+      await Outlet.updateOne(
+        { _id: existingOld._id },
+        { $set: { slug: "near-high-street", name: "The Infusion Saga - Near High Street" } }
+      );
+    } else if (existingOld && existingNew && String(existingOld._id) !== String(existingNew._id)) {
+      await Outlet.deleteOne({ _id: existingOld._id });
+      await Outlet.updateOne(
+        { _id: existingNew._id },
+        { $set: { name: "The Infusion Saga - Near High Street" } }
+      );
+    } else {
+      await Outlet.updateMany(
+        { name: /High Street Capital Mall/i },
+        { $set: { name: "The Infusion Saga - Near High Street" } }
+      );
+    }
+    const seeded = [];
+    for (const outlet of DEFAULT_OUTLETS) {
+      const payload = normalizeOutletPayload(outlet);
+      const { isActive, ...rest } = payload;
+      const saved = await Outlet.findOneAndUpdate(
+        { slug: outlet.slug },
+        { $setOnInsert: rest, $set: { isActive: outlet.isActive !== false } },
+        { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+      ).lean();
+      seeded.push(saved);
+    }
+    return seeded;
+  }
+
+  memory.outlets = memory.outlets || [];
+  let changed = false;
+  const seeded = [];
+
+  for (const outlet of DEFAULT_OUTLETS) {
+    const clean = normalizeOutletPayload(outlet);
+    const existing = memory.outlets.find((item) => item.slug === clean.slug);
+    if (existing) {
+      if (existing.isActive === false && outlet.isActive !== false) {
+        existing.isActive = true;
+        existing.updatedAt = new Date().toISOString();
+        changed = true;
+      }
+      seeded.push(existing);
+      continue;
+    }
+
+    const now = new Date().toISOString();
+    const saved = { ...clean, id: `outlet-${clean.slug}`, createdAt: now, updatedAt: now };
+    memory.outlets.push(saved);
+    seeded.push(saved);
+    changed = true;
+  }
+
+  if (changed) savePersistedMemory(memory);
+  return seeded;
+}
+
+export async function getExplicitOutletId(source = {}) {
+  const outletId = getRequestOutletValue(source, "outletId");
+  if (outletId === "all") return null;
+  if (outletId) {
+    const outlet = await store.outletById(outletId);
+    if (outlet) return normalizeOutletId(outlet);
+  }
+
+  const outletSlug = getRequestOutletValue(source, "outletSlug");
+  if (outletSlug === "all") return null;
+  if (outletSlug) {
+    const outlet = await store.outletBySlug(outletSlug);
+    if (outlet) return normalizeOutletId(outlet);
+  }
+
+  return null;
+}
+
+export async function getCurrentOutlet(source = {}) {
+  const outletId = getRequestOutletValue(source, "outletId");
+  if (outletId === "all") return null;
+  if (outletId) {
+    const outlet = await store.outletById(outletId);
+    if (outlet) return outlet;
+  }
+
+  const outletSlug = getRequestOutletValue(source, "outletSlug");
+  if (outletSlug === "all") return null;
+  if (outletSlug) {
+    const outlet = await store.outletBySlug(outletSlug);
+    if (outlet) return outlet;
+  }
+
+  let fallback = await store.outletBySlug(DEFAULT_OUTLET_SLUG);
+  if (!fallback) {
+    const seeded = await seedDefaultOutlets();
+    fallback = seeded.find((outlet) => outlet.slug === DEFAULT_OUTLET_SLUG) || await store.outletBySlug(DEFAULT_OUTLET_SLUG);
+  }
+  return fallback;
+}
+
+export async function getCurrentOutletId(source = {}) {
+  const outlet = await getCurrentOutlet(source);
+  return normalizeOutletId(outlet);
+}
+
+export async function migrateLegacyOutletData(defaultOutlet = null) {
+  const outlet = defaultOutlet || await getCurrentOutlet({ outletSlug: DEFAULT_OUTLET_SLUG });
+  const defaultOutletId = normalizeOutletId(outlet);
+  if (!defaultOutletId) return { orders: 0, tables: 0, inventory: 0, recipes: 0, inventoryHistory: 0 };
+
+  if (usingMongo()) {
+    // Resolve outlet documents to perform dynamic mapping from legacy string IDs
+    const skitOutletDoc = await Outlet.findOne({ slug: "near-skit" });
+    const hsOutletDoc = await Outlet.findOne({ slug: "near-high-street" });
+    if (skitOutletDoc && hsOutletDoc) {
+      const skitObjectId = skitOutletDoc._id;
+      const hsObjectId = hsOutletDoc._id;
+      const models = [Order, Table, RawMaterial, Recipe, InventoryHistory];
+      for (const model of models) {
+        await model.updateMany({ outletId: { $in: ["outlet-near-skit", "near-skit"] } }, { $set: { outletId: skitObjectId } });
+        await model.updateMany({ outletId: { $in: ["outlet-near-high-street", "near-high-street"] } }, { $set: { outletId: hsObjectId } });
+      }
+    }
+
+    const [orders, tables, inventory, recipes, inventoryHistory] = await Promise.all([
+      Order.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
+      Table.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
+      RawMaterial.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
+      Recipe.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
+      InventoryHistory.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } })
+    ]);
+
+    return {
+      orders: orders.modifiedCount || 0,
+      tables: tables.modifiedCount || 0,
+      inventory: inventory.modifiedCount || 0,
+      recipes: recipes.modifiedCount || 0,
+      inventoryHistory: inventoryHistory.modifiedCount || 0
+    };
+  }
+
+  let changed = false;
+  const summary = { orders: 0, tables: 0, inventory: 0, recipes: 0, inventoryHistory: 0 };
+  const targets = [
+    ["orders", "orders"],
+    ["tables", "tables"],
+    ["rawMaterials", "inventory"],
+    ["recipes", "recipes"],
+    ["inventoryHistory", "inventoryHistory"]
+  ];
+
+  for (const [memoryKey, summaryKey] of targets) {
+    memory[memoryKey] = Array.isArray(memory[memoryKey]) ? memory[memoryKey] : [];
+    for (const record of memory[memoryKey]) {
+      if (applyDefaultOutletToMemoryRecord(record, defaultOutletId)) {
+        summary[summaryKey] += 1;
+        changed = true;
+      }
+    }
+  }
+
+  if (changed) savePersistedMemory(memory);
+  return summary;
+}
 
 async function autoSyncDefaultRecipes() {
   // Only run auto-sync when using MongoDB
@@ -483,8 +773,9 @@ async function autoSyncDefaultRecipes() {
           itemId: String(defaultRecipe.itemId || "").trim(),
           ingredients
         };
+        if (defaultRecipe.outletId) cleanRecipe.outletId = defaultRecipe.outletId;
         
-        await Recipe.insertOne(cleanRecipe);
+        await Recipe.create(cleanRecipe);
         
         results.created++;
         console.log(`[Recipe Startup Sync] Created: ${cleanRecipe.itemId || cleanRecipe.id}`);
@@ -504,7 +795,7 @@ async function autoSyncDefaultRecipes() {
 }
 
 function canUsePersistedStaffFallback() {
-  return process.env.NODE_ENV !== "production" && !process.env.MONGODB_URI;
+  return process.env.NODE_ENV !== "production" && (!process.env.MONGODB_URI || !usingMongo());
 }
 
 export async function findStaffAccountByEmail(email) {
@@ -626,17 +917,46 @@ export async function connectDatabase() {
     }
     console.warn("MONGODB_URI not set. Using development fallback auth storage.");
     await seedStaffAccounts();
+    await seedDefaultOutlets();
+    const migrationSummary = await migrateLegacyOutletData();
+    if (Object.values(migrationSummary).some((count) => count > 0)) {
+      console.log(`[Outlet Migration] ${JSON.stringify(migrationSummary)}`);
+    }
     // Dev mode: recipes already loaded from persisted store
     return false;
   }
 
-  await mongoose.connect(process.env.MONGODB_URI);
-  await seedDatabase();
-  // Auto-sync default recipes into MongoDB after initial seed
-  await autoSyncDefaultRecipes();
-  await seedStaffAccounts();
-  console.log("Connected to MongoDB.");
-  return true;
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+    await seedDefaultOutlets();
+    await seedDatabase();
+    // Auto-sync default recipes into MongoDB after initial seed
+    await autoSyncDefaultRecipes();
+    const migrationSummary = await migrateLegacyOutletData();
+    if (Object.values(migrationSummary).some((count) => count > 0)) {
+      console.log(`[Outlet Migration] ${JSON.stringify(migrationSummary)}`);
+    }
+    await seedStaffAccounts();
+    console.log("Connected to MongoDB.");
+    return true;
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+    globalThis.mongoConnectionError = {
+      message: error.message,
+      stack: error.stack
+    };
+
+    console.error("Failed to connect to MongoDB in development. Falling back to local storage mode. Error:", error.message || error);
+    await seedStaffAccounts();
+    await seedDefaultOutlets();
+    const migrationSummary = await migrateLegacyOutletData();
+    if (Object.values(migrationSummary).some((count) => count > 0)) {
+      console.log(`[Outlet Migration] ${JSON.stringify(migrationSummary)}`);
+    }
+    return false;
+  }
 }
 
 function getMenuItemSyncSubcategory(item = {}) {
@@ -929,6 +1249,78 @@ export async function seedDatabase() {
 }
 
 export const store = {
+  async outlets(query = {}) {
+    const includeInactive = query.includeInactive === true || query.includeInactive === "true";
+    if (usingMongo()) {
+      const filter = includeInactive ? {} : { isActive: { $ne: false } };
+      return Outlet.find(filter).sort({ name: 1 }).lean();
+    }
+    return [...(memory.outlets || [])]
+      .filter((outlet) => (includeInactive ? true : outlet.isActive !== false))
+      .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")));
+  },
+  async outletBySlug(slug) {
+    const cleanSlug = slugifyOutlet(slug);
+    if (!cleanSlug) return null;
+    if (usingMongo()) return Outlet.findOne({ slug: cleanSlug }).lean();
+    return (memory.outlets || []).find((outlet) => outlet.slug === cleanSlug) || null;
+  },
+  async outletById(id) {
+    const cleanId = String(id || "").trim();
+    if (!cleanId) return null;
+    if (usingMongo()) {
+      if (!mongoose.Types.ObjectId.isValid(cleanId)) return null;
+      return Outlet.findById(cleanId).lean();
+    }
+    return (memory.outlets || []).find((outlet) => String(outlet._id || outlet.id || "") === cleanId) || null;
+  },
+  async createOutlet(payload) {
+    const clean = normalizeOutletPayload(payload);
+    if (usingMongo()) return Outlet.create(clean);
+
+    memory.outlets = memory.outlets || [];
+    if (memory.outlets.some((outlet) => outlet.slug === clean.slug)) {
+      throw new Error("Outlet slug must be unique.");
+    }
+    const now = new Date().toISOString();
+    const saved = { ...clean, id: `outlet-${Date.now()}`, createdAt: now, updatedAt: now };
+    memory.outlets.push(saved);
+    savePersistedMemory(memory);
+    return saved;
+  },
+  async updateOutlet(id, payload) {
+    const existing = await this.outletById(id);
+    if (!existing) return null;
+    const clean = normalizeOutletPayload(payload, existing);
+
+    if (usingMongo()) {
+      return Outlet.findByIdAndUpdate(existing._id, { $set: clean }, { new: true, runValidators: true }).lean();
+    }
+
+    memory.outlets = memory.outlets || [];
+    const duplicate = memory.outlets.find((outlet) => outlet.slug === clean.slug && String(outlet.id || outlet._id || "") !== String(existing.id || existing._id || ""));
+    if (duplicate) throw new Error("Outlet slug must be unique.");
+    const index = memory.outlets.findIndex((outlet) => String(outlet.id || outlet._id || "") === String(existing.id || existing._id || ""));
+    if (index < 0) return null;
+    memory.outlets[index] = { ...existing, ...clean, updatedAt: new Date().toISOString() };
+    savePersistedMemory(memory);
+    return memory.outlets[index];
+  },
+  async deleteOutlet(id) {
+    const cleanId = String(id || "").trim();
+    if (!cleanId) return { deletedCount: 0 };
+    if (usingMongo()) {
+      if (!mongoose.Types.ObjectId.isValid(cleanId)) return { deletedCount: 0 };
+      const updated = await Outlet.findByIdAndUpdate(cleanId, { $set: { isActive: false } }, { new: true }).lean();
+      return { deletedCount: updated ? 1 : 0, outlet: updated };
+    }
+    memory.outlets = memory.outlets || [];
+    const index = memory.outlets.findIndex((outlet) => String(outlet.id || outlet._id || "") === cleanId);
+    if (index < 0) return { deletedCount: 0 };
+    memory.outlets[index] = { ...memory.outlets[index], isActive: false, updatedAt: new Date().toISOString() };
+    savePersistedMemory(memory);
+    return { deletedCount: 1, outlet: memory.outlets[index] };
+  },
   async categories() {
     if (usingMongo()) return Category.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 }).lean();
     return [...memory.categories].filter((item) => item.isDeleted !== true).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -1093,21 +1485,27 @@ export const store = {
     return { deletedCount: 1 };
   },
   async rawMaterials(query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    const outletFilter = outletId ? { outletId } : {};
     if (usingMongo()) {
       const deletedFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
-      return RawMaterial.find({ $and: [deletedFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] })
+      return RawMaterial.find({ $and: [deletedFilter, outletFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] })
         .sort({ category: 1, name: 1 })
         .lean();
     }
     return [...memory.rawMaterials]
+      .filter((item) => matchesOutlet(item, outletId))
       .filter((item) => (query.includeDeleted ? true : !isDeletedInventoryItem(item)) && !isHiddenInventoryItem(item))
       .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
   },
-  async rawMaterial(id) {
-    if (usingMongo()) return RawMaterial.findOne({ $and: [{ id }, { isDeleted: { $ne: true } }, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] }).lean();
-    return memory.rawMaterials.find((item) => item.id === id && !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item));
+  async rawMaterial(id, query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    const outletFilter = outletId ? { outletId } : {};
+    if (usingMongo()) return RawMaterial.findOne({ $and: [{ id }, outletFilter, { isDeleted: { $ne: true } }, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] }).lean();
+    return memory.rawMaterials.find((item) => item.id === id && matchesOutlet(item, outletId) && !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item));
   },
   async upsertRawMaterial(payload) {
+    const outletId = await getCurrentOutletId(payload);
     const stockValue = Number(payload.stock ?? payload.quantity ?? 0);
     const minStockValue = Number(payload.minStock ?? payload.minimumStock ?? 0);
     const costValue = Number(payload.costPerUnit ?? payload.purchasePrice ?? payload.price ?? 0);
@@ -1123,27 +1521,29 @@ export const store = {
       isDeleted: payload.isDeleted === true,
       deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
+    if (outletId) clean.outletId = outletId;
     if (!clean.name) throw new Error("Inventory item name is required.");
     if (!["g", "ml", "pcs"].includes(clean.unit)) throw new Error("Inventory unit must be g, ml, or pcs.");
     if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
     if (usingMongo()) {
-      return RawMaterial.findOneAndUpdate({ id: clean.id }, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+      return RawMaterial.findOneAndUpdate({ id: clean.id, outletId }, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
-    const index = memory.rawMaterials.findIndex((item) => item.id === clean.id);
+    const index = memory.rawMaterials.findIndex((item) => item.id === clean.id && matchesOutlet(item, outletId));
     if (index >= 0) memory.rawMaterials[index] = clean;
     else memory.rawMaterials.push(clean);
     savePersistedMemory(memory);
     return clean;
   },
-  async deleteRawMaterial(id) {
+  async deleteRawMaterial(id, query = {}) {
+    const outletId = await getCurrentOutletId(query);
     if (usingMongo()) {
       return RawMaterial.findOneAndUpdate(
-        { id },
+        { id, outletId },
         { isDeleted: true, deletedAt: new Date() },
         { new: true, runValidators: true }
       ).lean();
     }
-    const index = memory.rawMaterials.findIndex((item) => item.id === id);
+    const index = memory.rawMaterials.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index >= 0) {
       memory.rawMaterials[index] = {
         ...memory.rawMaterials[index],
@@ -1155,28 +1555,32 @@ export const store = {
     }
     return { modifiedCount: 0 };
   },
-  async restoreRawMaterial(id) {
+  async restoreRawMaterial(id, query = {}) {
+    const outletId = await getCurrentOutletId(query);
     if (usingMongo()) {
       return RawMaterial.findOneAndUpdate(
-        { id },
+        { id, outletId },
         { $set: { isDeleted: false, deletedAt: null } },
         { new: true, runValidators: true }
       ).lean();
     }
-    const index = memory.rawMaterials.findIndex((item) => item.id === id);
+    const index = memory.rawMaterials.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index < 0) return null;
     memory.rawMaterials[index] = { ...memory.rawMaterials[index], isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
     return memory.rawMaterials[index];
   },
-  async adjustRawMaterialStock(id, change, note, orderId) {
-    return adjustRawMaterialStock(id, change, note, orderId);
+  async adjustRawMaterialStock(id, change, note, orderId, query = {}, purchasePrice = null) {
+    const outletId = await getCurrentOutletId(query);
+    return adjustRawMaterialStock(id, change, note, orderId, outletId, purchasePrice);
   },
-  async recipes() {
+  async recipes(query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    const filter = outletId ? { outletId } : {};
     if (usingMongo()) {
       const [recipes, rawMaterials] = await Promise.all([
-        Recipe.find().sort({ itemId: 1 }).lean(),
-        RawMaterial.find({ $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
+        Recipe.find(filter).sort({ itemId: 1 }).lean(),
+        RawMaterial.find({ ...filter, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
       ]);
       return recipes
         .map((recipe) => {
@@ -1186,35 +1590,42 @@ export const store = {
         })
         .sort((a, b) => a.itemId.localeCompare(b.itemId));
     }
+    const rawMaterials = memory.rawMaterials.filter((item) => matchesOutlet(item, outletId));
     return [...memory.recipes]
+      .filter((recipe) => matchesOutlet(recipe, outletId))
       .map((recipe) => {
-        const { ingredients, skipped } = normalizeRecipeIngredients(recipe.ingredients || [], memory.rawMaterials);
+        const { ingredients, skipped } = normalizeRecipeIngredients(recipe.ingredients || [], rawMaterials);
         if (skipped.length > 0) console.warn(`Normalized recipe ingredients for ${recipe.itemId || recipe.id}:`, skipped);
         return { ...recipe, ingredients };
       })
       .sort((a, b) => a.itemId.localeCompare(b.itemId));
   },
-  async recipeByItem(itemId) {
+  async recipeByItem(itemId, query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    const filter = { itemId };
+    if (outletId) filter.outletId = outletId;
+    const matFilter = outletId ? { outletId } : {};
     if (usingMongo()) {
       const [recipe, rawMaterials] = await Promise.all([
-        Recipe.findOne({ itemId }).lean(),
-        RawMaterial.find({ $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
+        Recipe.findOne(filter).lean(),
+        RawMaterial.find({ ...matFilter, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
       ]);
       if (!recipe) return null;
       const { ingredients, skipped } = normalizeRecipeIngredients(recipe.ingredients || [], rawMaterials);
       if (skipped.length > 0) console.warn(`Normalized recipe ingredients for ${recipe.itemId || recipe.id}:`, skipped);
       return { ...recipe, ingredients };
     }
-    const recipe = memory.recipes.find((item) => item.itemId === itemId);
+    const recipe = memory.recipes.find((item) => item.itemId === itemId && matchesOutlet(item, outletId));
     if (!recipe) return null;
-    const { ingredients, skipped } = normalizeRecipeIngredients(recipe.ingredients || [], memory.rawMaterials);
-    if (skipped.length > 0) console.warn(`Normalized recipe ingredients for ${recipe.itemId || recipe.id}:`, skipped);
+    const rawMaterials = memory.rawMaterials.filter((item) => matchesOutlet(item, outletId));
+    const { ingredients, skipped } = normalizeRecipeIngredients(recipe.ingredients || [], rawMaterials);
     return { ...recipe, ingredients };
   },
   async upsertRecipe(payload) {
+    const outletId = await getCurrentOutletId(payload);
     const rawMaterials = usingMongo()
-      ? await RawMaterial.find({ $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
-      : memory.rawMaterials;
+      ? await RawMaterial.find({ outletId, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
+      : memory.rawMaterials.filter((item) => matchesOutlet(item, outletId));
     const { ingredients, skipped } = normalizeRecipeIngredients(payload.ingredients || [], rawMaterials);
     if (skipped.length > 0) {
       console.warn(`Skipped unresolved recipe ingredients for ${payload.itemId || payload.id}:`, skipped);
@@ -1224,29 +1635,32 @@ export const store = {
       itemId: String(payload.itemId || "").trim(),
       ingredients
     };
+    if (outletId) clean.outletId = outletId;
     if (usingMongo()) {
-      return Recipe.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+      return Recipe.findOneAndUpdate({ id: clean.id, outletId }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
-    const index = memory.recipes.findIndex((item) => item.id === clean.id);
+    const index = memory.recipes.findIndex((item) => item.id === clean.id && matchesOutlet(item, outletId));
     if (index >= 0) memory.recipes[index] = clean;
     else memory.recipes.push(clean);
     savePersistedMemory(memory);
     return clean;
   },
-  async deleteRecipe(id) {
-    if (usingMongo()) return Recipe.deleteOne({ id });
-    memory.recipes = memory.recipes.filter((item) => item.id !== id);
+  async deleteRecipe(id, query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    if (usingMongo()) return Recipe.deleteOne({ id, outletId });
+    memory.recipes = memory.recipes.filter((item) => item.id !== id || !matchesOutlet(item, outletId));
     savePersistedMemory(memory);
     return { deletedCount: 1 };
   },
-  async syncDefaultRecipes(defaultRecipes) {
+  async syncDefaultRecipes(defaultRecipes, query = {}) {
     const results = { created: 0, skipped: 0, failed: 0, errors: [] };
+    const outletId = await getCurrentOutletId(query);
     
     try {
       // Get existing recipe keys for comparison
       const existingRecipes = usingMongo()
-        ? await Recipe.find({}, { id: 1, itemId: 1, _id: 1 }).lean()
-        : memory.recipes;
+        ? await Recipe.find({ outletId }, { id: 1, itemId: 1, _id: 1 }).lean()
+        : memory.recipes.filter((item) => matchesOutlet(item, outletId));
       const existingRecipeKeys = new Set(existingRecipes.flatMap((item) => [
         String(item.id || "").trim().toLowerCase(),
         String(item.itemId || "").trim().toLowerCase()
@@ -1254,8 +1668,8 @@ export const store = {
       
       // Get available raw materials for ingredient normalization
       const availableRawMaterials = usingMongo()
-        ? await RawMaterial.find({}, { id: 1, name: 1 }).lean()
-        : memory.rawMaterials;
+        ? await RawMaterial.find({ outletId }, { id: 1, name: 1 }).lean()
+        : memory.rawMaterials.filter((item) => matchesOutlet(item, outletId));
       
       for (const defaultRecipe of defaultRecipes) {
         try {
@@ -1279,9 +1693,10 @@ export const store = {
             itemId: String(defaultRecipe.itemId || "").trim(),
             ingredients
           };
+          if (outletId) cleanRecipe.outletId = outletId;
           
           if (usingMongo()) {
-            await Recipe.insertOne(cleanRecipe);
+            await Recipe.create(cleanRecipe);
           } else {
             memory.recipes.push(cleanRecipe);
             savePersistedMemory(memory);
@@ -1302,11 +1717,14 @@ export const store = {
     console.log(`[Recipe Manual Sync] Complete: ${results.created} created, ${results.skipped} skipped, ${results.failed} failed`);
     return results;
   },
-  async inventoryHistory() {
-    if (usingMongo()) return InventoryHistory.find().sort({ createdAt: -1 }).lean();
-    return [...memory.inventoryHistory].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  async inventoryHistory(query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    const filter = outletId ? { outletId } : {};
+    if (usingMongo()) return InventoryHistory.find(filter).sort({ createdAt: -1 }).lean();
+    return [...memory.inventoryHistory].filter((item) => matchesOutlet(item, outletId)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
   async orders(query = {}) {
+    const outletId = await getCurrentOutletId(query);
     const requestedLimit = Number(query?.limit ?? 100);
     const safeLimit = Number.isFinite(requestedLimit) && requestedLimit > 0 ? Math.min(requestedLimit, 500) : 100;
     const rawStatuses = Array.isArray(query?.statuses)
@@ -1317,6 +1735,7 @@ export const store = {
     const statuses = Array.from(new Set(rawStatuses.map((value) => normalizeSalesStatus(value)).filter(Boolean)));
 
     const filter = {};
+    if (outletId) filter.outletId = outletId;
     if (statuses.length > 0) {
       filter.$or = [
         { status: { $in: statuses } },
@@ -1330,6 +1749,7 @@ export const store = {
 
     const records = [...memory.orders]
       .filter((order) => {
+        if (!matchesOutlet(order, outletId)) return false;
         if (!statuses.length) return true;
         const status = normalizeSalesStatus(order?.status);
         const paymentStatus = normalizeSalesStatus(order?.paymentStatus);
@@ -1346,7 +1766,11 @@ export const store = {
     return memory.orders.find((item) => item.id === id || item.orderId === id) || null;
   },
   async createOrder(payload) {
-    const order = await buildOrder(payload);
+    const outletId = await getExplicitOutletId(payload);
+    if (!outletId) {
+      throw new Error("Invalid or missing outletId. Orders must be associated with a valid outlet.");
+    }
+    const order = await buildOrder({ ...payload, outletId });
     order.orderType = payload.orderType || payload.type || order.orderType || inferOrderType(payload) || "COC";
     order.source = payload.source || payload.createdFrom || payload._source || (order.orderType === "OOC" ? "ooc" : order.orderType === "COC" ? "coc" : "qr");
     order.orderId = order.orderId || generateOrderId();
@@ -1355,7 +1779,11 @@ export const store = {
       await deductInventoryForOrder(order);
       order.deductionStatus = "deducted";
     }
-    if (usingMongo()) return Order.create(order);
+    if (usingMongo()) {
+      const savedOrder = await Order.create(order);
+      console.log(`[Order Save DB] Saved order: _id=${savedOrder._id}, outletId=${savedOrder.outletId}, tableNumber=${savedOrder.tableNumber}`);
+      return savedOrder;
+    }
     const saved = { ...order, id: `order-${Date.now()}`, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     memory.orders.push(saved);
     savePersistedMemory(memory);
@@ -1363,7 +1791,11 @@ export const store = {
   },
   async createCocRequest(payload) {
     // build a COC request with resolved item names, prices, and total so admin sees correct details
-    const order = await buildOrder(payload);
+    const outletId = await getExplicitOutletId(payload);
+    if (!outletId) {
+      throw new Error("Invalid or missing outletId. COC requests must be associated with a valid outlet.");
+    }
+    const order = await buildOrder({ ...payload, outletId });
     order.orderType = payload.orderType || payload.type || order.orderType || inferOrderType(payload) || "COC";
     order.source = payload.source || payload.createdFrom || payload._source || "coc";
     order.status = payload.status || "pending";
@@ -1377,7 +1809,8 @@ export const store = {
     memory.cocRequests.push(request);
 
     if (usingMongo()) {
-      await Order.create({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      const savedCoc = await Order.create({ ...order, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+      console.log(`[Order Save DB] Saved COC request: _id=${savedCoc._id}, outletId=${savedCoc.outletId}, tableNumber=${savedCoc.tableNumber}`);
     } else {
       memory.orders.push({ ...order, id: request.id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
       savePersistedMemory(memory);
@@ -1385,9 +1818,15 @@ export const store = {
 
     return request;
   },
-  async cocRequests() {
+  async cocRequests(query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    if (usingMongo()) {
+      const filter = { orderType: "COC", status: "pending" };
+      if (outletId) filter.outletId = outletId;
+      return Order.find(filter).sort({ createdAt: -1 }).lean({ virtuals: true });
+    }
     memory.cocRequests = memory.cocRequests || [];
-    return [...memory.cocRequests].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return [...memory.cocRequests].filter((item) => matchesOutlet(item, outletId)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
   async approveCocRequest(id) {
     memory.cocRequests = memory.cocRequests || [];
@@ -1405,14 +1844,19 @@ export const store = {
         orderType: req.orderType || req.type || inferOrderType(req) || "COC",
         source: req.source || req.createdFrom || req._source || "coc",
         status: "confirmed",
-        paymentStatus: req.paymentStatus || "pending"
+        paymentStatus: req.paymentStatus || "pending",
+        outletId: req.outletId || existingOrder?.outletId
       };
 
       if (existingOrder) {
         return this.updateOrder(existingOrder._id || existingOrder.id, updates);
       }
 
-      const order = await buildOrder(req);
+      const resolvedOutletId = req.outletId || (await getExplicitOutletId(req));
+      if (!resolvedOutletId) {
+        throw new Error("Invalid or missing outletId for COC request approval.");
+      }
+      const order = await buildOrder({ ...req, outletId: resolvedOutletId });
       order.orderType = req.orderType || req.type || inferOrderType(req) || "COC";
       order.source = req.source || req.createdFrom || req._source || "coc";
       order.status = "confirmed";
@@ -1473,12 +1917,13 @@ export const store = {
     }
     return order;
   },
-  async reportsDaily(dateString) {
+  async reportsDaily(dateString, query = {}) {
+    const outletId = await getCurrentOutletId(query);
     const fromDate = dateString ? new Date(dateString) : new Date();
     fromDate.setHours(0, 0, 0, 0);
     const toDate = new Date(fromDate);
     toDate.setDate(fromDate.getDate() + 1);
-    const orders = (await this.orders()).filter((order) => {
+    const orders = (await this.orders({ outletId })).filter((order) => {
       const createdAt = new Date(order.createdAt);
       return createdAt >= fromDate && createdAt < toDate && isCompletedSale(order);
     });
@@ -1486,11 +1931,12 @@ export const store = {
     const totalOrders = orders.length;
     return { totalSales, totalOrders, orders };
   },
-  async reportsMonthly(yearMonth) {
+  async reportsMonthly(yearMonth, query = {}) {
+    const outletId = await getCurrentOutletId(query);
     const now = yearMonth ? new Date(yearMonth) : new Date();
     const fromDate = new Date(now.getFullYear(), now.getMonth(), 1);
     const toDate = new Date(fromDate.getFullYear(), fromDate.getMonth() + 1, 1);
-    const orders = (await this.orders()).filter((order) => {
+    const orders = (await this.orders({ outletId })).filter((order) => {
       const createdAt = new Date(order.createdAt);
       return createdAt >= fromDate && createdAt < toDate && isCompletedSale(order);
     });
@@ -1606,7 +2052,7 @@ async function buildOrder(payload) {
       .filter((addon) => Number.isFinite(addon.price) && addon.price >= 0);
     const extraCheeseSelected = !!raw.addons?.extraCheese || selectedAddons.some(isExtraCheeseAddon);
     const requiredExtraCheesePrice = extraCheeseSelected ? getExtraCheesePriceForItem(menuItem) : 0;
-    const extraCheeseInventoryDeduction = requiredExtraCheesePrice ? await resolveExtraCheeseInventoryDeduction(menuItem) : [];
+    const extraCheeseInventoryDeduction = requiredExtraCheesePrice ? await resolveExtraCheeseInventoryDeduction(menuItem, payload.outletId) : [];
     const normalizedAddOns = selectedAddons
       .filter((addon) => !isExtraCheeseAddon(addon))
       .map((addon) => ({ ...addon, id: addon.id || slugify(addon.name) }));
@@ -1654,6 +2100,7 @@ async function buildOrder(payload) {
   const source = String(payload.source || payload.createdFrom || payload._source || (orderType === "OOC" ? "ooc" : orderType === "COC" ? "coc" : "qr")).trim().toLowerCase();
 
   const order = {
+    ...(payload.outletId ? { outletId: payload.outletId } : {}),
     orderId: payload.orderId,
     customerName: payload.customerName || "Guest",
     phone: payload.phone || "Not provided",
@@ -1704,26 +2151,26 @@ function convertQuantity(amount, unit, targetUnit) {
   return value;
 }
 
-async function getRawMaterial(id) {
-  if (usingMongo()) return RawMaterial.findOne({ id }).lean();
-  return memory.rawMaterials.find((item) => item.id === id);
+async function getRawMaterial(id, outletId = null) {
+  if (usingMongo()) return RawMaterial.findOne({ id, ...(outletId ? { outletId } : {}) }).lean();
+  return memory.rawMaterials.find((item) => item.id === id && matchesOutlet(item, outletId));
 }
 
-async function getRawMaterials() {
-  if (usingMongo()) return RawMaterial.find({ isDeleted: { $ne: true } }).lean();
-  return memory.rawMaterials.filter((item) => item?.isDeleted !== true);
+async function getRawMaterials(outletId = null) {
+  if (usingMongo()) return RawMaterial.find({ isDeleted: { $ne: true }, ...(outletId ? { outletId } : {}) }).lean();
+  return memory.rawMaterials.filter((item) => item?.isDeleted !== true && matchesOutlet(item, outletId));
 }
 
-async function getRawMaterialByNameOrId(value) {
+async function getRawMaterialByNameOrId(value, outletId = null) {
   const normalized = normalizeInventoryName(value);
   if (!normalized) return null;
-  const rawMaterials = await getRawMaterials();
+  const rawMaterials = await getRawMaterials(outletId);
   return rawMaterials.find((item) => {
     return normalizeInventoryName(item?.id) === normalized || normalizeInventoryName(item?.name) === normalized;
   }) || null;
 }
 
-async function getRecipeForItem(itemId) {
+async function getRecipeForItem(itemId, outletId = null) {
   const normalizedItemId = String(itemId || "").trim();
   const legacyItemId = normalizedItemId.replace(/-+$/, "");
   const normalizeLegacyPackagedRecipe = (recipe) => {
@@ -1738,31 +2185,31 @@ async function getRecipeForItem(itemId) {
   };
 
   if (usingMongo()) {
-    const exact = await Recipe.findOne({ itemId: normalizedItemId }).lean();
+    const exact = await Recipe.findOne({ itemId: normalizedItemId, ...(outletId ? { outletId } : {}) }).lean();
     if (exact) return exact;
     if (legacyItemId && legacyItemId !== normalizedItemId) {
-      const legacy = await Recipe.findOne({ itemId: legacyItemId }).lean();
+      const legacy = await Recipe.findOne({ itemId: legacyItemId, ...(outletId ? { outletId } : {}) }).lean();
       if (legacy) return normalizeLegacyPackagedRecipe(legacy);
     }
     return null;
   }
 
-  const exact = memory.recipes.find((item) => item.itemId === normalizedItemId);
+  const exact = memory.recipes.find((item) => item.itemId === normalizedItemId && matchesOutlet(item, outletId));
   if (exact) return exact;
   if (legacyItemId && legacyItemId !== normalizedItemId) {
-    const legacy = memory.recipes.find((item) => item.itemId === legacyItemId);
+    const legacy = memory.recipes.find((item) => item.itemId === legacyItemId && matchesOutlet(item, outletId));
     if (legacy) return normalizeLegacyPackagedRecipe(legacy);
   }
   return null;
 }
 
-async function resolveExtraCheeseInventoryDeduction(menuItem = {}) {
+async function resolveExtraCheeseInventoryDeduction(menuItem = {}, outletId = null) {
   if (isBurgerMenuItem(menuItem)) {
-    const cheeseSlice = await getRawMaterialByNameOrId("Cheese Slice");
+    const cheeseSlice = await getRawMaterialByNameOrId("Cheese Slice", outletId);
     if (cheeseSlice) {
       return [{ rawMaterialId: cheeseSlice.id, itemName: "Cheese Slice", quantity: 1, unit: "pcs" }];
     }
-    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese");
+    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese", outletId);
     if (mozzarella) {
       return [{ rawMaterialId: mozzarella.id, itemName: "Mozzarella Cheese", quantity: 25, unit: "g" }];
     }
@@ -1770,7 +2217,7 @@ async function resolveExtraCheeseInventoryDeduction(menuItem = {}) {
   }
 
   if (isPizzaMenuItem(menuItem)) {
-    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese");
+    const mozzarella = await getRawMaterialByNameOrId("Mozzarella Cheese", outletId);
     return [{ rawMaterialId: mozzarella?.id, itemName: "Mozzarella Cheese", quantity: 40, unit: "g" }];
   }
 
@@ -1784,20 +2231,42 @@ function getOrderItemAddOns(item = {}) {
   return [];
 }
 
-async function adjustRawMaterialStock(rawMaterialId, change, note, orderId) {
+async function adjustRawMaterialStock(rawMaterialId, change, note, orderId, outletId = null, purchasePrice = null) {
+  let targetOutletId = outletId;
+
   if (usingMongo()) {
-    const updated = await RawMaterial.findOneAndUpdate({ id: rawMaterialId }, { $inc: { stock: change } }, { new: true }).lean();
-    await InventoryHistory.create({ rawMaterialId, change, note, orderId });
+    if (!targetOutletId) {
+      const mat = await RawMaterial.findOne({ id: rawMaterialId }).lean();
+      targetOutletId = mat?.outletId;
+    }
+    if (!targetOutletId) {
+      throw new Error("Raw material must be associated with a valid outlet.");
+    }
+    const updated = await RawMaterial.findOneAndUpdate({ id: rawMaterialId, outletId: targetOutletId }, { $inc: { stock: change } }, { new: true }).lean();
+    await InventoryHistory.create({ rawMaterialId, change, note, orderId, purchasePrice, outletId: targetOutletId });
     return {
       material: updated,
       isLowStock: isLowStockItem(updated)
     };
   }
 
-  const material = memory.rawMaterials.find((item) => item.id === rawMaterialId);
+  const material = memory.rawMaterials.find((item) => item.id === rawMaterialId && matchesOutlet(item, targetOutletId));
   if (!material) throw new Error(`Inventory item not found: ${rawMaterialId}`);
+  targetOutletId = material.outletId || targetOutletId;
+  if (!targetOutletId) {
+    throw new Error("Raw material must be associated with a valid outlet.");
+  }
   material.stock = Number(material.stock || 0) + Number(change || 0);
-  memory.inventoryHistory.push({ rawMaterialId, change, note, orderId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+  memory.inventoryHistory.push({
+    rawMaterialId,
+    change,
+    note,
+    orderId,
+    purchasePrice,
+    outletId: targetOutletId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  });
   savePersistedMemory(memory);
   return {
     material,
@@ -1813,7 +2282,7 @@ async function deductInventoryForOrder(order) {
   order.lowStockItems = [];
 
   for (const item of order.items) {
-    const recipe = await getRecipeForItem(item.itemId);
+    const recipe = await getRecipeForItem(item.itemId, order.outletId);
     if (!recipe) {
       order.warnings.push(`Recipe missing for ${item.name || item.itemId}. Inventory deduction skipped for this item.`);
     } else if (!recipe.ingredients?.length) {
@@ -1821,13 +2290,13 @@ async function deductInventoryForOrder(order) {
     } else {
       for (const ingredient of recipe.ingredients) {
         if (ingredient.serveType && ingredient.serveType !== item.serveType) continue;
-        const material = await getRawMaterial(ingredient.rawMaterialId);
+        const material = await getRawMaterial(ingredient.rawMaterialId, order.outletId);
         if (!material) throw new Error(`Inventory item missing: ${ingredient.rawMaterialId}`);
         const required = convertQuantity(ingredient.amount, ingredient.unit, material.unit) * item.quantity;
         if (material.stock < required) {
           throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
         }
-        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber})`, orderId);
+        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber})`, orderId, order.outletId);
         if (result.isLowStock) {
           order.lowStockItems.push({
             name: material.name,
@@ -1842,14 +2311,14 @@ async function deductInventoryForOrder(order) {
     for (const addon of getOrderItemAddOns(item)) {
       for (const deduction of addon?.inventoryDeduction || []) {
         const material = deduction.rawMaterialId
-          ? await getRawMaterial(deduction.rawMaterialId)
-          : await getRawMaterialByNameOrId(deduction.itemName || deduction.name);
+          ? await getRawMaterial(deduction.rawMaterialId, order.outletId)
+          : await getRawMaterialByNameOrId(deduction.itemName || deduction.name, order.outletId);
         if (!material) throw new Error(`Inventory item missing: ${deduction.itemName || deduction.rawMaterialId}`);
         const required = convertQuantity(deduction.quantity, deduction.unit, material.unit) * item.quantity;
         if (material.stock < required) {
           throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
         }
-        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber}) - ${addon.name}`, orderId);
+        const result = await adjustRawMaterialStock(material.id, -required, `Order ${order.customerName} (${order.tableNumber}) - ${addon.name}`, orderId, order.outletId);
         if (result.isLowStock) {
           order.lowStockItems.push({
             name: material.name,

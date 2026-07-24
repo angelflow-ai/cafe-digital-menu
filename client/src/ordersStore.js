@@ -1,6 +1,7 @@
 import sync from "./sync";
 import demoMode from "./demoMode";
-import { api, API } from "./services/apiClient";
+import { api } from "./services/apiClient";
+import orderService from "./services/orderService";
 
 const IS_DEV = import.meta.env.DEV;
 
@@ -25,25 +26,25 @@ function notify() {
 export async function loadOrders() {
   if (loadPromise) return loadPromise;
   loadPromise = (async () => {
-  try {
-    const res = await api("/orders?limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected");
-    orders = res || [];
-    notify();
-    try { sync.saveOrders(orders); } catch (e) {}
-    try { window.dispatchEvent(new CustomEvent('inventoryRefresh')); } catch (e) {}
-    if (!initialized) setupStream();
-    return orders;
-  } catch (err) {
-    // In demo mode, load orders from localStorage
-    if (demoMode.isDemoModeEnabled()) {
-      if (IS_DEV) console.log("ordersStore: loading from demo mode (localStorage)");
-      orders = demoMode.loadDemoOrders();
+    try {
+      const res = await api("/orders?limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected");
+      orders = res || [];
       notify();
+      try { sync.saveOrders(orders); } catch (e) {}
+      try { window.dispatchEvent(new CustomEvent('inventoryRefresh')); } catch (e) {}
+      setupStream();
+      return orders;
+    } catch (err) {
+      // In demo mode, load orders from localStorage
+      if (demoMode.isDemoModeEnabled()) {
+        if (IS_DEV) console.log("ordersStore: loading from demo mode (localStorage)");
+        orders = demoMode.loadDemoOrders();
+        notify();
+        return orders;
+      }
+      console.error("ordersStore: failed to load orders", err);
       return orders;
     }
-    console.error("ordersStore: failed to load orders", err);
-    return orders;
-  }
   })();
   try {
     return await loadPromise;
@@ -64,8 +65,17 @@ export function subscribe(cb) {
   return () => listeners.delete(cb);
 }
 
+let currentStreamUrl = "";
+
 function setupStream() {
-  if (es) return;
+  const targetUrl = orderService.ordersStreamUrl();
+  if (es && currentStreamUrl === targetUrl) return;
+
+  if (es) {
+    try { es.close(); } catch (e) {}
+    es = null;
+  }
+
   initialized = true;
   // In demo mode, don't try to setup EventSource
   if (demoMode.isDemoModeEnabled()) {
@@ -73,7 +83,8 @@ function setupStream() {
     return;
   }
   try {
-    es = new EventSource(`${API}/orders/stream`, { withCredentials: true });
+    currentStreamUrl = targetUrl;
+    es = new EventSource(targetUrl, { withCredentials: true });
     const scheduleLoad = () => {
       if (streamReloadTimer) clearTimeout(streamReloadTimer);
       streamReloadTimer = setTimeout(() => {
@@ -86,6 +97,7 @@ function setupStream() {
     es.onerror = () => {
       try { es.close(); } catch (e) {}
       es = null;
+      currentStreamUrl = "";
       // try to re-init after a delay
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
       reconnectTimeout = setTimeout(() => { reconnectTimeout = null; try { setupStream(); } catch (e) {} }, 3000);
@@ -109,7 +121,7 @@ window.addEventListener("ordersUpdated", (e) => {
 window.addEventListener("storage", (e) => {
   try {
     if (!e.key) return;
-    if (e.key === "infusion-orders") {
+    if (e.key === sync.getOrdersKey()) {
       const payload = sync.getOrdersFromStorage();
       orders = payload;
       notify();
