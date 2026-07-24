@@ -673,61 +673,50 @@ export async function getCurrentOutletId(source = {}) {
 export async function migrateLegacyOutletData(defaultOutlet = null) {
   const outlet = defaultOutlet || await getCurrentOutlet({ outletSlug: DEFAULT_OUTLET_SLUG });
   const defaultOutletId = normalizeOutletId(outlet);
-  if (!defaultOutletId) return { orders: 0, tables: 0, inventory: 0, recipes: 0, inventoryHistory: 0 };
 
-  if (usingMongo()) {
-    // Resolve outlet documents to perform dynamic mapping from legacy string IDs
-    const skitOutletDoc = await Outlet.findOne({ slug: "near-skit" });
-    const hsOutletDoc = await Outlet.findOne({ slug: "near-high-street" });
-    if (skitOutletDoc && hsOutletDoc) {
-      const skitObjectId = skitOutletDoc._id;
-      const hsObjectId = hsOutletDoc._id;
-      const models = [Order, Table, RawMaterial, Recipe, InventoryHistory];
-      for (const model of models) {
-        await model.updateMany({ outletId: { $in: ["outlet-near-skit", "near-skit"] } }, { $set: { outletId: skitObjectId } });
-        await model.updateMany({ outletId: { $in: ["outlet-near-high-street", "near-high-street"] } }, { $set: { outletId: hsObjectId } });
-      }
-    }
-
-    const [orders, tables, inventory, recipes, inventoryHistory] = await Promise.all([
-      Order.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
-      Table.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
-      RawMaterial.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
-      Recipe.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } }),
-      InventoryHistory.updateMany({ $or: [{ outletId: { $exists: false } }, { outletId: null }] }, { $set: { outletId: defaultOutletId } })
-    ]);
-
-    return {
-      orders: orders.modifiedCount || 0,
-      tables: tables.modifiedCount || 0,
-      inventory: inventory.modifiedCount || 0,
-      recipes: recipes.modifiedCount || 0,
-      inventoryHistory: inventoryHistory.modifiedCount || 0
-    };
+  if (!defaultOutletId || !usingMongo()) {
+    return { orders: 0, tables: 0, inventory: 0, recipes: 0, inventoryHistory: 0 };
   }
 
-  let changed = false;
-  const summary = { orders: 0, tables: 0, inventory: 0, recipes: 0, inventoryHistory: 0 };
-  const targets = [
-    ["orders", "orders"],
-    ["tables", "tables"],
-    ["rawMaterials", "inventory"],
-    ["recipes", "recipes"],
-    ["inventoryHistory", "inventoryHistory"]
+  const skitOutlet = await Outlet.findOne({ slug: "near-skit" });
+  const highStreetOutlet = await Outlet.findOne({ slug: "near-high-street" });
+
+  const legacyMappings = [
+    { legacyValues: ["outlet-near-skit", "near-skit"], outletId: skitOutlet?._id },
+    { legacyValues: ["outlet-near-high-street", "near-high-street"], outletId: highStreetOutlet?._id }
   ];
 
-  for (const [memoryKey, summaryKey] of targets) {
-    memory[memoryKey] = Array.isArray(memory[memoryKey]) ? memory[memoryKey] : [];
-    for (const record of memory[memoryKey]) {
-      if (applyDefaultOutletToMemoryRecord(record, defaultOutletId)) {
-        summary[summaryKey] += 1;
-        changed = true;
-      }
-    }
-  }
+  const models = [Order, Table, RawMaterial, Recipe, InventoryHistory];
+  const migrationResults = await Promise.all(
+    models.map(async (model) => {
+      let modifiedCount = 0;
 
-  if (changed) savePersistedMemory(memory);
-  return summary;
+      for (const { legacyValues, outletId } of legacyMappings) {
+        if (!outletId) continue;
+
+        const legacyResult = await model.collection.updateMany(
+          { outletId: { $in: legacyValues } },
+          { $set: { outletId } }
+        );
+        modifiedCount += legacyResult?.modifiedCount || 0;
+      }
+
+      const defaultResult = await model.collection.updateMany(
+        { $or: [{ outletId: { $exists: false } }, { outletId: null }] },
+        { $set: { outletId: defaultOutletId } }
+      );
+
+      return modifiedCount + (defaultResult?.modifiedCount || 0);
+    })
+  );
+
+  return {
+    orders: migrationResults[0] || 0,
+    tables: migrationResults[1] || 0,
+    inventory: migrationResults[2] || 0,
+    recipes: migrationResults[3] || 0,
+    inventoryHistory: migrationResults[4] || 0
+  };
 }
 
 async function autoSyncDefaultRecipes() {
@@ -1313,9 +1302,14 @@ export const store = {
     const cleanId = String(id || "").trim();
     if (!cleanId) return { deletedCount: 0 };
     if (usingMongo()) {
-      if (!mongoose.Types.ObjectId.isValid(cleanId)) return { deletedCount: 0 };
-      const updated = await Outlet.findByIdAndUpdate(cleanId, { $set: { isActive: false } }, { new: true }).lean();
-      return { deletedCount: updated ? 1 : 0, outlet: updated };
+      let outletDoc = null;
+      if (mongoose.Types.ObjectId.isValid(cleanId)) {
+        outletDoc = await Outlet.findByIdAndUpdate(cleanId, { $set: { isActive: false } }, { new: true }).lean();
+      }
+      if (!outletDoc) {
+        outletDoc = await Outlet.findOneAndUpdate({ $or: [{ id: cleanId }, { slug: cleanId }] }, { $set: { isActive: false } }, { new: true }).lean();
+      }
+      return { deletedCount: outletDoc ? 1 : 0, outlet: outletDoc };
     }
     memory.outlets = memory.outlets || [];
     const index = memory.outlets.findIndex((outlet) => String(outlet.id || outlet._id || "") === cleanId);
@@ -1333,8 +1327,13 @@ export const store = {
     return [...memory.categories].filter((item) => item.isDeleted === true).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
   },
   async upsertCategory(payload) {
+    const name = String(payload.name || "").trim();
+    const id = String(payload.id || name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    if (!name) throw new Error("Category name is required.");
     const clean = {
       ...payload,
+      id,
+      name,
       isDeleted: payload.isDeleted === true,
       deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
@@ -1975,7 +1974,7 @@ function validateMenuItem(payload) {
   const addons = Array.isArray(payload.addons)
     ? payload.addons
         .map((addon) => ({
-          id: String(addon.id || addon.name || `addon-${Date.now()}`).trim(),
+          id: String(addon.id || addon.name || `addon-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`).trim(),
           name: String(addon.name || "").trim(),
           description: String(addon.description || "").trim(),
           price: Math.round(Number(addon.price))

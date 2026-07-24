@@ -15,7 +15,7 @@ function resolveApiRoot() {
   const isLocalApp = isLocalAppHost(window.location.hostname);
   const configuredIsLocal = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(cleanConfiguredUrl);
 
-  if (cleanConfiguredUrl && (isLocalApp || !configuredIsLocal)) {
+  if (cleanConfiguredUrl && (import.meta.env.DEV || isLocalApp || !configuredIsLocal)) {
     return cleanConfiguredUrl;
   }
 

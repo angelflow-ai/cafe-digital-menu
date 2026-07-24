@@ -11,7 +11,6 @@ import {
   Instagram,
   MessageCircle,
   Music,
-  Play,
   Sandwich,
   ShieldCheck,
   Sparkles,
@@ -34,6 +33,15 @@ import matchScreeningsImage from "../assets/Images/Match-Screenings.png";
 import quickBitesImage from "../assets/Images/Quick-Bites.webp";
 import signatureChaiCoffeeImage from "../assets/Images/Signature-Chai&Coffee.jpg";
 import workChillImage from "../assets/Images/Work&Chill.png";
+import cafeHeroVideo from "../assets/videos/cafe-hero-video.mp4";
+import cafeStoryVideo from "../assets/videos/cafe-story.mp4";
+import liveMusicVideo from "../assets/videos/live-music.mp4";
+import liveProjectorVideo from "../assets/videos/live-projector.mp4";
+import review1Video from "../assets/videos/review-1.mp4";
+import review2Video from "../assets/videos/review-2.MP4";
+import review3Video from "../assets/videos/review-3.mp4";
+import review4Video from "../assets/videos/review-4.mp4";
+import review5Video from "../assets/videos/review-5.mp4";
 
 const instagramUrl = "https://www.instagram.com/theinfusionsaga?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const instagramFooterUrl = instagramUrl;
@@ -135,6 +143,18 @@ const customerExperiences = [
   }
 ];
 
+const aboutVideoSources = [
+  cafeHeroVideo,
+  cafeStoryVideo,
+  liveProjectorVideo,
+  liveMusicVideo,
+  review1Video,
+  review2Video,
+  review3Video,
+  review4Video,
+  review5Video
+];
+
 const footerColumns = [
   {
     title: "INFO",
@@ -217,16 +237,28 @@ function InfoModal({ title, children, onClose }) {
   );
 }
 
-function VideoPlaceholder({ label, className = "" }) {
+function VideoPlaceholder({ label, className = "", videoSrc }) {
   return (
     <div className={`about-video-card group relative isolate min-h-64 overflow-hidden rounded-[2rem] border border-white/65 bg-[linear-gradient(145deg,rgba(255,255,255,0.58),rgba(255,224,199,0.28),rgba(255,255,255,0.28))] shadow-[0_24px_72px_rgba(67,45,28,0.18)] backdrop-blur-2xl ${className}`}>
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_18%,rgba(255,255,255,0.95),transparent_30%),radial-gradient(circle_at_82%_76%,rgba(251,146,60,0.24),transparent_34%),linear-gradient(135deg,rgba(17,17,17,0.03),rgba(17,17,17,0.13))] transition duration-500 group-hover:scale-105" />
       <div className="absolute inset-5 rounded-[1.5rem] border border-white/50 bg-white/16" />
-      <div className="relative z-10 flex h-full min-h-inherit flex-col items-center justify-center gap-4 p-8 text-center">
-        <span className="grid h-16 w-16 place-items-center rounded-full bg-black text-white shadow-[0_18px_40px_rgba(0,0,0,0.22)] transition duration-300 group-hover:scale-105">
-          <Play size={28} fill="currentColor" />
-        </span>
-        <p className="rounded-full bg-white/70 px-5 py-2 text-sm font-black text-stone-900 backdrop-blur-xl">{label}</p>
+      <div className="relative z-10 h-full min-h-inherit">
+        {videoSrc ? (
+          <video
+            src={videoSrc}
+            className="h-full w-full rounded-[1.5rem] object-cover"
+            controls
+            muted
+            playsInline
+            preload="metadata"
+            loop
+            aria-label={label}
+          />
+        ) : (
+          <div className="flex h-full min-h-inherit flex-col items-center justify-center gap-4 p-8 text-center">
+            <p className="rounded-full bg-white/70 px-5 py-2 text-sm font-black text-stone-900 backdrop-blur-xl">{label}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -374,13 +406,13 @@ export default function AboutCafe({ navigate }) {
               </a>
             </div>
           </div>
-          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" />
+          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" videoSrc={aboutVideoSources[0]} />
         </div>
       </SectionShell>
 
       <SectionShell id="our-story" eyebrow="Our story" title="Cafe culture, crafted warmly">
         <div className="about-story-card grid gap-6 rounded-[2.25rem] border border-white/65 bg-white/42 p-4 shadow-[0_28px_80px_rgba(67,45,28,0.16)] backdrop-blur-2xl sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-7">
-          <VideoPlaceholder label="Cafe Story Image" className="min-h-[20rem] lg:min-h-full" />
+          <VideoPlaceholder label="Cafe Story Video" className="min-h-[20rem] lg:min-h-full" videoSrc={aboutVideoSources[1]} />
           <div className="about-story-copy flex flex-col justify-center rounded-[1.75rem] bg-white/28 p-4 sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-rose-900/70">THE INFUSION SAGA</p>
             <h2 className="mt-3 text-3xl font-black leading-tight text-stone-950 sm:text-4xl">More than a menu, it is a modern cafe pause.</h2>
@@ -415,11 +447,11 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell id="visual-moments" eyebrow="Visual moments" title="Experiences beyond the table">
         <div className="grid gap-5 lg:grid-cols-2">
-          {visualMoments.map((moment) => {
+          {visualMoments.map((moment, index) => {
             const Icon = moment.icon;
             return (
               <article key={moment.title} className="about-cinematic-card about-lift overflow-hidden rounded-[2rem] border border-white/65 bg-white/46 shadow-[0_24px_72px_rgba(67,45,28,0.16)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_82px_rgba(67,45,28,0.22)]">
-                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" />
+                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" videoSrc={aboutVideoSources[2 + index]} />
                 <div className="p-6">
                   <span className="grid h-13 w-13 place-items-center rounded-2xl bg-black p-3 text-white">
                     <Icon size={25} />
@@ -445,7 +477,7 @@ export default function AboutCafe({ navigate }) {
         <Carousel>
           {customerExperiences.map((experience, index) => (
             <article key={`${experience.name}-${index}`} className="about-review-card about-lift w-[18rem] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/65 bg-white/50 shadow-[0_22px_60px_rgba(67,45,28,0.15)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:w-[21rem]">
-              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" />
+              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" videoSrc={aboutVideoSources[4 + index] || aboutVideoSources[index % aboutVideoSources.length]} />
               <div className="p-5">
                 <p className="text-lg font-black text-stone-950">{experience.name}</p>
                 <div className="mt-2"><StarRating /></div>
