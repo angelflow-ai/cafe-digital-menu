@@ -1592,7 +1592,7 @@ export const store = {
     }
     if (!query.includeDeleted) filter.isDeleted = { $ne: true };
     if (usingMongo()) {
-      const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true }, ...(outletId ? { outletId } : {}) };
+      const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
       const visibleCategoryIds = await Category.find(categoryFilter).distinct("id");
       if (!query.includeDeleted) {
         if (query.categoryId && !visibleCategoryIds.includes(query.categoryId)) return [];
