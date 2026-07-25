@@ -1197,6 +1197,21 @@ function CustomerApp({ navigate, route, counterMode = false }) {
 
   const cartTotals = calculateTotals(cart);
 
+  // If the route is exactly `/menu/:outletSlug` (no extra segments), show the outlet About/Landing page.
+  const isMenuOutletRoot = (() => {
+    try {
+      const path = String(route || window.location.pathname || "");
+      const match = path.match(/^\/menu\/[^/]+\/?$/i);
+      return Boolean(match);
+    } catch (e) {
+      return false;
+    }
+  })();
+
+  if (isMenuOutletRoot) {
+    return <AboutCafe navigate={navigate} />;
+  }
+
   function handleAddToCart(item, sizeId, quantity = 1, serveType = "", options = {}) {
     setCart((current) => addCartItem(current, item, sizeId, quantity, serveType, options));
   }

@@ -732,7 +732,7 @@ export async function getCurrentOutletId(source = {}) {
   return normalizeOutletId(outlet);
 }
 
-const SHARED_CATALOG_COLLECTIONS = new Set([]);
+const SHARED_CATALOG_COLLECTIONS = new Set(["categories", "category"]);
 
 function isAllOutletsSelection(source = {}) {
   const outletId = getRequestOutletValue(source, "outletId");
@@ -1304,21 +1304,13 @@ export async function seedDatabase() {
       isDeleted: Boolean(category.isDeleted),
       deletedAt: category.isDeleted ? category.deletedAt || new Date() : null
     };
-    for (const outletId of outletIds) {
-      await Category.findOneAndUpdate(
-        {
-          id: cleanCategory.id,
-          $or: [
-            { outletId },
-            { outletId: null },
-            { outletId: { $exists: false } }
-          ]
-        },
-        {
-          $setOnInsert: { ...cleanCategory, outletId }
-        },
-        { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
-      );
+    const sharedCategory = await Category.findOneAndUpdate(
+      { id: cleanCategory.id },
+      { ...cleanCategory, outletId: null },
+      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+    ).lean();
+    if (sharedCategory) {
+      await Category.deleteMany({ id: cleanCategory.id, _id: { $ne: sharedCategory._id } });
     }
   }
 
@@ -1505,25 +1497,30 @@ export const store = {
   async categories(query = {}) {
     const outletId = await resolveCollectionOutletScope("categories", query);
     const filter = { isDeleted: { $ne: true }, ...(outletId ? { outletId } : {}) };
-    if (usingMongo()) return Category.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
-    return [...memory.categories]
-      .filter((item) => item.isDeleted !== true && matchesOutlet(item, outletId))
-      .sort((a, b) => a.sortOrder - b.sortOrder);
+    if (usingMongo()) {
+      const categories = await Category.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
+      return deduplicateSharedRecords(categories).sort((a, b) => a.sortOrder - b.sortOrder || String(a.name || "").localeCompare(String(b.name || "")));
+    }
+    return deduplicateSharedRecords(
+      [...memory.categories].filter((item) => item.isDeleted !== true && matchesOutlet(item, outletId))
+    ).sort((a, b) => a.sortOrder - b.sortOrder || String(a.name || "").localeCompare(String(b.name || "")));
   },
   async deletedCategories(query = {}) {
     const outletId = await resolveCollectionOutletScope("categories", query);
     const filter = { isDeleted: true, ...(outletId ? { outletId } : {}) };
-    if (usingMongo()) return Category.find(filter).sort({ deletedAt: -1, sortOrder: 1, name: 1 }).lean();
-    return [...memory.categories]
-      .filter((item) => item.isDeleted === true && matchesOutlet(item, outletId))
-      .sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
+    if (usingMongo()) {
+      const categories = await Category.find(filter).sort({ deletedAt: -1, sortOrder: 1, name: 1 }).lean();
+      return deduplicateSharedRecords(categories).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0) || a.sortOrder - b.sortOrder || String(a.name || "").localeCompare(String(b.name || "")));
+    }
+    return deduplicateSharedRecords(
+      [...memory.categories].filter((item) => item.isDeleted === true && matchesOutlet(item, outletId))
+    ).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0) || a.sortOrder - b.sortOrder || String(a.name || "").localeCompare(String(b.name || "")));
   },
   async upsertCategory(payload) {
     const name = String(payload.name || "").trim();
     const id = String(payload.id || name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     if (!name) throw new Error("Category name is required.");
     const clean = {
-      ...payload,
       id,
       name,
       icon: payload.icon || "Utensils",
@@ -1531,37 +1528,31 @@ export const store = {
       isDeleted: payload.isDeleted === true,
       deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
-    const targetOutletIds = await getTargetOutletIds(payload);
-    if (!targetOutletIds.length) throw new Error("Invalid or missing outletId.");
-    const results = [];
 
-    for (const outletId of targetOutletIds) {
-      const record = { ...clean, outletId };
-      if (usingMongo()) {
-        const saved = await Category.findOneAndUpdate(
-          { id: record.id, outletId },
-          record,
-          { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
-        ).lean();
-        results.push(saved);
-        continue;
-      }
-
-      const index = memory.categories.findIndex((item) => item.id === record.id && matchesOutlet(item, outletId));
-      if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...record };
-      else memory.categories.push(record);
-      results.push(record);
+    if (usingMongo()) {
+      const saved = await Category.findOneAndUpdate(
+        { id: clean.id },
+        { ...clean, outletId: null },
+        { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+      ).lean();
+      await Category.deleteMany({ id: clean.id, _id: { $ne: saved._id } });
+      savePersistedMemory(memory);
+      return saved;
     }
 
+    const index = memory.categories.findIndex((item) => item.id === clean.id);
+    if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...clean };
+    else memory.categories.push(clean);
     savePersistedMemory(memory);
-    return results.length === 1 ? results[0] : results;
+    return clean;
   },
   async deleteCategory(id, query = {}) {
     const outletId = await resolveCollectionOutletScope("categories", query);
     const deletedAt = new Date();
     if (usingMongo()) {
       const filter = { id, ...(outletId ? { outletId } : {}) };
-      return Category.findOneAndUpdate(filter, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
+      await Category.updateMany(filter, { $set: { isDeleted: true, deletedAt } }, { runValidators: true });
+      return Category.findOne({ id, ...(outletId ? { outletId } : { outletId: null }) }).lean();
     }
     const index = memory.categories.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index < 0) return null;
@@ -1573,7 +1564,8 @@ export const store = {
     const outletId = await resolveCollectionOutletScope("categories", query);
     if (usingMongo()) {
       const filter = { id, ...(outletId ? { outletId } : {}) };
-      return Category.findOneAndUpdate(filter, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
+      await Category.updateMany(filter, { $set: { isDeleted: false, deletedAt: null } }, { runValidators: true });
+      return Category.findOne({ id, ...(outletId ? { outletId } : { outletId: null }) }).lean();
     }
     const index = memory.categories.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index < 0) return null;
@@ -1583,7 +1575,7 @@ export const store = {
   },
   async permanentlyDeleteCategory(id, query = {}) {
     const outletId = await resolveCollectionOutletScope("categories", query);
-    if (usingMongo()) return Category.deleteOne({ id, ...(outletId ? { outletId } : {}) });
+    if (usingMongo()) return Category.deleteMany({ id, ...(outletId ? { outletId } : {}) });
     const originalLength = memory.categories.length;
     memory.categories = memory.categories.filter((item) => item.id !== id || !matchesOutlet(item, outletId));
     if (memory.categories.length !== originalLength) savePersistedMemory(memory);

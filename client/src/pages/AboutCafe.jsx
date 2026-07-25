@@ -38,7 +38,7 @@ import cafeStoryVideo from "../assets/videos/cafe-story.mp4";
 import liveMusicVideo from "../assets/videos/live-music.mp4";
 import liveProjectorVideo from "../assets/videos/live-projector.mp4";
 import review1Video from "../assets/videos/review-1.mp4";
-import review2Video from "../assets/videos/review-2.MP4";
+import review2Video from "../assets/videos/review-2.mp4";
 import review3Video from "../assets/videos/review-3.mp4";
 import review4Video from "../assets/videos/review-4.mp4";
 import review5Video from "../assets/videos/review-5.mp4";
@@ -139,7 +139,7 @@ const customerExperiences = [
   }
 ];
 
-const aboutVideoSources = [
+const defaultAboutVideoSources = [
   cafeHeroVideo,
   cafeStoryVideo,
   liveProjectorVideo,
@@ -150,6 +150,46 @@ const aboutVideoSources = [
   review4Video,
   review5Video
 ];
+
+const highStreetAboutVideoSources = [
+  liveProjectorVideo,
+  liveMusicVideo,
+  cafeStoryVideo,
+  review3Video,
+  review4Video,
+  review5Video,
+  review1Video
+];
+
+// Outlet-specific content overrides. Keep default values (Near SKIT) in the existing constants above.
+const OUTLET_CONTENT = {
+  "near-high-street": {
+    navTitle: "Near High Street - Capital Mall",
+    heroTitle: "Near High Street Capital Mall",
+    heroDescription: "A breezy cafe experience with rooftop views, outdoor garden seating and family-friendly vibes.",
+    serveItems: [
+      { title: "Rooftop View", description: "Open-air seating with skyline views and evening ambience.", icon: Trophy, image: coupleDatesImage },
+      { title: "Indoor AC Sitting", description: "Comfortable air-conditioned indoor seating for relaxed dining.", icon: ShieldCheck, image: dineInExperienceImage },
+      { title: "Outdoor Garden Sitting", description: "Fresh greenery and outdoor tables for breezy evenings.", icon: Sparkles, image: friendsMeetupImage },
+      { title: "Fresh Greenery", description: "Lush plants and a green atmosphere to unwind.", icon: HeartHandshake, image: familyTimeImage },
+      { title: "Evening Ambience", description: "Soft lighting and music for pleasant evenings.", icon: Music, image: eveningSnacksImage },
+      { title: "Family Friendly Seating", description: "Spacious tables and a warm setting for families.", icon: Heart, image: freshSnacksImage }
+    ],
+    bestForItems: [
+      { title: "Couple Dates", description: "A serene rooftop for conversations and shared moments.", icon: Heart, image: coupleDatesImage },
+      { title: "Friends Meetup", description: "Open tables for casual meetups and group evenings.", icon: HeartHandshake, image: friendsMeetupImage },
+      { title: "Family Time", description: "Comfortable seating and a warm atmosphere for family dinners.", icon: ShieldCheck, image: familyTimeImage },
+      { title: "Evening Snacks", description: "Perfect for late snacks and evening hangouts.", icon: Sandwich, image: eveningSnacksImage }
+    ],
+    visualMoments: visualMoments,
+    customerExperiences: [
+      { name: "Anjali Patel", review: "Lovely rooftop, great ambience and friendly staff!" },
+      { name: "Saurabh", review: "Perfect for evening meetups — the garden seating is delightful." },
+      { name: "Neha", review: "Food was great and the AC seating is very comfortable." }
+    ],
+    aboutVideoSources: highStreetAboutVideoSources
+  }
+};
 
 const footerColumns = [
   {
@@ -303,9 +343,43 @@ function XSocialIcon() {
   return <span className="text-base font-black leading-none">X</span>;
 }
 
+function getOutletSlugFromPath() {
+  try {
+    if (typeof window === "undefined") return "";
+    const segments = window.location.pathname.split("/").filter(Boolean);
+    // Customer menu: /menu/:outletSlug/...
+    if (segments[0] === "menu" && segments[1]) return String(segments[1] || "");
+    // Fallback: if the app stored a selected outlet in sessionStorage (CustomerApp sync), use it
+    try {
+      const stored = sessionStorage.getItem("infusion-selected-outlet");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && parsed.slug) return String(parsed.slug || "");
+      }
+    } catch (e) {
+      // ignore
+    }
+    return "";
+  } catch (e) {
+    return "";
+  }
+}
+
 export default function AboutCafe({ navigate }) {
   const [modal, setModal] = React.useState(null);
   const [fssaiMissing, setFssaiMissing] = React.useState(false);
+  const outletSlug = getOutletSlugFromPath();
+  const outletOverride = OUTLET_CONTENT[String(outletSlug || "").toLowerCase()] || null;
+  const content = {
+    navTitle: outletOverride?.navTitle || "THE INFUSION SAGA",
+    heroTitle: outletOverride?.heroTitle || "Welcome to The Infusion Saga",
+    heroDescription: outletOverride?.heroDescription || "A cozy cafe experience crafted for conversations, comfort, unforgettable flavors, and the kind of everyday moments that deserve a beautiful place.",
+    serveItems: outletOverride?.serveItems || serveItems,
+    bestForItems: outletOverride?.bestForItems || bestForItems,
+    visualMoments: outletOverride?.visualMoments || visualMoments,
+    customerExperiences: outletOverride?.customerExperiences || customerExperiences,
+    aboutVideoSources: outletOverride?.aboutVideoSources || defaultAboutVideoSources
+  };
 
   function scrollToSection(sectionId) {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -375,7 +449,7 @@ export default function AboutCafe({ navigate }) {
           >
             <ArrowLeft size={19} />
           </button>
-          <p className="text-center text-sm font-black uppercase tracking-[0.2em] text-stone-950 sm:text-base">THE INFUSION SAGA</p>
+          <p className="text-center text-sm font-black uppercase tracking-[0.2em] text-stone-950 sm:text-base">{content.navTitle}</p>
           <span className="h-11 w-11" aria-hidden="true" />
         </nav>
       </header>
@@ -384,10 +458,10 @@ export default function AboutCafe({ navigate }) {
         <div className="about-hero-grid grid min-h-[calc(100vh-7rem)] items-center gap-7 lg:grid-cols-2">
           <div className="about-hero-copy max-w-3xl">
             <h1 className="text-5xl font-black leading-[0.95] text-stone-950 sm:text-6xl lg:text-7xl">
-              Welcome to The Infusion Saga
+              {content.heroTitle}
             </h1>
             <p className="mt-6 max-w-2xl text-base font-bold leading-8 text-stone-700 sm:text-lg">
-              A cozy cafe experience crafted for conversations, comfort, unforgettable flavors, and the kind of everyday moments that deserve a beautiful place.
+              {content.heroDescription}
             </p>
             <div className="about-hero-actions mt-8 flex flex-col gap-3 sm:flex-row">
               <PremiumButton onClick={() => navigate("/")}>Explore Menu</PremiumButton>
@@ -402,19 +476,19 @@ export default function AboutCafe({ navigate }) {
               </a>
             </div>
           </div>
-          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" videoSrc={aboutVideoSources[0]} />
+          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" videoSrc={content.aboutVideoSources[0]} />
         </div>
       </SectionShell>
 
       <SectionShell id="our-story" eyebrow="Our story" title="Cafe culture, crafted warmly">
         <div className="about-story-card grid gap-6 rounded-[2.25rem] border border-white/65 bg-white/42 p-4 shadow-[0_28px_80px_rgba(67,45,28,0.16)] backdrop-blur-2xl sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-7">
-          <VideoPlaceholder label="Cafe Story Video" className="min-h-[20rem] lg:min-h-full" videoSrc={aboutVideoSources[1]} />
+          <VideoPlaceholder label="Cafe Story Video" className="min-h-[20rem] lg:min-h-full" videoSrc={content.aboutVideoSources[1]} />
           <div className="about-story-copy flex flex-col justify-center rounded-[1.75rem] bg-white/28 p-4 sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-rose-900/70">THE INFUSION SAGA</p>
             <h2 className="mt-3 text-3xl font-black leading-tight text-stone-950 sm:text-4xl">More than a menu, it is a modern cafe pause.</h2>
             <div className="mt-5 space-y-4 text-sm font-semibold leading-7 text-stone-700 sm:text-base sm:leading-8">
               <p>
-                The Infusion Saga is designed as a modern cafe space where great taste meets a warm and relaxing vibe.
+                {content.heroDescription}
                 From signature chai and handcrafted coffees to refreshing mojitos, shakes, snacks, and desserts, every
                 item is made to give customers a fresh cafe experience.
               </p>
@@ -435,7 +509,7 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell eyebrow="Freshly crafted" title="What We Serve">
         <Carousel>
-          {serveItems.map((item) => (
+          {content.serveItems.map((item) => (
             <ServiceCard key={item.title} item={item} />
           ))}
         </Carousel>
@@ -443,11 +517,11 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell id="visual-moments" eyebrow="Visual moments" title="Experiences beyond the table">
         <div className="grid gap-5 lg:grid-cols-2">
-          {visualMoments.map((moment, index) => {
+          {content.visualMoments.map((moment, index) => {
             const Icon = moment.icon;
             return (
               <article key={moment.title} className="about-cinematic-card about-lift overflow-hidden rounded-[2rem] border border-white/65 bg-white/46 shadow-[0_24px_72px_rgba(67,45,28,0.16)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_82px_rgba(67,45,28,0.22)]">
-                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" videoSrc={aboutVideoSources[2 + index]} />
+                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" videoSrc={content.aboutVideoSources[2 + index]} />
                 <div className="p-6">
                   <span className="grid h-13 w-13 place-items-center rounded-2xl bg-black p-3 text-white">
                     <Icon size={25} />
@@ -463,7 +537,7 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell eyebrow="Every visit matters" title="Best For">
         <Carousel>
-          {bestForItems.map((item) => (
+          {content.bestForItems.map((item) => (
             <ServiceCard key={item.title} item={item} />
           ))}
         </Carousel>
@@ -471,9 +545,9 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell title="Customer Experiences">
         <Carousel>
-          {customerExperiences.map((experience, index) => (
+          {content.customerExperiences.map((experience, index) => (
             <article key={`${experience.name}-${index}`} className="about-review-card about-lift w-[18rem] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/65 bg-white/50 shadow-[0_22px_60px_rgba(67,45,28,0.15)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:w-[21rem]">
-              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" videoSrc={aboutVideoSources[4 + index] || aboutVideoSources[index % aboutVideoSources.length]} />
+              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" videoSrc={content.aboutVideoSources[4 + index] || content.aboutVideoSources[index % content.aboutVideoSources.length]} />
               <div className="p-5">
                 <p className="text-lg font-black text-stone-950">{experience.name}</p>
                 <div className="mt-2"><StarRating /></div>

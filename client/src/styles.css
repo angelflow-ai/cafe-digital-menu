@@ -144,6 +144,14 @@ textarea {
   -webkit-backdrop-filter: blur(24px);
 }
 
+.about-video-card video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1.5rem;
+}
+
 .about-video-card::before {
   content: "";
   position: absolute;
