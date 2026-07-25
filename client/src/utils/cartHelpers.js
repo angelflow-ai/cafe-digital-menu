@@ -1,5 +1,10 @@
 const DEFAULT_CART_STORAGE_KEY = "infusion-cart";
 
+export function getCartStorageKey(outletSlug = "") {
+  const normalizedSlug = String(outletSlug || "").trim().toLowerCase().replace(/^outlet-/, "");
+  return normalizedSlug ? `infusion-cart-${normalizedSlug}` : DEFAULT_CART_STORAGE_KEY;
+}
+
 export function parseCartStorageValue(value) {
   if (!value) return [];
   try {

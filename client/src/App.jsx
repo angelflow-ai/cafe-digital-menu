@@ -41,7 +41,7 @@ import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import AboutCafe from "./pages/AboutCafe";
-import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
+import { addToCart as addCartItem, calculateTotals, getCartStorageKey, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
@@ -846,7 +846,9 @@ function CustomerApp({ navigate, route, counterMode = false }) {
   const [cartOpen, setCartOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(null);
   const [orderOnCounter, setOrderOnCounter] = useState(false);
-  const [cart, setCart] = useState(() => loadCartFromStorage());
+  const currentOutletSlug = useMemo(() => getCustomerOutletSlugFromPath(route || window.location.pathname) || activeOutlet?.slug || "", [route, activeOutlet?.slug]);
+  const cartStorageKey = useMemo(() => getCartStorageKey(currentOutletSlug), [currentOutletSlug]);
+  const [cart, setCart] = useState(() => loadCartFromStorage(getCartStorageKey(getCustomerOutletSlugFromPath(route || window.location.pathname))));
   const [loading, setLoading] = useState(true);
   const [appError, setAppError] = useState(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -1030,8 +1032,15 @@ function CustomerApp({ navigate, route, counterMode = false }) {
   }, [activeOutlet]);
 
   useEffect(() => {
-    saveCartToStorage(cart);
-  }, [cart]);
+    const nextCart = loadCartFromStorage(cartStorageKey);
+    if (JSON.stringify(nextCart) !== JSON.stringify(cart)) {
+      setCart(nextCart);
+    }
+  }, [cartStorageKey]);
+
+  useEffect(() => {
+    saveCartToStorage(cart, cartStorageKey);
+  }, [cart, cartStorageKey]);
 
   useEffect(() => {
     if (!orderPlaced || orderPlaced._source !== "coc" || !orderPlaced.pendingApproval || !orderPlaced.orderId) return;
@@ -1137,13 +1146,13 @@ function CustomerApp({ navigate, route, counterMode = false }) {
   useEffect(() => {
     function onStorage(event) {
       if (!event.key) return;
-      if (event.key === "infusion-cart") {
+      if (event.key === cartStorageKey) {
         setCart(parseCartStorageValue(event.newValue));
       }
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
-  }, []);
+  }, [cartStorageKey]);
 
   const normalizedItems = useMemo(() => items.map(normalizeMenuItem), [items]);
   const categoryMap = useMemo(() => new Map(categories.map((category) => [category.id, category])), [categories]);
