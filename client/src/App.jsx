@@ -137,6 +137,56 @@ function normalizeSubcategoryList(value) {
   return [];
 }
 
+function normalizeOutletSlug(value) {
+  return String(value || "").trim().toLowerCase().replace(/^outlet-/, "");
+}
+
+function getCustomerOutletSlugFromPath(pathname) {
+  const match = String(pathname || "").match(/^\/menu\/([^/]+)/i);
+  return match ? normalizeOutletSlug(match[1]) : null;
+}
+
+function getOwnerOutletSlugFromPath(pathname) {
+  const path = String(pathname || "").replace(/\/+$/, "");
+  const segments = path.split("/").filter(Boolean);
+  if (segments[0] !== "owner") return null;
+  if (!segments[1]) return null;
+  const candidate = normalizeOutletSlug(segments[1]);
+  const knownTabs = new Set(["inventory", "categories", "stock", "recipes", "lowstock", "reports", "history", "compare", "outlets"]);
+  return knownTabs.has(candidate) ? null : candidate;
+}
+
+function getOwnerInitialTabFromPath(pathname) {
+  const path = String(pathname || "").replace(/\/+$/, "");
+  const segments = path.split("/").filter(Boolean);
+  const ownerTabByKey = {
+    inventory: "inventory",
+    categories: "categories",
+    stock: "stock",
+    recipes: "recipes",
+    lowstock: "lowstock",
+    reports: "reports",
+    history: "history",
+    compare: "compare",
+    outlets: "outlets"
+  };
+
+  if (segments.length === 0 || segments[0] !== "owner") return "items";
+  if (segments.length === 1) return "items";
+  if (segments.length === 2) {
+    return ownerTabByKey[segments[1]] || "items";
+  }
+  if (segments.length >= 3) {
+    return ownerTabByKey[segments[2]] || "items";
+  }
+  return "items";
+}
+
+const DEFAULT_OUTLETS = [
+  { name: "The Infusion Saga - Near SKIT", slug: "near-skit", id: "6a5cadad7aed56a342c4ea44", _id: "6a5cadad7aed56a342c4ea44" },
+  { name: "The Infusion Saga - Near High Street", slug: "near-high-street", id: "6a5f4bc63024c53065d4ac5f", _id: "6a5f4bc63024c53065d4ac5f" }
+];
+
 function normalizeDeletedSubcategoryMap(value) {
   const source = value && typeof value === "object" ? value : {};
   const result = {};
@@ -366,7 +416,7 @@ function saveLocalInventoryItems(items) {
   }
   try {
     localStorage.setItem(INVENTORY_ITEMS_KEY, JSON.stringify(normalized));
-    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: normalized }));
+    window.dispatchEvent(new CustomEvent("localInventoryUpdated", { detail: normalized }));
     dispatchOwnerDataUpdated({ source: "inventory" });
   } catch (err) {
     console.error("Failed to save inventory items:", err);
@@ -756,15 +806,15 @@ function App() {
 
   const normalizedRoute = route.replace(/\/+$/, "");
   if (normalizedRoute === "" || normalizedRoute === "/about-cafe") return <AboutCafe navigate={navigate} />;
-  if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} counterMode />;
-  if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} />;
+  if (normalizedRoute === "/counter") return <CustomerApp navigate={navigate} route={route} counterMode />;
+  if (normalizedRoute === "/owner/forgot-password") return <OwnerApp navigate={navigate} route={route} />;
   if (normalizedRoute === "/biller/forgot-password") return <BillerApp navigate={navigate} />;
   if (normalizedRoute === "/order/biller") return <BillerApp navigate={navigate} />;
-  if (normalizedRoute === "/order/owner") return <OwnerApp navigate={navigate} />;
-  if (normalizedRoute === "/order" || normalizedRoute === "/order/") return <CustomerApp navigate={navigate} />;
+  if (normalizedRoute === "/order/owner") return <OwnerApp navigate={navigate} route={route} />;
+  if (normalizedRoute === "/order" || normalizedRoute === "/order/") return <CustomerApp navigate={navigate} route={route} />;
   if (route.startsWith("/order/")) {
     const orderId = route.replace("/order/", "");
-    if (!orderId) return <CustomerApp navigate={navigate} />;
+    if (!orderId) return <CustomerApp navigate={navigate} route={route} />;
     return <OrderTracking orderId={orderId} />;
   }
   // backward-compatibility: redirect old /admin URL and subpaths to /owner
@@ -776,34 +826,16 @@ function App() {
     }
   }
   if (route.startsWith("/owner")) {
-    const ownerTabByPath = {
-      "/owner/inventory": "inventory",
-      "/owner/categories": "categories",
-      "/owner/stock": "stock",
-      "/owner/recipes": "recipes",
-      "/owner/lowstock": "lowstock",
-      "/owner/reports": "reports",
-      "/owner/history": "history"
-    };
-    return <OwnerApp navigate={navigate} initialTab={ownerTabByPath[normalizedRoute] || "items"} />;
+    const ownerOutletSlug = getOwnerOutletSlugFromPath(route);
+    const ownerTab = getOwnerInitialTabFromPath(route);
+    return <OwnerApp navigate={navigate} route={route} outletSlug={ownerOutletSlug} initialTab={ownerTab} />;
   }
   if (route.startsWith("/biller")) return <BillerApp navigate={navigate} />;
-  return <CustomerApp navigate={navigate} />;
+  return <CustomerApp navigate={navigate} route={route} />;
 }
 
-function CustomerApp({ navigate, counterMode = false }) {
-  const [activeOutlet, setActiveOutlet] = useState(() => {
-    try {
-      const match = window.location.pathname.match(/\/menu\/([^/]+)/i);
-      if (match) {
-        const cached = JSON.parse(sessionStorage.getItem("infusion-selected-outlet") || "null");
-        if (cached?.slug === match[1]) return cached;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  });
+function CustomerApp({ navigate, route, counterMode = false }) {
+  const [activeOutlet, setActiveOutlet] = useState(null);
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [activeCategory, setActiveCategoryId] = useState("all");
@@ -845,36 +877,36 @@ function CustomerApp({ navigate, counterMode = false }) {
 
   // Sync selected outlet context from the URL path
   useEffect(() => {
-    const match = window.location.pathname.match(/\/menu\/([^/]+)/i);
-    if (match) {
-      const urlSlug = match[1];
-      (async () => {
-        try {
-          const outletsList = await api("/outlets");
-          if (Array.isArray(outletsList)) {
-            const targetOutlet = outletsList.find(o => o.slug === urlSlug);
-            if (targetOutlet) {
-              sessionStorage.setItem("infusion-selected-outlet", JSON.stringify(targetOutlet));
-              setActiveOutlet(targetOutlet);
-              if (import.meta.env.DEV) {
-                console.log("[CustomerApp] Synced outlet context from URL:", urlSlug, targetOutlet._id || targetOutlet.id);
-              }
-            } else {
-              setAppError(`Outlet "${urlSlug}" not found.`);
-              setLoading(false);
+    const urlSlug = getCustomerOutletSlugFromPath(route || window.location.pathname);
+    if (!urlSlug) return;
+    if (activeOutlet?.slug === urlSlug) return;
+
+    (async () => {
+      try {
+        const outletsList = await api("/outlets");
+        if (Array.isArray(outletsList)) {
+          const targetOutlet = outletsList.find((o) => o.slug === urlSlug);
+          if (targetOutlet) {
+            sessionStorage.setItem("infusion-selected-outlet", JSON.stringify(targetOutlet));
+            setActiveOutlet(targetOutlet);
+            if (import.meta.env.DEV) {
+              console.log("[CustomerApp] Synced outlet context from URL:", urlSlug, targetOutlet._id || targetOutlet.id);
             }
           } else {
-            setAppError("Failed to load outlets list.");
+            setAppError(`Outlet "${urlSlug}" not found.`);
             setLoading(false);
           }
-        } catch (error) {
-          console.error("Failed to sync outlet context from URL:", error);
-          setAppError("Outlet service is currently unavailable. Please try again later.");
+        } else {
+          setAppError("Failed to load outlets list.");
           setLoading(false);
         }
-      })();
-    }
-  }, []);
+      } catch (error) {
+        console.error("Failed to sync outlet context from URL:", error);
+        setAppError("Outlet service is currently unavailable. Please try again later.");
+        setLoading(false);
+      }
+    })();
+  }, [route, activeOutlet]);
 
   useEffect(() => {
     try {
@@ -1560,7 +1592,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
       const saved = editingItem
         ? await menuService.updateMenuItem(editingItem._id || editingItem.id, payload)
         : await menuService.createMenuItem(payload);
-      if (!saved?.id) throw new Error("Save did not return the saved menu item.");
+      if (!saved || (!saved.id && !saved._id)) throw new Error("Save did not return the saved menu item.");
       setForm({ name: "", categoryId: categories[0]?.id || "", subCategoryId: "", subCategoryName: "", description: "", image: "", active: true, price: "", serveOptions: [], addons: [] });
       setNewServeOption("");
       setNewAddonName("");
@@ -3174,7 +3206,7 @@ function OrderSuccess({ order, onClose, showFallbackAction = false, onFallbackAc
   );
 }
 
-function OwnerApp({ navigate, initialTab = "items" }) {
+function OwnerApp({ navigate, route, outletSlug, initialTab = "items" }) {
   const [owner, setOwner] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
@@ -3184,7 +3216,7 @@ function OwnerApp({ navigate, initialTab = "items" }) {
 
   if (authLoading) return <OwnerShell><p className="font-bold">Loading...</p></OwnerShell>;
   if (!owner) return <Login role="admin" onLogin={setOwner} navigate={navigate} />;
-  return <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} initialTab={initialTab} />;
+  return <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} initialTab={initialTab} urlOutletSlug={outletSlug} />;
 }
 
 function BillerApp({ navigate }) {
@@ -3211,6 +3243,8 @@ function BillerApp({ navigate }) {
     outletError
   });
 
+  const resolvedOutletRef = useRef(null);
+
   useEffect(() => {
     if (!availableOutlets || !availableOutlets.length) {
       loadOutlets().catch(() => {});
@@ -3218,41 +3252,23 @@ function BillerApp({ navigate }) {
   }, [availableOutlets, loadOutlets]);
 
   useEffect(() => {
-    console.log("[BillerApp Matching Effect Run]", {
-      availableOutletsCount: availableOutlets?.length || 0,
-      currentOutletSlug: currentOutlet?.slug || "none",
-      pathname: window.location.pathname
-    });
-
-    // Only execute matching once outlets are loaded to avoid false mismatches
     if (!availableOutlets || !availableOutlets.length) return;
 
     const match = window.location.pathname.match(/^\/biller\/([^/]+)/);
-    if (match) {
-      const slug = match[1];
-      if (slug !== "forgot-password") {
-        const targetOutlet = availableOutlets.find((o) => o.slug === slug);
-        console.log("[BillerApp Matching Lookup Result]", {
-          slug,
-          targetOutletFound: Boolean(targetOutlet),
-          targetOutletSlug: targetOutlet?.slug || "none",
-          targetOutletId: targetOutlet?._id || targetOutlet?.id || "none"
-        });
+    const candidateSlug = match?.[1] && match[1] !== "forgot-password" ? match[1] : null;
+    const targetOutlet = candidateSlug
+      ? availableOutlets.find((o) => o.slug === candidateSlug)
+      : availableOutlets.find((o) => o.slug === currentOutlet?.slug) || availableOutlets[0];
 
-        if (targetOutlet) {
-          setOutletError("");
-          if (targetOutlet.slug !== currentOutlet?.slug) {
-            console.log("[BillerApp Matching Selecting Outlet]", {
-              selecting: targetOutlet.slug
-            });
-            selectOutlet(targetOutlet);
-          }
-        } else {
-          setOutletError(`Outlet "${slug}" not found.`);
-        }
-      }
-    } else {
-      setOutletError("Outlet not specified. Please verify the URL.");
+    if (!targetOutlet) {
+      setOutletError(candidateSlug ? `Outlet "${candidateSlug}" not found.` : "Outlet not specified. Please verify the URL.");
+      return;
+    }
+
+    setOutletError("");
+    if (resolvedOutletRef.current?.slug !== targetOutlet.slug || resolvedOutletRef.current?._id !== (targetOutlet._id || targetOutlet.id)) {
+      resolvedOutletRef.current = targetOutlet;
+      selectOutlet(targetOutlet);
     }
   }, [availableOutlets, currentOutlet, selectOutlet]);
 
@@ -3762,7 +3778,7 @@ function OutletQrManager() {
   );
 }
 
-function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
+function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletSlug }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [deletedCategories, setDeletedCategories] = useState([]);
@@ -3781,6 +3797,10 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("name");
   const [editingItem, setEditingItem] = useState(null);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
   const [pendingDelete, setPendingDelete] = useState(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const mobileNavRef = useRef(null);
@@ -3794,21 +3814,75 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     }
   }, [availableOutlets, loadOutlets]);
 
-  const outlets = (availableOutlets && availableOutlets.length) ? availableOutlets : [
-    { name: "The Infusion Saga - Near SKIT", slug: "near-skit", id: "6a5cadad7aed56a342c4ea44", _id: "6a5cadad7aed56a342c4ea44" },
-    { name: "The Infusion Saga - Near High Street", slug: "near-high-street", id: "6a5f4bc63024c53065d4ac5f", _id: "6a5f4bc63024c53065d4ac5f" }
-  ];
+  const outlets = (availableOutlets && availableOutlets.length) ? availableOutlets : DEFAULT_OUTLETS;
 
   const [selectedOutletFilter, setSelectedOutletFilter] = useState(() => {
-    return sessionStorage.getItem("ownerSelectedOutletFilter") || "all";
+    return urlOutletSlug ? normalizeOutletSlug(urlOutletSlug) : "all";
   });
+
+  useEffect(() => {
+    if (urlOutletSlug) {
+      setSelectedOutletFilter(normalizeOutletSlug(urlOutletSlug));
+    } else {
+      setSelectedOutletFilter("all");
+    }
+  }, [urlOutletSlug]);
 
   const activeOutletObj = useMemo(() => {
     if (selectedOutletFilter === "all") return null;
-    return outlets.find(o => o.slug === selectedOutletFilter);
+    return outlets.find((o) => o.slug === selectedOutletFilter) || null;
   }, [outlets, selectedOutletFilter]);
 
   const activeOutletId = activeOutletObj?._id || activeOutletObj?.id;
+
+  const outletFilterDiagnostics = useRef({ count: 0 });
+
+  function resolveOutletIdValue(outletId) {
+    if (!outletId) return "";
+    if (typeof outletId === "string") return outletId;
+    if (typeof outletId === "object") {
+      return String(outletId._id || outletId.id || outletId.slug || "");
+    }
+    return String(outletId);
+  }
+
+  function itemMatchesOutletFilter(item, filter) {
+    if (filter === "all") return true;
+    if (!item) return false;
+
+    if (item.outletId?.slug === filter) return true;
+
+    const itemOutletId = resolveOutletIdValue(item.outletId);
+    if (!itemOutletId) {
+      // Shared catalog items may not carry an explicit outletId.
+      // They should still be visible for any selected outlet.
+      return true;
+    }
+
+    const normalizedOutletId = String(itemOutletId).trim();
+    const normalizedOutletSlug = normalizeOutletSlug(normalizedOutletId);
+    if (normalizedOutletId === filter || normalizedOutletSlug === filter) return true;
+
+    const matchedOutlet = outlets.find((o) => {
+      const outletIdValue = String(o._id || o.id || "").trim();
+      const outletSlugValue = String(o.slug || "").trim();
+      return outletIdValue === normalizedOutletId || outletSlugValue === normalizedOutletId || outletIdValue === normalizedOutletSlug || outletSlugValue === normalizedOutletSlug;
+    });
+
+    const matches = Boolean(matchedOutlet && matchedOutlet.slug === filter);
+    if (import.meta.env.DEV && !matches && outletFilterDiagnostics.current.count < 20) {
+      outletFilterDiagnostics.current.count += 1;
+      console.debug("[Owner Inventory] outlet filter mismatch", {
+        selectedOutletFilter: filter,
+        itemId: item.id || item._id || item.name || "<unknown>",
+        itemOutletId,
+        rawOutletId: item.outletId,
+        matchedOutletSlug: matchedOutlet?.slug || null
+      });
+    }
+
+    return matches;
+  }
 
   // Sync selected outlet context for API client requests
   useEffect(() => {
@@ -3819,59 +3893,37 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     }
   }, [activeOutletObj]);
 
+  useEffect(() => {
+    if (selectedOutletFilter === "all") {
+      sessionStorage.setItem("ownerSelectedOutletFilter", "all");
+    } else {
+      sessionStorage.setItem("ownerSelectedOutletFilter", selectedOutletFilter);
+    }
+  }, [selectedOutletFilter]);
+
   const filteredRawMaterials = useMemo(() => {
     if (selectedOutletFilter === "all") return rawMaterials;
-    return rawMaterials.filter(item => {
-      if (item.outletId?.slug === selectedOutletFilter) return true;
-      const oid = item.outletId?._id || item.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return rawMaterials.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [rawMaterials, selectedOutletFilter, outlets]);
 
   const filteredLocalInventoryItems = useMemo(() => {
     if (selectedOutletFilter === "all") return localInventoryItems;
-    return localInventoryItems.filter(item => {
-      if (item.outletId?.slug === selectedOutletFilter) return true;
-      const oid = item.outletId?._id || item.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return localInventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [localInventoryItems, selectedOutletFilter, outlets]);
 
   const filteredRecipes = useMemo(() => {
     if (selectedOutletFilter === "all") return recipes;
-    return recipes.filter(r => {
-      if (r.outletId?.slug === selectedOutletFilter) return true;
-      const oid = r.outletId?._id || r.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return recipes.filter((r) => itemMatchesOutletFilter(r, selectedOutletFilter));
   }, [recipes, selectedOutletFilter, outlets]);
 
   const filteredOrders = useMemo(() => {
     if (selectedOutletFilter === "all") return orders;
-    return orders.filter(o => {
-      if (o.outletId?.slug === selectedOutletFilter) return true;
-      const oid = o.outletId?._id || o.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return orders.filter((o) => itemMatchesOutletFilter(o, selectedOutletFilter));
   }, [orders, selectedOutletFilter, outlets]);
 
   const filteredCocRequests = useMemo(() => {
     if (selectedOutletFilter === "all") return cocRequests;
-    return cocRequests.filter(r => {
-      if (r.outletId?.slug === selectedOutletFilter) return true;
-      const oid = r.outletId?._id || r.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return cocRequests.filter((r) => itemMatchesOutletFilter(r, selectedOutletFilter));
   }, [cocRequests, selectedOutletFilter, outlets]);
 
   async function load() {
@@ -4024,10 +4076,10 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     }
 
     syncLocalInventory();
-    window.addEventListener("inventoryUpdated", syncLocalInventory);
+    window.addEventListener("localInventoryUpdated", syncLocalInventory);
     window.addEventListener("storage", syncLocalInventory);
     return () => {
-      window.removeEventListener("inventoryUpdated", syncLocalInventory);
+      window.removeEventListener("localInventoryUpdated", syncLocalInventory);
       window.removeEventListener("storage", syncLocalInventory);
     };
   }, []);
@@ -4040,7 +4092,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     }
     clearDashboardCache();
     try { window.dispatchEvent(new CustomEvent("ordersUpdated", { detail: [] })); } catch (error) {}
-    try { window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: [] })); } catch (error) {}
+    try { window.dispatchEvent(new CustomEvent("localInventoryUpdated", { detail: [] })); } catch (error) {}
     onLogout();
   }
 
@@ -4165,12 +4217,13 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
 
     return mergedItems.filter((item) => {
       if (!item || item?.isDeleted === true) return false;
+      if (!itemMatchesOutletFilter(item, selectedOutletFilter)) return false;
       const key = String(item.id ?? item._id ?? item.name ?? "");
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;
     });
-  }, [filteredRawMaterials, filteredLocalInventoryItems]);
+  }, [filteredRawMaterials, filteredLocalInventoryItems, selectedOutletFilter, outlets]);
 
   const lowStockCount = inventoryAttentionItems.filter((item) => {
     const quantity = Number(item.quantity ?? item.stock ?? 0) || 0;
@@ -4199,6 +4252,13 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
     { key: "outlets", label: "Outlets & QR Codes" }
   ];
 
+  const ownerBasePath = selectedOutletFilter === "all" ? "/owner" : `/owner/${selectedOutletFilter}`;
+  const navigateOwnerTab = (nextTab) => {
+    const nextTabSegment = nextTab && nextTab !== "items" ? `/${nextTab}` : "";
+    navigate(`${ownerBasePath}${nextTabSegment}`);
+    setTab(nextTab);
+  };
+
   const visibleItems = [...items]
     .filter((item) => item?.isDeleted !== true)
     .filter((item) => !search || item.name.toLowerCase().includes(search.toLowerCase()))
@@ -4221,6 +4281,10 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                       const val = e.target.value;
                       setSelectedOutletFilter(val);
                       sessionStorage.setItem("ownerSelectedOutletFilter", val);
+
+                      const tabSegment = tab && tab !== "items" ? `/${tab}` : "";
+                      const nextRoute = val === "all" ? `/owner${tabSegment}` : `/owner/${val}${tabSegment}`;
+                      navigate(nextRoute);
                     }}
                     className="bg-transparent text-sm font-black text-stone-900 outline-none cursor-pointer pr-1"
                   >
@@ -4232,6 +4296,11 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                 </div>
               )}
             </div>
+            {selectedOutletFilter === "all" && (
+              <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 shadow-sm">
+                You are viewing All Outlets. Creating categories or menu items will be bulk-created across every outlet.
+              </div>
+            )}
             {lastSync && <p className="mt-1 text-xs text-stone-500">Last sync: {new Date(lastSync).toLocaleString()}</p>}
           </div>
           <div className="flex items-center gap-2 md:hidden">
@@ -4306,7 +4375,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
                         <button
                           key={tabItem.key}
                           type="button"
-                          onClick={() => { setTab(tabItem.key); setMobileNavOpen(false); }}
+                          onClick={() => { navigateOwnerTab(tabItem.key); setMobileNavOpen(false); }}
                           className={`w-full rounded-2xl px-4 py-3 text-left text-sm font-black ${tab === tabItem.key ? "bg-black text-white" : isLowStockAlertButton ? "bg-red-600 text-white shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-stone-100 text-stone-900"}`}
                         >
                           {tabItem.label}
@@ -4330,7 +4399,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items" }) {
             return (
               <button
                 key={tabItem.key}
-                onClick={() => setTab(tabItem.key)}
+                onClick={() => navigateOwnerTab(tabItem.key)}
                 className={`flex-shrink-0 rounded-full px-4 py-2.5 text-sm font-black transition border border-stone-200/60 ${tab === tabItem.key ? "bg-black text-white border-black" : isLowStockAlertButton ? "bg-red-600 text-white border-red-600 shadow-[0_0_0_1px_rgba(220,38,38,0.15),0_10px_20px_rgba(220,38,38,0.18)]" : "bg-white text-stone-900 hover:bg-stone-50"}`}
               >
                 {tabItem.label}
@@ -5088,12 +5157,12 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
       if (onInventoryChanged) onInventoryChanged(latestItems);
     }
     
-    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: loadLocalInventoryItems() }));
-    window.addEventListener("inventoryUpdated", handleInventoryUpdated);
+    window.dispatchEvent(new CustomEvent("localInventoryUpdated", { detail: loadLocalInventoryItems() }));
+    window.addEventListener("localInventoryUpdated", handleInventoryUpdated);
     window.addEventListener("storage", handleStorage);
     
     return () => {
-      window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
+      window.removeEventListener("localInventoryUpdated", handleInventoryUpdated);
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
@@ -5256,13 +5325,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const inventoryStoreItems = useMemo(() => Array.isArray(rawMaterials) ? rawMaterials.map(normalizeServerInventoryItem).filter(Boolean) : [], [rawMaterials]);
   const filteredLocalItems = useMemo(() => {
     if (selectedOutletFilter === "all") return inventoryItems;
-    return inventoryItems.filter(item => {
-      if (item.outletId?.slug === selectedOutletFilter) return true;
-      const oid = item.outletId?._id || item.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return inventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [inventoryItems, selectedOutletFilter, outlets]);
   const renderedInventory = useMemo(() => mergeInventoryItems(inventoryStoreItems, filteredLocalItems), [inventoryStoreItems, filteredLocalItems]);
 
@@ -5512,9 +5575,9 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
       setRecentTransactions(transactions.slice(0, 20));
     });
     
-    window.addEventListener("inventoryUpdated", handleInventoryUpdated);
+    window.addEventListener("localInventoryUpdated", handleInventoryUpdated);
     return () => {
-      window.removeEventListener("inventoryUpdated", handleInventoryUpdated);
+      window.removeEventListener("localInventoryUpdated", handleInventoryUpdated);
       unsubscribe();
     };
   }, []);
@@ -5522,13 +5585,7 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   // Combine backend and local inventory
   const filteredLocalItems = useMemo(() => {
     if (selectedOutletFilter === "all") return localItems;
-    return localItems.filter(item => {
-      if (item.outletId?.slug === selectedOutletFilter) return true;
-      const oid = item.outletId?._id || item.outletId;
-      if (!oid) return false;
-      const itemOutlet = outlets.find(o => String(o._id || o.id || "") === String(oid || ""));
-      return itemOutlet?.slug === selectedOutletFilter;
-    });
+    return localItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [localItems, selectedOutletFilter, outlets]);
 
   const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true);

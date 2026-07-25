@@ -105,13 +105,13 @@ async function findPublicOrder(identifier) {
   const cached = publicOrderCache.get(key);
   if (cached) return cached;
 
-  const direct = await store.orderById(key);
+  const direct = await store.orderById(key, { outletId: "all" });
   if (direct) {
     cacheOrder(direct);
     return direct;
   }
 
-  const allOrders = await store.orders();
+  const allOrders = await store.orders({ outletId: "all" });
   const match = allOrders.find((order) => String(order._id || "") === key || String(order.id || "") === key || String(order.orderId || "") === key);
   if (match) {
     cacheOrder(match);
@@ -124,8 +124,11 @@ async function findPublicOrder(identifier) {
 function sendSseEvent(name, data, targetOutletId = null) {
   const payload = typeof data === "string" ? data : JSON.stringify(data);
   for (const client of sseClients) {
-    if (targetOutletId && client.outletId && String(client.outletId) !== String(targetOutletId)) {
-      continue;
+    // If a specific targetOutletId is provided, only send to clients
+    // that have the same outletId. Do not broadcast to clients with no outlet.
+    if (targetOutletId) {
+      if (!client.outletId) continue;
+      if (String(client.outletId) !== String(targetOutletId)) continue;
     }
     try {
       client.res.write(`event: ${name}\n`);
@@ -559,12 +562,12 @@ app.get("/api/_debug/orders", async (_req, res, next) => { try { res.json(await 
 app.get("/api/categories", async (_req, res, next) => {
   try {
     const includeDeleted = _req.query.includeDeleted === "true";
-    const categories = await store.categories();
+    const categories = await store.categories(_req.query);
     if (!includeDeleted) {
       res.json(categories);
       return;
     }
-    const deleted = await store.deletedCategories();
+    const deleted = await store.deletedCategories(_req.query);
     res.json([...categories, ...deleted]);
   } catch (error) {
     next(error);
@@ -577,7 +580,9 @@ app.post("/api/categories", requireAdmin, async (req, res, next) => {
       id: slugify(req.body.id || req.body.name),
       name: req.body.name,
       icon: req.body.icon || "Utensils",
-      sortOrder: Number(req.body.sortOrder || 0)
+      sortOrder: Number(req.body.sortOrder || 0),
+      outletId: req.body.outletId,
+      outletSlug: req.body.outletSlug
     };
     res.json(await store.upsertCategory(payload));
   } catch (error) {
@@ -587,7 +592,10 @@ app.post("/api/categories", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/categories/:id/restore", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.restoreCategory(req.params.id));
+    res.json(await store.restoreCategory(req.params.id, {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    }));
   } catch (error) {
     next(error);
   }
@@ -596,10 +604,16 @@ app.patch("/api/categories/:id/restore", requireAdmin, async (req, res, next) =>
 app.delete("/api/categories/:id", requireAdmin, async (req, res, next) => {
   try {
     if (req.query.permanent === "true") {
-      res.json(await store.permanentlyDeleteCategory(req.params.id));
+      res.json(await store.permanentlyDeleteCategory(req.params.id, {
+        outletId: req.body.outletId || req.query.outletId,
+        outletSlug: req.body.outletSlug || req.query.outletSlug
+      }));
       return;
     }
-    res.json(await store.deleteCategory(req.params.id));
+    res.json(await store.deleteCategory(req.params.id, {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    }));
   } catch (error) {
     next(error);
   }
@@ -612,7 +626,9 @@ app.get(["/api/menu", "/api/menu-items"], async (req, res, next) => {
         categoryId: req.query.categoryId,
         search: req.query.search,
         includeInactive: req.query.includeInactive === "true",
-        includeDeleted: req.query.includeDeleted === "true"
+        includeDeleted: req.query.includeDeleted === "true",
+        outletId: req.query.outletId,
+        outletSlug: req.query.outletSlug
       })
     );
   } catch (error) {
@@ -622,7 +638,10 @@ app.get(["/api/menu", "/api/menu-items"], async (req, res, next) => {
 
 app.get(["/api/menu/:id", "/api/menu-items/:id"], async (req, res, next) => {
   try {
-    const item = await store.menuItem(req.params.id);
+    const item = await store.menuItem(req.params.id, {
+      outletId: req.query.outletId,
+      outletSlug: req.query.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -632,7 +651,11 @@ app.get(["/api/menu/:id", "/api/menu-items/:id"], async (req, res, next) => {
 
 app.post(["/api/menu", "/api/menu-items"], requireAdmin, async (req, res, next) => {
   try {
-    const item = await store.upsertMenuItem(req.body);
+    const item = await store.upsertMenuItem({
+      ...req.body,
+      outletId: req.body.outletId,
+      outletSlug: req.body.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -651,7 +674,13 @@ function readActiveToggle(body = {}) {
 
 async function updateMenuItemRoute(req, res, next) {
   try {
-    const item = await store.updateMenuItem(req.params.id, req.body || {});
+    console.log('[Debug:updateMenuItemRoute] params.id=', req.params.id);
+    console.log('[Debug:updateMenuItemRoute] body=', JSON.stringify(req.body || {}));
+    console.log('[Debug:updateMenuItemRoute] query=', JSON.stringify(req.query || {}));
+    const item = await store.updateMenuItem(req.params.id, req.body || {}, {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -661,7 +690,10 @@ async function updateMenuItemRoute(req, res, next) {
 
 async function setMenuItemActiveRoute(req, res, next) {
   try {
-    const item = await store.setMenuItemActive(req.params.id, readActiveToggle(req.body || {}));
+    const item = await store.setMenuItemActive(req.params.id, readActiveToggle(req.body || {}), {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -676,7 +708,10 @@ app.put(menuItemActiveRoutes, requireAdmin, setMenuItemActiveRoute);
 
 app.patch(["/api/menu/:id/restore", "/api/menu-items/:id/restore"], requireAdmin, async (req, res, next) => {
   try {
-    const item = await store.restoreMenuItem(req.params.id);
+    const item = await store.restoreMenuItem(req.params.id, {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -687,10 +722,16 @@ app.patch(["/api/menu/:id/restore", "/api/menu-items/:id/restore"], requireAdmin
 app.delete(["/api/menu/:id", "/api/menu-items/:id"], requireAdmin, async (req, res, next) => {
   try {
     if (req.query.permanent === "true") {
-      res.json(await store.permanentlyDeleteMenuItem(req.params.id));
+      res.json(await store.permanentlyDeleteMenuItem(req.params.id, {
+        outletId: req.body.outletId || req.query.outletId,
+        outletSlug: req.body.outletSlug || req.query.outletSlug
+      }));
       return;
     }
-    const item = await store.deleteMenuItem(req.params.id);
+    const item = await store.deleteMenuItem(req.params.id, {
+      outletId: req.body.outletId || req.query.outletId,
+      outletSlug: req.body.outletSlug || req.query.outletSlug
+    });
     if (!item) return res.status(404).json({ message: "Menu item not found." });
     return res.json(item);
   } catch (error) {
@@ -816,7 +857,7 @@ app.post("/api/orders/public/:id/retry", async (req, res, next) => {
   try {
     const order = await findPublicOrder(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found." });
-    const updated = await store.updateOrder(order._id || order.id, { paymentStatus: "pending_verification", status: "pending" });
+    const updated = await store.updateOrder(order._id || order.id, { paymentStatus: "pending_verification", status: "pending" }, { outletId: order.outletId || "all" });
     cacheOrder(updated);
     res.json(updated);
     try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }, updated.outletId); } catch (e) {}
@@ -854,7 +895,7 @@ app.get("/api/orders/stream", async (req, res) => {
 
 app.get("/api/orders/:id", requireStaff, async (req, res, next) => {
   try {
-    const order = await store.orderById(req.params.id);
+    const order = await store.orderById(req.params.id, req.query);
     if (!order) return res.status(404).json({ message: "Order not found." });
     res.json(order);
   } catch (error) {
@@ -864,20 +905,20 @@ app.get("/api/orders/:id", requireStaff, async (req, res, next) => {
 
 app.patch("/api/orders/:id/status", requireStaff, async (req, res, next) => {
   try {
-    const order = await store.updateOrder(req.params.id, { status: req.body.status });
+    const order = await store.updateOrder(req.params.id, { status: req.body.status }, req.query);
     if (!order) return res.status(404).json({ message: "Order not found." });
     cacheOrder(order);
 
     const nextStatus = String(req.body.status || "").toLowerCase().trim();
     if (nextStatus === "confirmed" || nextStatus === "completed") {
       try {
-        await store.deductOrderInventory(order._id || order.id);
+        await store.deductOrderInventory(order._id || order.id, req.query);
       } catch (err) {
         console.error("Failed to deduct inventory on status change:", err);
       }
     }
 
-    const updated = await store.orderById(order._id || order.id);
+    const updated = await store.orderById(order._id || order.id, req.query);
     cacheOrder(updated);
     res.json(updated);
     try {
@@ -892,7 +933,7 @@ app.patch("/api/orders/:id/status", requireStaff, async (req, res, next) => {
 
 app.post("/api/orders/:id/deduct-inventory", requireAdmin, async (req, res, next) => {
   try {
-    const order = await store.deductOrderInventory(req.params.id);
+    const order = await store.deductOrderInventory(req.params.id, req.query);
     res.json(order);
   } catch (error) {
     next(error);
@@ -1110,7 +1151,7 @@ app.get("/api/orders/history", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
   try {
-    const order = await store.updateOrder(req.params.id, req.body);
+    const order = await store.updateOrder(req.params.id, req.body, req.query);
     if (!order) return res.status(404).json({ message: "Order not found." });
     cacheOrder(order);
 
@@ -1118,14 +1159,14 @@ app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
     const nextStatus = String(req.body?.status || "").toLowerCase().trim();
     if (nextStatus === "confirmed" || nextStatus === "completed") {
       try {
-        await store.deductOrderInventory(order._id || order.id);
+        await store.deductOrderInventory(order._id || order.id, req.query);
       } catch (err) {
         // log but don't fail the request — caller should see the updated order
         console.error("Failed to deduct inventory on confirm:", err);
       }
     }
 
-    const updated = await store.orderById(order._id || order.id);
+    const updated = await store.orderById(order._id || order.id, req.query);
     cacheOrder(updated);
     res.json(updated);
     try {
@@ -1140,7 +1181,7 @@ app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
 
 app.delete("/api/orders/:id", requireAdmin, async (req, res, next) => {
   try {
-    res.json(await store.deleteOrder(req.params.id));
+    res.json(await store.deleteOrder(req.params.id, req.query));
   } catch (error) {
     next(error);
   }

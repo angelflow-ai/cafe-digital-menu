@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import os from "node:os";
+import dotenv from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { fileURLToPath } from "node:url";
@@ -7,8 +9,29 @@ import { categories as seedCategories, menuItems as seedItems, rawMaterials as s
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// Ensure server/.env is loaded even when this module is imported directly
+try {
+  const envPath = path.join(__dirname, "..", ".env");
+  dotenv.config({ path: envPath });
+} catch (err) {
+  // Non-fatal: dotenv may already be loaded by the caller
+}
 const persistenceFile = path.join(__dirname, "persisted-store.json");
 const authPersistenceFile = path.join(__dirname, "persisted-auth.json");
+
+function maskMongoUri(uri) {
+  if (!uri || typeof uri !== "string") return "(missing)";
+  try {
+    // Remove credentials
+    const withoutCreds = uri.replace(/:\/\/.+@/, "//<redacted>@");
+    // Extract hosts section between '//' and '/' or '?'
+    const match = withoutCreds.match(/:\/\/([^/\?]+)[/\?]?/);
+    const hosts = match ? match[1] : withoutCreds;
+    return String(hosts).replace(/[^,]+/g, (h) => h.replace(/(:\\d+)?$/, (m) => m));
+  } catch (e) {
+    return "(unparseable)";
+  }
+}
 
 export const DEFAULT_OUTLET_SLUG = "near-skit";
 export const DEFAULT_OUTLETS = [
@@ -80,7 +103,8 @@ const addonSchema = new mongoose.Schema(
 
 const categorySchema = new mongoose.Schema(
   {
-    id: { type: String, unique: true, required: true },
+    outletId: outletReference,
+    id: { type: String, required: true },
     name: { type: String, required: true },
     icon: { type: String, default: "Utensils" },
     sortOrder: { type: Number, default: 0 },
@@ -92,7 +116,8 @@ const categorySchema = new mongoose.Schema(
 
 const menuItemSchema = new mongoose.Schema(
   {
-    id: { type: String, unique: true, required: true },
+    outletId: outletReference,
+    id: { type: String, required: true },
     name: { type: String, required: true },
     categoryId: { type: String, required: true },
     description: { type: String, default: "" },
@@ -226,6 +251,8 @@ const staffAccountSchema = new mongoose.Schema(
 
 rawMaterialSchema.index({ outletId: 1, id: 1 }, { unique: true });
 recipeSchema.index({ outletId: 1, id: 1 }, { unique: true });
+categorySchema.index({ outletId: 1, id: 1 }, { unique: true });
+menuItemSchema.index({ outletId: 1, id: 1 }, { unique: true });
 
 export const Category = mongoose.model("Category", categorySchema);
 export const MenuItem = mongoose.model("MenuItem", menuItemSchema);
@@ -236,6 +263,26 @@ export const RawMaterial = mongoose.model("RawMaterial", rawMaterialSchema);
 export const Recipe = mongoose.model("Recipe", recipeSchema);
 export const InventoryHistory = mongoose.model("InventoryHistory", inventoryHistorySchema);
 export const StaffAccount = mongoose.model("StaffAccount", staffAccountSchema);
+
+async function ensureMongoIndexes() {
+  if (!usingMongo()) return;
+
+  try {
+    const categoriesIndexNames = (await Category.collection.indexes()).map((index) => index.name);
+    if (categoriesIndexNames.includes("id_1")) {
+      await Category.collection.dropIndex("id_1");
+    }
+    await Category.collection.createIndex({ outletId: 1, id: 1 }, { unique: true });
+
+    const menuItemsIndexNames = (await MenuItem.collection.indexes()).map((index) => index.name);
+    if (menuItemsIndexNames.includes("id_1")) {
+      await MenuItem.collection.dropIndex("id_1");
+    }
+    await MenuItem.collection.createIndex({ outletId: 1, id: 1 }, { unique: true });
+  } catch (error) {
+    console.warn("Failed to ensure MongoDB schema indexes:", error);
+  }
+}
 
 function generateOrderId() {
   return `INF-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
@@ -430,7 +477,7 @@ function isSafeMongoOrderId(value) {
 
 function buildOrderLookup(identifier) {
   const key = String(identifier || "").trim();
-  if (!key) return {};
+  if (!key) return null;
 
   const filters = [];
   if (isSafeMongoOrderId(key)) filters.push({ _id: key });
@@ -496,15 +543,16 @@ function normalizePersistedMemory(raw = {}) {
   const fallbackMenuItems = Array.isArray(raw.menuItems) && raw.menuItems.length ? raw.menuItems : seedItems;
   const fallbackRawMaterials = Array.isArray(raw.rawMaterials) && raw.rawMaterials.length ? raw.rawMaterials : seedRawMaterials;
   const fallbackRecipes = Array.isArray(raw.recipes) && raw.recipes.length ? raw.recipes : seedRecipes;
+  const defaultOutletId = String((Array.isArray(raw.outlets) && raw.outlets[0] && (raw.outlets[0]._id || raw.outlets[0].id)) || `outlet-${DEFAULT_OUTLET_SLUG}`);
 
   return {
     outlets: Array.isArray(raw.outlets) ? raw.outlets.map((item) => ({ ...item })) : [],
-    categories: fallbackCategories.map((item) => ({ ...item })),
-    menuItems: fallbackMenuItems.map((item) => ({ ...item, sizes: Array.isArray(item.sizes) ? item.sizes.map((size) => ({ ...size })) : [] })),
+    categories: fallbackCategories.map((item) => ({ ...(item || {}), outletId: String(item?.outletId || defaultOutletId) })),
+    menuItems: fallbackMenuItems.map((item) => ({ ...(item || {}), outletId: String(item?.outletId || defaultOutletId), sizes: Array.isArray(item?.sizes) ? item.sizes.map((size) => ({ ...size })) : [] })),
     orders: Array.isArray(raw.orders) ? raw.orders.map((item) => ({ ...item })) : [],
     tables: Array.isArray(raw.tables) ? raw.tables.map((item) => ({ ...item })) : [],
-    rawMaterials: fallbackRawMaterials.filter((item) => !isHiddenInventoryItem(item)).map((item) => ({ ...item })),
-    recipes: fallbackRecipes.map((item) => ({ ...item })),
+    rawMaterials: fallbackRawMaterials.filter((item) => !isHiddenInventoryItem(item)).map((item) => ({ ...(item || {}), outletId: String(item?.outletId || defaultOutletId) })),
+    recipes: fallbackRecipes.map((item) => ({ ...(item || {}), outletId: String(item?.outletId || defaultOutletId) })),
     inventoryHistory: Array.isArray(raw.inventoryHistory) ? raw.inventoryHistory.map((item) => ({ ...item })) : []
   };
 }
@@ -534,6 +582,13 @@ function savePersistedMemory(memoryState) {
     }, null, 2), "utf8");
   } catch (error) {
     console.warn("Failed to save persisted fallback memory.", error);
+    try {
+      const fallback = path.join(os.tmpdir(), path.basename(persistenceFile));
+      fs.writeFileSync(fallback, JSON.stringify(memoryState, null, 2), "utf8");
+      console.warn("Persisted memory written to fallback path:", fallback);
+    } catch (err2) {
+      console.warn("Failed to write persisted memory to fallback path.", err2);
+    }
   }
 }
 
@@ -553,6 +608,13 @@ function savePersistedStaffAccounts(accounts) {
     fs.writeFileSync(authPersistenceFile, JSON.stringify(accounts, null, 2), "utf8");
   } catch (error) {
     console.warn("Failed to save persisted staff accounts.", error);
+    try {
+      const fallback = path.join(os.tmpdir(), path.basename(authPersistenceFile));
+      fs.writeFileSync(fallback, JSON.stringify(accounts, null, 2), "utf8");
+      console.warn("Persisted staff accounts written to fallback path:", fallback);
+    } catch (err2) {
+      console.warn("Failed to write persisted staff accounts to fallback path.", err2);
+    }
   }
 }
 
@@ -668,6 +730,78 @@ export async function getCurrentOutlet(source = {}) {
 export async function getCurrentOutletId(source = {}) {
   const outlet = await getCurrentOutlet(source);
   return normalizeOutletId(outlet);
+}
+
+const SHARED_CATALOG_COLLECTIONS = new Set([]);
+
+function isAllOutletsSelection(source = {}) {
+  const outletId = getRequestOutletValue(source, "outletId");
+  const outletSlug = getRequestOutletValue(source, "outletSlug");
+  return outletId === "all" || outletSlug === "all";
+}
+
+async function getTargetOutletIds(source = {}) {
+  if (isAllOutletsSelection(source)) {
+    if (usingMongo()) {
+      const outlets = await Outlet.find({}).lean();
+      return outlets.map((outlet) => normalizeOutletId(outlet)).filter(Boolean);
+    }
+    return (memory.outlets || []).map((outlet) => normalizeOutletId(outlet)).filter(Boolean);
+  }
+  const outletId = await getCurrentOutletId(source);
+  return outletId ? [outletId] : [];
+}
+
+export function resolveCollectionOutletScope(collectionName, query = {}) {
+  const normalizedName = String(collectionName || "").trim().toLowerCase().replace(/[^a-z]+/g, "");
+  if (SHARED_CATALOG_COLLECTIONS.has(normalizedName)) return null;
+  return getCurrentOutletId(query);
+}
+
+async function buildCollectionFilter(collectionName, query = {}) {
+  const outletId = await resolveCollectionOutletScope(collectionName, query);
+  return outletId ? { outletId } : {};
+}
+
+export function deduplicateSharedRecords(records = [], key = "id") {
+  const unique = [];
+  const seen = new Map();
+
+  for (const record of Array.isArray(records) ? records : []) {
+    const identifier = String(record?.[key] ?? "").trim();
+    if (!identifier) continue;
+
+    const existing = seen.get(identifier);
+    if (!existing) {
+      seen.set(identifier, record);
+      unique.push(record);
+      continue;
+    }
+
+    const existingHasOutlet = Boolean(existing?.outletId);
+    const recordHasOutlet = Boolean(record?.outletId);
+
+    if (!existingHasOutlet && recordHasOutlet) {
+      continue;
+    }
+
+    if (existingHasOutlet && !recordHasOutlet) {
+      const existingIndex = unique.findIndex((item) => String(item?.[key] ?? "").trim() === identifier);
+      if (existingIndex >= 0) unique[existingIndex] = record;
+      seen.set(identifier, record);
+      continue;
+    }
+
+    const existingUpdatedAt = existing?.updatedAt ? new Date(existing.updatedAt).getTime() : 0;
+    const recordUpdatedAt = record?.updatedAt ? new Date(record.updatedAt).getTime() : 0;
+    if (recordUpdatedAt > existingUpdatedAt) {
+      const existingIndex = unique.findIndex((item) => String(item?.[key] ?? "").trim() === identifier);
+      if (existingIndex >= 0) unique[existingIndex] = record;
+      seen.set(identifier, record);
+    }
+  }
+
+  return unique;
 }
 
 export async function migrateLegacyOutletData(defaultOutlet = null) {
@@ -916,7 +1050,15 @@ export async function connectDatabase() {
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS: 5000 });
+    const serverSelectionTimeoutMS = Number(process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS || 10000);
+    const connectTimeoutMS = Number(process.env.MONGO_CONNECT_TIMEOUT_MS || 10000);
+
+    const maskedHosts = maskMongoUri(process.env.MONGODB_URI);
+    console.log(`[DB] Attempting MongoDB connection to host(s): ${maskedHosts} (masked)`);
+    console.log(`[DB] Connection options: serverSelectionTimeoutMS=${serverSelectionTimeoutMS}, connectTimeoutMS=${connectTimeoutMS}`);
+
+    await mongoose.connect(process.env.MONGODB_URI, { serverSelectionTimeoutMS, connectTimeoutMS });
+    await ensureMongoIndexes();
     await seedDefaultOutlets();
     await seedDatabase();
     // Auto-sync default recipes into MongoDB after initial seed
@@ -929,22 +1071,29 @@ export async function connectDatabase() {
     console.log("Connected to MongoDB.");
     return true;
   } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error;
-    }
+    // Do not silently fall back when a MONGODB_URI is provided. Surface the error so startup fails loudly.
     globalThis.mongoConnectionError = {
       message: error.message,
       stack: error.stack
     };
-
-    console.error("Failed to connect to MongoDB in development. Falling back to local storage mode. Error:", error.message || error);
-    await seedStaffAccounts();
-    await seedDefaultOutlets();
-    const migrationSummary = await migrateLegacyOutletData();
-    if (Object.values(migrationSummary).some((count) => count > 0)) {
-      console.log(`[Outlet Migration] ${JSON.stringify(migrationSummary)}`);
+    console.error("Failed to connect to MongoDB.", error?.message || error);
+    // If MONGODB_URI was explicitly set, propagate the error to abort startup.
+    if (process.env.MONGODB_URI) {
+      throw new Error(`MongoDB connection failed for ${maskMongoUri(process.env.MONGODB_URI)}: ${error?.message || String(error)}`);
     }
-    return false;
+    // Otherwise (no MONGODB_URI), remain in dev fallback mode.
+    if (process.env.NODE_ENV !== "production") {
+      console.warn("No MONGODB_URI set; using development fallback storage.");
+      await seedStaffAccounts();
+      await seedDefaultOutlets();
+      const migrationSummary = await migrateLegacyOutletData();
+      if (Object.values(migrationSummary).some((count) => count > 0)) {
+        console.log(`[Outlet Migration] ${JSON.stringify(migrationSummary)}`);
+      }
+      return false;
+    }
+    // In production, rethrow.
+    throw error;
   }
 }
 
@@ -1006,7 +1155,7 @@ export async function repairMenuData() {
   const summary = { duplicatesRemoved: 0, itemsRepaired: 0, itemsCreated: 0 };
 
   for (const [id, image] of managedMenuImagePaths.entries()) {
-    const result = await MenuItem.updateOne(
+    const result = await MenuItem.updateMany(
       { id, image: { $ne: image } },
       { $set: { image } },
       { runValidators: true }
@@ -1141,21 +1290,56 @@ export async function seedDatabase() {
   const categoriesToSeed = Array.isArray(persistedMemory.categories) && persistedMemory.categories.length ? persistedMemory.categories : seedCategories;
   const menuItemsToSeed = Array.isArray(persistedMemory.menuItems) && persistedMemory.menuItems.length ? persistedMemory.menuItems : seedItems;
 
+  const outletIds = usingMongo()
+    ? (await Outlet.find({}, { _id: 1 }).lean()).map((outlet) => normalizeOutletId(outlet)).filter(Boolean)
+    : (memory.outlets || []).map((outlet) => normalizeOutletId(outlet)).filter(Boolean);
+
   for (const category of categoriesToSeed) {
-    await Category.findOneAndUpdate(
-      { id: category.id },
-      { $setOnInsert: { ...category, sortOrder: Number(category.sortOrder || 0), icon: category.icon || "Utensils", isDeleted: Boolean(category.isDeleted), deletedAt: category.isDeleted ? category.deletedAt || new Date() : null } },
-      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
-    );
+    const cleanCategory = {
+      ...category,
+      id: category.id,
+      name: category.name,
+      icon: category.icon || "Utensils",
+      sortOrder: Number(category.sortOrder || 0),
+      isDeleted: Boolean(category.isDeleted),
+      deletedAt: category.isDeleted ? category.deletedAt || new Date() : null
+    };
+    for (const outletId of outletIds) {
+      await Category.findOneAndUpdate(
+        {
+          id: cleanCategory.id,
+          $or: [
+            { outletId },
+            { outletId: null },
+            { outletId: { $exists: false } }
+          ]
+        },
+        {
+          $setOnInsert: { ...cleanCategory, outletId }
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+      );
+    }
   }
 
   for (const item of menuItemsToSeed) {
     const cleanItem = validateMenuItem(item);
-    await MenuItem.findOneAndUpdate(
-      { id: cleanItem.id },
-      { $setOnInsert: cleanItem },
-      { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
-    );
+    for (const outletId of outletIds) {
+      await MenuItem.findOneAndUpdate(
+        {
+          id: cleanItem.id,
+          $or: [
+            { outletId },
+            { outletId: null },
+            { outletId: { $exists: false } }
+          ]
+        },
+        {
+          $setOnInsert: { ...cleanItem, outletId }
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+      );
+    }
   }
 
   await MenuItem.updateMany({ $or: [{ active: { $exists: false } }, { active: null }] }, { $set: { active: true } });
@@ -1318,13 +1502,21 @@ export const store = {
     savePersistedMemory(memory);
     return { deletedCount: 1, outlet: memory.outlets[index] };
   },
-  async categories() {
-    if (usingMongo()) return Category.find({ isDeleted: { $ne: true } }).sort({ sortOrder: 1, name: 1 }).lean();
-    return [...memory.categories].filter((item) => item.isDeleted !== true).sort((a, b) => a.sortOrder - b.sortOrder);
+  async categories(query = {}) {
+    const outletId = await resolveCollectionOutletScope("categories", query);
+    const filter = { isDeleted: { $ne: true }, ...(outletId ? { outletId } : {}) };
+    if (usingMongo()) return Category.find(filter).sort({ sortOrder: 1, name: 1 }).lean();
+    return [...memory.categories]
+      .filter((item) => item.isDeleted !== true && matchesOutlet(item, outletId))
+      .sort((a, b) => a.sortOrder - b.sortOrder);
   },
-  async deletedCategories() {
-    if (usingMongo()) return Category.find({ isDeleted: true }).sort({ deletedAt: -1, sortOrder: 1, name: 1 }).lean();
-    return [...memory.categories].filter((item) => item.isDeleted === true).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
+  async deletedCategories(query = {}) {
+    const outletId = await resolveCollectionOutletScope("categories", query);
+    const filter = { isDeleted: true, ...(outletId ? { outletId } : {}) };
+    if (usingMongo()) return Category.find(filter).sort({ deletedAt: -1, sortOrder: 1, name: 1 }).lean();
+    return [...memory.categories]
+      .filter((item) => item.isDeleted === true && matchesOutlet(item, outletId))
+      .sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
   },
   async upsertCategory(payload) {
     const name = String(payload.name || "").trim();
@@ -1334,56 +1526,81 @@ export const store = {
       ...payload,
       id,
       name,
+      icon: payload.icon || "Utensils",
+      sortOrder: Number(payload.sortOrder || 0),
       isDeleted: payload.isDeleted === true,
       deletedAt: payload.isDeleted ? payload.deletedAt || new Date() : null
     };
-    if (usingMongo()) {
-      return Category.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+    const targetOutletIds = await getTargetOutletIds(payload);
+    if (!targetOutletIds.length) throw new Error("Invalid or missing outletId.");
+    const results = [];
+
+    for (const outletId of targetOutletIds) {
+      const record = { ...clean, outletId };
+      if (usingMongo()) {
+        const saved = await Category.findOneAndUpdate(
+          { id: record.id, outletId },
+          record,
+          { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+        ).lean();
+        results.push(saved);
+        continue;
+      }
+
+      const index = memory.categories.findIndex((item) => item.id === record.id && matchesOutlet(item, outletId));
+      if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...record };
+      else memory.categories.push(record);
+      results.push(record);
     }
-    const index = memory.categories.findIndex((item) => item.id === clean.id);
-    if (index >= 0) memory.categories[index] = { ...memory.categories[index], ...clean };
-    else memory.categories.push(clean);
+
     savePersistedMemory(memory);
-    return clean;
+    return results.length === 1 ? results[0] : results;
   },
-  async deleteCategory(id) {
+  async deleteCategory(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("categories", query);
     const deletedAt = new Date();
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
+      const filter = { id, ...(outletId ? { outletId } : {}) };
+      return Category.findOneAndUpdate(filter, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
     }
-    const index = memory.categories.findIndex((item) => item.id === id);
+    const index = memory.categories.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index < 0) return null;
     memory.categories[index] = { ...memory.categories[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
     savePersistedMemory(memory);
     return memory.categories[index];
   },
-  async restoreCategory(id) {
+  async restoreCategory(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("categories", query);
     if (usingMongo()) {
-      return Category.findOneAndUpdate({ id }, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
+      const filter = { id, ...(outletId ? { outletId } : {}) };
+      return Category.findOneAndUpdate(filter, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
     }
-    const index = memory.categories.findIndex((item) => item.id === id);
+    const index = memory.categories.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
     if (index < 0) return null;
     memory.categories[index] = { ...memory.categories[index], isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
     return memory.categories[index];
   },
-  async permanentlyDeleteCategory(id) {
-    if (usingMongo()) return Category.deleteOne({ id });
-    memory.categories = memory.categories.filter((item) => item.id !== id);
-    savePersistedMemory(memory);
-    return { deletedCount: 1 };
+  async permanentlyDeleteCategory(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("categories", query);
+    if (usingMongo()) return Category.deleteOne({ id, ...(outletId ? { outletId } : {}) });
+    const originalLength = memory.categories.length;
+    memory.categories = memory.categories.filter((item) => item.id !== id || !matchesOutlet(item, outletId));
+    if (memory.categories.length !== originalLength) savePersistedMemory(memory);
+    return { deletedCount: originalLength - memory.categories.length };
   },
   async menuItems(query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
+    const filter = { ...(outletId ? { outletId } : {}) };
+    if (query.categoryId) filter.categoryId = query.categoryId;
+    if (query.search) filter.name = { $regex: query.search, $options: "i" };
+    if (!query.includeInactive) {
+      filter.active = { $ne: false };
+      filter.isActive = { $ne: false };
+    }
+    if (!query.includeDeleted) filter.isDeleted = { $ne: true };
     if (usingMongo()) {
-      const filter = {};
-      if (query.categoryId) filter.categoryId = query.categoryId;
-      if (query.search) filter.name = { $regex: query.search, $options: "i" };
-      if (!query.includeInactive) {
-        filter.active = { $ne: false };
-        filter.isActive = { $ne: false };
-      }
-      if (!query.includeDeleted) filter.isDeleted = { $ne: true };
-      const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
+      const categoryFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true }, ...(outletId ? { outletId } : {}) };
       const visibleCategoryIds = await Category.find(categoryFilter).distinct("id");
       if (!query.includeDeleted) {
         if (query.categoryId && !visibleCategoryIds.includes(query.categoryId)) return [];
@@ -1391,123 +1608,192 @@ export const store = {
       }
       return MenuItem.find(filter).sort({ name: 1 }).lean();
     }
+    const filteredCategories = memory.categories.filter((category) => matchesOutlet(category, outletId) && (query.includeDeleted ? true : category.isDeleted !== true));
+    const visibleCategoryIds = filteredCategories.map((category) => category.id);
     return memory.menuItems
+      .filter((item) => matchesOutlet(item, outletId))
       .filter((item) => (query.includeInactive ? true : item.active !== false && item.isActive !== false))
       .filter((item) => (query.includeDeleted ? true : item.isDeleted !== true))
-      .filter((item) => (query.includeDeleted ? true : (memory.categories.find((category) => category.id === item.categoryId)?.isDeleted !== true)))
+      .filter((item) => (query.includeDeleted ? true : visibleCategoryIds.includes(item.categoryId)))
       .filter((item) => (!query.categoryId ? true : item.categoryId === query.categoryId))
       .filter((item) => (!query.search ? true : item.name.toLowerCase().includes(query.search.toLowerCase())))
       .sort((a, b) => a.name.localeCompare(b.name));
   },
-  async menuItem(id) {
+  async menuItem(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
+    const filter = { ...buildMenuItemLookup(id), ...(outletId ? { outletId } : {}) };
     if (usingMongo()) {
-      return MenuItem.findOne(buildMenuItemLookup(id)).lean();
+      return MenuItem.findOne(filter).lean();
     }
-    return memory.menuItems.find((item) => item.id === id || String(item._id || "") === String(id));
+    return memory.menuItems.find((item) => (item.id === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
   },
-  async deletedMenuItems() {
-    if (usingMongo()) return MenuItem.find({ isDeleted: true }).sort({ deletedAt: -1, name: 1 }).lean();
-    return [...memory.menuItems].filter((item) => item.isDeleted === true).sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
+  async deletedMenuItems(query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
+    if (usingMongo()) return MenuItem.find({ isDeleted: true, ...(outletId ? { outletId } : {}) }).sort({ deletedAt: -1, name: 1 }).lean();
+    return [...memory.menuItems]
+      .filter((item) => item.isDeleted === true && matchesOutlet(item, outletId))
+      .sort((a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0));
   },
   async upsertMenuItem(payload) {
     const clean = validateMenuItem(payload);
-    if (usingMongo()) {
-      return MenuItem.findOneAndUpdate({ id: clean.id }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+    const targetOutletIds = await getTargetOutletIds(payload);
+    if (!targetOutletIds.length) throw new Error("Invalid or missing outletId.");
+    const results = [];
+
+    for (const outletId of targetOutletIds) {
+      const record = { ...clean, outletId };
+      if (usingMongo()) {
+        const saved = await MenuItem.findOneAndUpdate(
+          { id: record.id, outletId },
+          record,
+          { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }
+        ).lean();
+        results.push(saved);
+        continue;
+      }
+
+      const index = memory.menuItems.findIndex((item) => item.id === record.id && matchesOutlet(item, outletId));
+      if (index >= 0) memory.menuItems[index] = record;
+      else memory.menuItems.push(record);
+      results.push(record);
     }
-    const index = memory.menuItems.findIndex((item) => item.id === clean.id);
-    if (index >= 0) memory.menuItems[index] = clean;
-    else memory.menuItems.push(clean);
+
     savePersistedMemory(memory);
-    return clean;
+    return results.length === 1 ? results[0] : results;
   },
-  async updateMenuItem(id, payload) {
-    if (usingMongo()) {
-      const existing = await this.menuItem(id);
-      if (!existing) return null;
-      const nextPayload = { ...existing, ...payload, id: payload.id || existing.id };
+  async updateMenuItem(id, payload, query = {}) {
+    const outletIds = await getTargetOutletIds(query);
+    const results = [];
+    for (const outletId of outletIds) {
+      console.log('[Debug:updateMenuItem] id=', id);
+      console.log('[Debug:updateMenuItem] payload=', JSON.stringify(payload || {}));
+      console.log('[Debug:updateMenuItem] query=', JSON.stringify(query || {}));
+      console.log('[Debug:updateMenuItem] resolved outletId=', outletId);
+      if (usingMongo()) {
+        const existing = await this.menuItem(id, { ...query, outletId });
+        console.log('[Debug:updateMenuItem] existing menuItem=', JSON.stringify(existing));
+        if (!existing) continue;
+        const nextPayload = { ...existing, ...payload, id: payload.id || existing.id };
+        if (Object.prototype.hasOwnProperty.call(payload, "price") && !Object.prototype.hasOwnProperty.call(payload, "sizes")) {
+          const price = Number(payload.price);
+          if (!Number.isFinite(price)) throw new Error("Price must be a valid number.");
+          const existingSizes = Array.isArray(existing.sizes) ? existing.sizes : [];
+          nextPayload.sizes = existingSizes.map((size, index) => (index === 0 ? { ...size, price } : size));
+        }
+        const clean = validateMenuItem(nextPayload);
+        const filter = { ...buildMenuItemLookup(id), outletId };
+        console.log('[Debug:updateMenuItem] MongoDB filter=', JSON.stringify(filter));
+        const updated = await MenuItem.findOneAndUpdate(
+          filter,
+          { $set: clean },
+          { new: true, runValidators: true }
+        ).lean();
+        console.log('[Debug:updateMenuItem] MongoDB returned=', JSON.stringify(updated));
+        if (updated) results.push(updated);
+        continue;
+      }
+
+      const index = memory.menuItems.findIndex((item) => (item.id === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
+      if (index < 0) continue;
+      const nextPayload = { ...memory.menuItems[index], ...payload, id: payload.id || memory.menuItems[index].id };
       if (Object.prototype.hasOwnProperty.call(payload, "price") && !Object.prototype.hasOwnProperty.call(payload, "sizes")) {
         const price = Number(payload.price);
         if (!Number.isFinite(price)) throw new Error("Price must be a valid number.");
-        const existingSizes = Array.isArray(existing.sizes) ? existing.sizes : [];
-        nextPayload.sizes = existingSizes.map((size, index) => (index === 0 ? { ...size, price } : size));
+        const existingSizes = Array.isArray(memory.menuItems[index].sizes) ? memory.menuItems[index].sizes : [];
+        nextPayload.sizes = existingSizes.map((size, sizeIndex) => (sizeIndex === 0 ? { ...size, price } : size));
       }
       const clean = validateMenuItem(nextPayload);
-      return MenuItem.findByIdAndUpdate(existing._id, { $set: clean }, { new: true, runValidators: true }).lean();
+      memory.menuItems[index] = clean;
+      results.push(clean);
     }
-    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
-    if (index < 0) return null;
-    const nextPayload = { ...memory.menuItems[index], ...payload, id: payload.id || memory.menuItems[index].id };
-    if (Object.prototype.hasOwnProperty.call(payload, "price") && !Object.prototype.hasOwnProperty.call(payload, "sizes")) {
-      const price = Number(payload.price);
-      if (!Number.isFinite(price)) throw new Error("Price must be a valid number.");
-      const existingSizes = Array.isArray(memory.menuItems[index].sizes) ? memory.menuItems[index].sizes : [];
-      nextPayload.sizes = existingSizes.map((size, sizeIndex) => (sizeIndex === 0 ? { ...size, price } : size));
-    }
-    const clean = validateMenuItem(nextPayload);
-    memory.menuItems[index] = clean;
+
+    if (!results.length) return null;
     savePersistedMemory(memory);
-    return clean;
+    return results.length === 1 ? results[0] : results;
   },
-  async setMenuItemActive(id, active) {
+  async setMenuItemActive(id, active, query = {}) {
     const nextActive = active !== false;
-    if (usingMongo()) {
-      return MenuItem.findOneAndUpdate(
-        buildMenuItemLookup(id),
-        { $set: { active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null } },
-        { new: true, runValidators: true }
-      ).lean();
+    const outletIds = await getTargetOutletIds(query);
+    const results = [];
+    for (const outletId of outletIds) {
+      if (usingMongo()) {
+        const updated = await MenuItem.findOneAndUpdate(
+          { ...buildMenuItemLookup(id), ...(outletId ? { outletId } : {}) },
+          { $set: { active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null } },
+          { new: true, runValidators: true }
+        ).lean();
+        if (updated) results.push(updated);
+        continue;
+      }
+      const index = memory.menuItems.findIndex((item) => (item.id === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
+      if (index < 0) continue;
+      memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null };
+      results.push(memory.menuItems[index]);
     }
-    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
-    if (index < 0) return null;
-    memory.menuItems[index] = { ...memory.menuItems[index], active: nextActive, isActive: nextActive, isDeleted: false, deletedAt: null };
+    if (!results.length) return null;
     savePersistedMemory(memory);
-    return memory.menuItems[index];
+    return results.length === 1 ? results[0] : results;
   },
-  async deleteMenuItem(id) {
+  async deleteMenuItem(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
     const deletedAt = new Date();
-    if (usingMongo()) return MenuItem.findOneAndUpdate(buildMenuItemLookup(id), { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
-    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
+    if (usingMongo()) {
+      const filter = { ...buildMenuItemLookup(id), ...(outletId ? { outletId } : {}) };
+      return MenuItem.findOneAndUpdate(filter, { $set: { isDeleted: true, deletedAt } }, { new: true, runValidators: true }).lean();
+    }
+    const index = memory.menuItems.findIndex((item) => (item.id === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: true, deletedAt: deletedAt.toISOString() };
     savePersistedMemory(memory);
     return memory.menuItems[index];
   },
-  async restoreMenuItem(id) {
-    if (usingMongo()) return MenuItem.findOneAndUpdate(buildMenuItemLookup(id), { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
-    const index = memory.menuItems.findIndex((item) => item.id === id || String(item._id || "") === String(id));
+  async restoreMenuItem(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
+    if (usingMongo()) {
+      const filter = { ...buildMenuItemLookup(id), ...(outletId ? { outletId } : {}) };
+      return MenuItem.findOneAndUpdate(filter, { $set: { isDeleted: false, deletedAt: null } }, { new: true, runValidators: true }).lean();
+    }
+    const index = memory.menuItems.findIndex((item) => (item.id === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
     if (index < 0) return null;
     memory.menuItems[index] = { ...memory.menuItems[index], isDeleted: false, deletedAt: null };
     savePersistedMemory(memory);
     return memory.menuItems[index];
   },
-  async permanentlyDeleteMenuItem(id) {
-    if (usingMongo()) return MenuItem.deleteOne(buildMenuItemLookup(id));
-    memory.menuItems = memory.menuItems.filter((item) => item.id !== id && String(item._id || "") !== String(id));
-    savePersistedMemory(memory);
-    return { deletedCount: 1 };
+  async permanentlyDeleteMenuItem(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("menuitems", query);
+    if (usingMongo()) return MenuItem.deleteOne({ ...buildMenuItemLookup(id), ...(outletId ? { outletId } : {}) });
+    const originalLength = memory.menuItems.length;
+    memory.menuItems = memory.menuItems.filter((item) => {
+      const matchesId = item.id === id || String(item._id || "") === String(id);
+      return matchesId ? !matchesOutlet(item, outletId) : true;
+    });
+    if (memory.menuItems.length !== originalLength) savePersistedMemory(memory);
+    return { deletedCount: originalLength - memory.menuItems.length };
   },
   async rawMaterials(query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("inventory", query);
     const outletFilter = outletId ? { outletId } : {};
     if (usingMongo()) {
       const deletedFilter = query.includeDeleted ? {} : { isDeleted: { $ne: true } };
-      return RawMaterial.find({ $and: [deletedFilter, outletFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] })
-        .sort({ category: 1, name: 1 })
-        .lean();
+      const filter = outletId ? { $and: [deletedFilter, outletFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] } : { $and: [deletedFilter, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] };
+      const results = await RawMaterial.find(filter).sort({ category: 1, name: 1 }).lean();
+      return deduplicateSharedRecords(results).filter((item) => !isHiddenInventoryItem(item));
     }
-    return [...memory.rawMaterials]
-      .filter((item) => matchesOutlet(item, outletId))
-      .filter((item) => (query.includeDeleted ? true : !isDeletedInventoryItem(item)) && !isHiddenInventoryItem(item))
-      .sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
+    return deduplicateSharedRecords(
+      [...memory.rawMaterials]
+        .filter((item) => matchesOutlet(item, outletId))
+        .filter((item) => (query.includeDeleted ? true : !isDeletedInventoryItem(item)) && !isHiddenInventoryItem(item))
+    ).sort((a, b) => a.category.localeCompare(b.category) || a.name.localeCompare(b.name));
   },
   async rawMaterial(id, query = {}) {
-    const outletId = await getCurrentOutletId(query);
-    const outletFilter = outletId ? { outletId } : {};
-    if (usingMongo()) return RawMaterial.findOne({ $and: [{ id }, outletFilter, { isDeleted: { $ne: true } }, { $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }] }).lean();
+    const outletId = await resolveCollectionOutletScope("inventory", query);
+    const filter = { id, isDeleted: { $ne: true }, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] };
+    if (outletId) filter.outletId = outletId;
+    if (usingMongo()) return RawMaterial.findOne(filter).lean();
     return memory.rawMaterials.find((item) => item.id === id && matchesOutlet(item, outletId) && !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item));
   },
   async upsertRawMaterial(payload) {
-    const outletId = await getCurrentOutletId(payload);
+    const outletId = await resolveCollectionOutletScope("inventory", payload);
     const stockValue = Number(payload.stock ?? payload.quantity ?? 0);
     const minStockValue = Number(payload.minStock ?? payload.minimumStock ?? 0);
     const costValue = Number(payload.costPerUnit ?? payload.purchasePrice ?? payload.price ?? 0);
@@ -1528,7 +1814,9 @@ export const store = {
     if (!["g", "ml", "pcs"].includes(clean.unit)) throw new Error("Inventory unit must be g, ml, or pcs.");
     if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
     if (usingMongo()) {
-      return RawMaterial.findOneAndUpdate({ id: clean.id, outletId }, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+      const filter = { id: clean.id };
+      if (outletId) filter.outletId = outletId;
+      return RawMaterial.findOneAndUpdate(filter, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.rawMaterials.findIndex((item) => item.id === clean.id && matchesOutlet(item, outletId));
     if (index >= 0) memory.rawMaterials[index] = clean;
@@ -1537,10 +1825,12 @@ export const store = {
     return clean;
   },
   async deleteRawMaterial(id, query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("inventory", query);
     if (usingMongo()) {
+      const filter = { id };
+      if (outletId) filter.outletId = outletId;
       return RawMaterial.findOneAndUpdate(
-        { id, outletId },
+        filter,
         { isDeleted: true, deletedAt: new Date() },
         { new: true, runValidators: true }
       ).lean();
@@ -1558,10 +1848,12 @@ export const store = {
     return { modifiedCount: 0 };
   },
   async restoreRawMaterial(id, query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("inventory", query);
     if (usingMongo()) {
+      const filter = { id };
+      if (outletId) filter.outletId = outletId;
       return RawMaterial.findOneAndUpdate(
-        { id, outletId },
+        filter,
         { $set: { isDeleted: false, deletedAt: null } },
         { new: true, runValidators: true }
       ).lean();
@@ -1577,7 +1869,7 @@ export const store = {
     return adjustRawMaterialStock(id, change, note, orderId, outletId, purchasePrice);
   },
   async recipes(query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("recipes", query);
     const filter = outletId ? { outletId } : {};
     if (usingMongo()) {
       const [recipes, rawMaterials] = await Promise.all([
@@ -1603,7 +1895,7 @@ export const store = {
       .sort((a, b) => a.itemId.localeCompare(b.itemId));
   },
   async recipeByItem(itemId, query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("recipes", query);
     const filter = { itemId };
     if (outletId) filter.outletId = outletId;
     const matFilter = outletId ? { outletId } : {};
@@ -1624,7 +1916,7 @@ export const store = {
     return { ...recipe, ingredients };
   },
   async upsertRecipe(payload) {
-    const outletId = await getCurrentOutletId(payload);
+    const outletId = await resolveCollectionOutletScope("recipes", payload);
     const rawMaterials = usingMongo()
       ? await RawMaterial.find({ outletId, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] }, { id: 1, name: 1 }).lean()
       : memory.rawMaterials.filter((item) => matchesOutlet(item, outletId));
@@ -1639,7 +1931,9 @@ export const store = {
     };
     if (outletId) clean.outletId = outletId;
     if (usingMongo()) {
-      return Recipe.findOneAndUpdate({ id: clean.id, outletId }, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
+      const filter = { id: clean.id };
+      if (outletId) filter.outletId = outletId;
+      return Recipe.findOneAndUpdate(filter, clean, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
     const index = memory.recipes.findIndex((item) => item.id === clean.id && matchesOutlet(item, outletId));
     if (index >= 0) memory.recipes[index] = clean;
@@ -1648,15 +1942,19 @@ export const store = {
     return clean;
   },
   async deleteRecipe(id, query = {}) {
-    const outletId = await getCurrentOutletId(query);
-    if (usingMongo()) return Recipe.deleteOne({ id, outletId });
+    const outletId = await resolveCollectionOutletScope("recipes", query);
+    if (usingMongo()) {
+      const filter = { id };
+      if (outletId) filter.outletId = outletId;
+      return Recipe.deleteOne(filter);
+    }
     memory.recipes = memory.recipes.filter((item) => item.id !== id || !matchesOutlet(item, outletId));
     savePersistedMemory(memory);
     return { deletedCount: 1 };
   },
   async syncDefaultRecipes(defaultRecipes, query = {}) {
     const results = { created: 0, skipped: 0, failed: 0, errors: [] };
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("recipes", query);
     
     try {
       // Get existing recipe keys for comparison
@@ -1720,7 +2018,7 @@ export const store = {
     return results;
   },
   async inventoryHistory(query = {}) {
-    const outletId = await getCurrentOutletId(query);
+    const outletId = await resolveCollectionOutletScope("inventoryHistory", query);
     const filter = outletId ? { outletId } : {};
     if (usingMongo()) return InventoryHistory.find(filter).sort({ createdAt: -1 }).lean();
     return [...memory.inventoryHistory].filter((item) => matchesOutlet(item, outletId)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -1761,11 +2059,16 @@ export const store = {
 
     return records.slice(0, safeLimit);
   },
-  async orderById(id) {
+  async orderById(id, query = {}) {
+    const selector = buildOrderLookup(id);
+    if (!selector) return null;
+    const outletId = await getCurrentOutletId(query);
+    const filter = { ...selector };
+    if (outletId) filter.outletId = outletId;
     if (usingMongo()) {
-      return Order.findOne(buildOrderLookup(id)).lean({ virtuals: true });
+      return Order.findOne(filter).lean({ virtuals: true });
     }
-    return memory.orders.find((item) => item.id === id || item.orderId === id) || null;
+    return memory.orders.find((item) => (item.id === id || item.orderId === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId)) || null;
   },
   async createOrder(payload) {
     const outletId = await getExplicitOutletId(payload);
@@ -1841,7 +2144,7 @@ export const store = {
 
     if (index >= 0) {
       const req = memory.cocRequests.splice(index, 1)[0];
-      const existingOrder = await this.orderById(req.orderId || req.id || req.requestId || id);
+      const existingOrder = await this.orderById(req.orderId || req.id || req.requestId || id, { outletId: "all" });
       const updates = {
         orderType: req.orderType || req.type || inferOrderType(req) || "COC",
         source: req.source || req.createdFrom || req._source || "coc",
@@ -1851,7 +2154,7 @@ export const store = {
       };
 
       if (existingOrder) {
-        return this.updateOrder(existingOrder._id || existingOrder.id, updates);
+        return this.updateOrder(existingOrder._id || existingOrder.id, updates, { outletId: "all" });
       }
 
       const resolvedOutletId = req.outletId || (await getExplicitOutletId(req));
@@ -1884,22 +2187,28 @@ export const store = {
 
     return null;
   },
-  async updateOrder(id, payload) {
+  async updateOrder(id, payload, query = {}) {
+    const selector = buildOrderLookup(id);
+    if (!selector) return null;
     if (usingMongo()) {
+      const outletId = await getCurrentOutletId(query);
       const cleanPayload = { ...payload };
       if (cleanPayload.status !== undefined) cleanPayload.status = normalizeSalesStatus(cleanPayload.status);
       if (cleanPayload.paymentStatus !== undefined) cleanPayload.paymentStatus = normalizeSalesStatus(cleanPayload.paymentStatus);
-      return Order.findOneAndUpdate(buildOrderLookup(id), cleanPayload, { new: true }).lean();
+      const filter = { ...selector };
+      if (outletId) filter.outletId = outletId;
+      return Order.findOneAndUpdate(filter, cleanPayload, { new: true }).lean();
     }
-    const index = memory.orders.findIndex((item) => item.id === id || item.orderId === id || String(item._id || "") === String(id));
+    const outletId = await getCurrentOutletId(query);
+    const index = memory.orders.findIndex((item) => (item.id === id || item.orderId === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
     if (index < 0) return null;
     const updated = { ...memory.orders[index], ...payload, updatedAt: new Date().toISOString() };
     memory.orders[index] = updated;
     savePersistedMemory(memory);
     return updated;
   },
-  async deductOrderInventory(id) {
-    const order = await this.orderById(id);
+  async deductOrderInventory(id, query = {}) {
+    const order = await this.orderById(id, query);
     if (!order) throw new Error("Order not found.");
     if (order.deductionStatus === "deducted") return order;
     await deductInventoryForOrder(order);
@@ -1946,9 +2255,17 @@ export const store = {
     const totalOrders = orders.length;
     return { totalSales, totalOrders, orders };
   },
-  async deleteOrder(id) {
-    if (usingMongo()) return Order.findOneAndDelete(buildOrderLookup(id));
-    memory.orders = memory.orders.filter((item) => item.id !== id && item.orderId !== id && String(item._id || "") !== String(id));
+  async deleteOrder(id, query = {}) {
+    const outletId = await getCurrentOutletId(query);
+    if (usingMongo()) {
+      const filter = { ...buildOrderLookup(id) };
+      if (outletId) filter.outletId = outletId;
+      return Order.findOneAndDelete(filter);
+    }
+    memory.orders = memory.orders.filter((item) => {
+      const matchesId = item.id === id || item.orderId === id || String(item._id || "") === String(id);
+      return matchesId ? !matchesOutlet(item, outletId) : true;
+    });
     savePersistedMemory(memory);
     return { deletedCount: 1 };
   }

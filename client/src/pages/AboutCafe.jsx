@@ -118,28 +118,24 @@ const visualMoments = [
 
 const customerExperiences = [
   {
-    name: "Customer Name",
-    review: "Customer video review will appear here with their cafe experience."
+    name: "Ravikant Sharma",
+    review: "Great Coffee, a welcoming atmosphere, and conversations that feel effortless.☕✨"
   },
   {
-    name: "Customer Name",
-    review: "A real ambience and food reaction video can be placed here later."
+    name: "Harsh Desai",
+    review: "I love the ambiance, a place that feels familiar.💛"
   },
   {
-    name: "Customer Name",
-    review: "Perfect placeholder for a short reel-style testimonial."
+    name: "Vedica",
+    review: "A newly opened cafe serving good vibes and good food.🥰"
   },
   {
-    name: "Customer Name",
-    review: "Use this card for coffee, snacks, or dine-in feedback."
+    name: "Vedica",
+    review: "I keep coming back here, and honestly, it's the staff that makes this place special — always so polite and friendly! 💖"
   },
   {
-    name: "Customer Name",
-    review: "Add a customer story video here when available."
-  },
-  {
-    name: "Customer Name",
-    review: "A warm cafe memory can be showcased in this card."
+    name: "Arpana",
+    review: "I love the cold coffee and the vibe of this place.😊❤️"
   }
 ];
 

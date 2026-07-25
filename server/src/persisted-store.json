@@ -34,31 +34,36 @@
       "id": "hot-drinks",
       "name": "Hot Drinks",
       "icon": "Coffee",
-      "sortOrder": 1
+      "sortOrder": 1,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cold-drinks",
       "name": "Cold Drinks",
       "icon": "CupSoda",
-      "sortOrder": 10
+      "sortOrder": 10,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coconut-water",
       "name": "Coconut Water",
       "icon": "Droplet",
-      "sortOrder": 15
+      "sortOrder": 15,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "snacks",
       "name": "Snacks",
       "icon": "Sandwich",
-      "sortOrder": 20
+      "sortOrder": 20,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "dessert",
       "name": "Dessert",
       "icon": "CakeSlice",
-      "sortOrder": 30
+      "sortOrder": 30,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "water-bottles",
@@ -66,7 +71,8 @@
       "icon": "Droplet",
       "sortOrder": 32,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cigarettes",
@@ -74,7 +80,8 @@
       "icon": "Smoking",
       "sortOrder": 35,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     }
   ],
   "menuItems": [
@@ -102,7 +109,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-tea",
@@ -128,7 +136,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-tea",
@@ -154,7 +163,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tulsi-tea",
@@ -180,7 +190,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon-tea",
@@ -206,7 +217,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-lemon-tea",
@@ -232,7 +244,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "signature-infusion-chai",
@@ -258,7 +271,8 @@
       "active": true,
       "isActive": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-heritage-coffee",
@@ -275,7 +289,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hot-chocolate",
@@ -292,7 +307,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "core-coffee",
@@ -309,7 +325,8 @@
           "price": 68
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-coffee",
@@ -326,7 +343,8 @@
           "price": 58
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-signature-ice-tea",
@@ -343,7 +361,8 @@
           "price": 128
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-ice-tea",
@@ -360,7 +379,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peach-ice-tea",
@@ -377,7 +397,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon-ice-tea",
@@ -394,7 +415,8 @@
           "price": 88
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-heritage-cold-coffee",
@@ -411,7 +433,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hazelnut-cold-coffee",
@@ -428,7 +451,8 @@
           "price": 148
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "caramel-cold-coffee",
@@ -445,7 +469,8 @@
           "price": 128
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mocha-cold-coffee",
@@ -462,7 +487,8 @@
           "price": 128
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chocolate-cold-coffee",
@@ -479,7 +505,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "signature-coffee",
@@ -496,7 +523,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "guava-chilli-mojito",
@@ -513,7 +541,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "masala-lemonade-mojito",
@@ -530,7 +559,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "spicy-mango-mojito",
@@ -547,7 +577,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-apple-mojito",
@@ -564,7 +595,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-mojito",
@@ -581,7 +613,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cranberry-mojito",
@@ -598,7 +631,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "blue-curacao-mojito",
@@ -615,7 +649,8 @@
           "price": 108
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lime-mint-mojito",
@@ -632,7 +667,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-slush",
@@ -649,7 +685,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-apple-slush",
@@ -666,7 +703,8 @@
           "price": 108
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cranberry-slush",
@@ -683,7 +721,8 @@
           "price": 108
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kala-khatta-slush",
@@ -700,7 +739,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "strawberry-slush",
@@ -717,7 +757,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kunafa-shake",
@@ -742,7 +783,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "brownie-shake",
@@ -759,7 +801,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "dark-chocolate-shake",
@@ -776,7 +819,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kit-kat-shake",
@@ -801,7 +845,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "oreo-shake",
@@ -818,7 +863,8 @@
           "price": 158
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "butterscotch-shake",
@@ -835,7 +881,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mango-shake",
@@ -852,7 +899,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "strawberry-shake",
@@ -869,7 +917,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "prab-protein-milk-shake-double-chocolate",
@@ -894,7 +943,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "prab-protein-milk-shake-coffee",
@@ -919,7 +969,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "storia-coconut-water",
@@ -944,7 +995,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-heritage-melt",
@@ -961,7 +1013,8 @@
           "price": 173
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-tikka-melt",
@@ -986,7 +1039,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "trio-delight-sandwich",
@@ -1003,7 +1057,8 @@
           "price": 113
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garden-fresh-sandwich",
@@ -1020,7 +1075,8 @@
           "price": 93
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "blush-bowl-pasta",
@@ -1037,7 +1093,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tomato-basil-pasta",
@@ -1054,7 +1111,8 @@
           "price": 148
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "herbed-bechamel-pasta",
@@ -1071,7 +1129,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "jalapeno-corn-stuffed-garlic-bread",
@@ -1087,7 +1146,8 @@
           "price": 188
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheesy-melt-garlic-bread",
@@ -1104,7 +1164,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pure-garlic-bread",
@@ -1121,7 +1182,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-velvet-cheese-fries",
@@ -1138,7 +1200,8 @@
           "price": 188
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-chilli-glazed-potato",
@@ -1155,7 +1218,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chilli-blaze-potato",
@@ -1172,7 +1236,8 @@
           "price": 148
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "fiery-peri-peri-fries",
@@ -1189,7 +1254,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "golden-crisp-fries",
@@ -1206,7 +1272,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-loaded-stack",
@@ -1223,7 +1290,8 @@
           "price": 188
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-bliss-burger",
@@ -1240,7 +1308,8 @@
           "price": 158
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-indulgence-burger",
@@ -1257,7 +1326,8 @@
           "price": 128
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "veg-essence-burger",
@@ -1274,7 +1344,8 @@
           "price": 98
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "spiced-aloo-burger",
@@ -1291,7 +1362,8 @@
           "price": 78
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-wok-hakka",
@@ -1308,7 +1380,8 @@
           "price": 178
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "schezwan-blaze-noodles",
@@ -1325,7 +1398,8 @@
           "price": 158
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic-essence-noodles",
@@ -1342,7 +1416,8 @@
           "price": 138
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "harvest-veg-noodles",
@@ -1359,7 +1434,8 @@
           "price": 108
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "infusion-maxxed-maggi",
@@ -1376,7 +1452,8 @@
           "price": 163
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-luxe-maggi",
@@ -1393,7 +1470,8 @@
           "price": 133
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tandoori-twist-maggi",
@@ -1410,7 +1488,8 @@
           "price": 123
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "veggie-comfort-maggi",
@@ -1427,7 +1506,8 @@
           "price": 93
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "just-maggi",
@@ -1444,7 +1524,8 @@
           "price": 63
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-tikka-supreme",
@@ -1461,7 +1542,8 @@
           "price": 318
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garden-harvest-pizza",
@@ -1478,7 +1560,8 @@
           "price": 278
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "margherita-delight",
@@ -1495,7 +1578,8 @@
           "price": 248
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kurkure-delight-momos",
@@ -1512,7 +1596,8 @@
           "price": 228
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "fusion-gravy-momos",
@@ -1529,7 +1614,8 @@
           "price": 198
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "golden-crunch-momos",
@@ -1546,7 +1632,8 @@
           "price": 168
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-velvet-lava-cake",
@@ -1565,7 +1652,8 @@
       "active": false,
       "isActive": false,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "choco-lava-cake",
@@ -1581,7 +1669,8 @@
           "price": 128
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sizzling-brownie-with-ice-cream",
@@ -1597,7 +1686,8 @@
           "price": 118
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hot-brownie",
@@ -1613,7 +1703,8 @@
           "price": 108
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "strawberry-coolberg",
@@ -1638,7 +1729,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peach-coolberg",
@@ -1663,7 +1755,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cranberry-coolberg",
@@ -1688,7 +1781,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "jugaaro-coolberg",
@@ -1713,7 +1807,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ultra-white-monster",
@@ -1738,7 +1833,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ultra-original-monster",
@@ -1763,7 +1859,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ultra-pink-monster",
@@ -1788,7 +1885,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bad-apple-monster",
@@ -1813,7 +1911,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "rio-punch-monster",
@@ -1838,7 +1937,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "white-pineapple-monster",
@@ -1863,7 +1963,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "redbull-250ml-",
@@ -1888,7 +1989,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "water-bottle",
@@ -1913,7 +2015,8 @@
       "featured": false,
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "big-advance",
@@ -1931,7 +2034,8 @@
       ],
       "active": true,
       "isDeleted": false,
-      "deletedAt": null
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "big-gold-flake",
@@ -1947,7 +2051,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "connect",
@@ -1963,7 +2068,8 @@
           "price": 25
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ultra-mild",
@@ -1979,7 +2085,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mild-classic",
@@ -1995,7 +2102,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "fine-touch",
@@ -2011,7 +2119,8 @@
           "price": 25
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "marlboro-red",
@@ -2027,7 +2136,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "double-brust",
@@ -2043,7 +2153,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ice-brust",
@@ -2059,7 +2170,8 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "classic-regular",
@@ -2075,7 +2187,35 @@
           "price": 28
         }
       ],
-      "active": true
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "test-item",
+      "name": "test item",
+      "categoryId": "hot-drinks",
+      "description": "",
+      "subCategoryId": "chai",
+      "subCategoryName": "Chai",
+      "subcategory": "Chai",
+      "image": "",
+      "sizes": [
+        {
+          "id": "regular",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 10,
+          "sortOrder": 1
+        }
+      ],
+      "serveOptions": [],
+      "addons": [],
+      "featured": false,
+      "active": true,
+      "isActive": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
     }
   ],
   "orders": [

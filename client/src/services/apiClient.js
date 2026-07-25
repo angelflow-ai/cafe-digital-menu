@@ -30,6 +30,7 @@ const API_ROOT = resolveApiRoot();
 const API = `${API_ROOT}/api`;
 const AUTH_TOKEN_STORAGE_KEY = "infusion-auth-token";
 const SELECTED_OUTLET_STORAGE_KEY = "infusion-selected-outlet";
+const OWNER_SELECTED_OUTLET_FILTER_KEY = "ownerSelectedOutletFilter";
 
 const inFlight = new Map();
 const LOGIN_RETRY_DELAY_MS = 700;
@@ -45,19 +46,55 @@ function isLoginRequest(path) {
 }
 
 function readSelectedOutletContext() {
+  // Derive active outlet from the URL path only. Do not use sessionStorage/localStorage
+  // as the source of truth for active outlet selection.
   try {
-    const outlet = JSON.parse(sessionStorage.getItem(SELECTED_OUTLET_STORAGE_KEY) || "null");
-    const outletId = outlet?._id || outlet?.id || "";
-    const outletSlug = outlet?.slug || "";
-    return { outletId, outletSlug };
+    if (typeof window === "undefined") return { outletId: "", outletSlug: "" };
+    const url = new URL(window.location.href);
+    const segments = url.pathname.split("/").filter(Boolean);
+
+    // Customer menu: /menu/:outletSlug/...
+    if (segments[0] === "menu" && segments[1]) {
+      return { outletId: "", outletSlug: String(segments[1] || "") };
+    }
+
+    // Owner dashboard: /owner/:outletSlug
+    if (segments[0] === "owner" && segments[1]) {
+      return { outletId: "", outletSlug: String(segments[1] || "") };
+    }
+
+    // Biller dashboard: /biller/:outletSlug
+    if (segments[0] === "biller" && segments[1]) {
+      return { outletId: "", outletSlug: String(segments[1] || "") };
+    }
+
+    // Allow explicit query params to override when present (useful for API calls):
+    const outletIdParam = String(url.searchParams.get("outletId") || "").trim();
+    const outletSlugParam = String(url.searchParams.get("outletSlug") || "").trim();
+    if (outletIdParam || outletSlugParam) return { outletId: outletIdParam, outletSlug: outletSlugParam };
+
+    // Owner "all" selection may be present in query for administrative actions
+    const ownerFilter = String(url.searchParams.get("ownerSelectedOutletFilter") || "").trim().toLowerCase();
+    if (ownerFilter === "all" && segments[0] === "owner") return { outletId: "", outletSlug: "all" };
+
+    return { outletId: "", outletSlug: "" };
   } catch (error) {
     return { outletId: "", outletSlug: "" };
+  }
+}
+
+function readOwnerSelectedOutletFilter() {
+  try {
+    return String(sessionStorage.getItem(OWNER_SELECTED_OUTLET_FILTER_KEY) || "").trim().toLowerCase();
+  } catch (error) {
+    return "";
   }
 }
 
 function shouldAttachOutletContext(path) {
   const cleanPath = pathWithoutQuery(path);
   if (cleanPath.startsWith("/orders/public")) return false;
+  // Attach outlet context for collections scoped by outlet.
   return (
     cleanPath === "/orders" ||
     cleanPath.startsWith("/orders/") ||
@@ -74,9 +111,9 @@ function shouldAttachOutletContext(path) {
     cleanPath === "/categories" ||
     cleanPath.startsWith("/categories/") ||
     cleanPath === "/menu" ||
-    cleanPath.startsWith("/menu/") ||
+    cleanPath.startsWith("/menu") ||
     cleanPath === "/menu-items" ||
-    cleanPath.startsWith("/menu-items/")
+    cleanPath.startsWith("/menu-items")
   );
 }
 
@@ -97,6 +134,10 @@ function withOutletRequestContext(path, options = {}) {
   const { outletId, outletSlug } = readSelectedOutletContext();
   if (!outletId && !outletSlug) return { path, options };
 
+  if (import.meta.env.DEV) {
+    console.debug("[apiClient] attaching outlet context", { path, outletId, outletSlug, method: (options.method || "GET").toUpperCase() });
+  }
+
   const nextOptions = { ...options };
   const method = (nextOptions.method || "GET").toUpperCase();
   if (["POST", "PUT", "PATCH"].includes(method) && nextOptions.body) {
@@ -108,6 +149,14 @@ function withOutletRequestContext(path, options = {}) {
           const nextBody = { ...body };
           if (outletId && !nextBody.outletId) nextBody.outletId = outletId;
           if (outletSlug && !nextBody.outletSlug) nextBody.outletSlug = outletSlug;
+
+          const ownerSelectedOutletFilter = readOwnerSelectedOutletFilter();
+          const createAllOutletPaths = ["/categories", "/menu", "/menu-items"];
+          const pathOnly = pathWithoutQuery(path);
+          if (!nextBody.outletId && !nextBody.outletSlug && method === "POST" && ownerSelectedOutletFilter === "all" && createAllOutletPaths.includes(pathOnly)) {
+            nextBody.outletSlug = "all";
+          }
+
           nextOptions.body = typeof nextOptions.body === "string" ? JSON.stringify(nextBody) : nextBody;
         }
       }
@@ -165,6 +214,9 @@ async function rawFetch(path, options = {}) {
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
   const token = getAuthToken();
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  if (import.meta.env.DEV) {
+    console.debug("[apiClient] request", { path, method, hasToken: Boolean(token), tokenPreview: token ? `${String(token).slice(0, 8)}...` : null });
+  }
   if (token && !headers.Authorization && !headers.authorization) {
     headers.Authorization = `Bearer ${token}`;
   }

@@ -2,31 +2,31 @@
   {
     "email": "owner@theinfusionsaga.com",
     "role": "admin",
-    "passwordHash": "$2b$10$H7.5JRLqGfvt30DOIt7s1em.KYcUMm0zeIVBv5JTk8TdD3bXYsJAu",
+    "passwordHash": "$2b$10$CxUS53RWCaDcmScgnwOf9O1iabsEnkJxGF6GfM3Ea5sC9KGJ7x/9i",
     "verified": true,
     "verificationToken": null,
     "verificationExpiresAt": null,
     "passwordResetToken": null,
     "passwordResetExpiresAt": null,
-    "passwordSetAt": "2026-07-24T01:39:52.841Z",
+    "passwordSetAt": "2026-07-25T08:18:44.779Z",
     "mustChangePassword": false,
     "isActive": true,
-    "updatedAt": "2026-07-24T01:39:52.856Z",
+    "updatedAt": "2026-07-25T08:18:44.781Z",
     "createdAt": "2026-06-04T18:55:49.822Z"
   },
   {
     "email": "biller@theinfusionsaga.com",
     "role": "biller",
-    "passwordHash": "$2b$10$MG80M2vL4gx/pyHWe27O6Ohc81K.S6WTNfioZw1xpmxm579CaoPJ.",
+    "passwordHash": "$2b$10$MbtGwU98XUUbkO5nd8vJJ./UPpmHpN3bvJOwSsPrm4v29fPSHdcjG",
     "verified": true,
     "verificationToken": null,
     "verificationExpiresAt": null,
     "passwordResetToken": null,
     "passwordResetExpiresAt": null,
-    "passwordSetAt": "2026-07-24T01:39:52.872Z",
+    "passwordSetAt": "2026-07-25T08:18:44.785Z",
     "mustChangePassword": false,
     "isActive": true,
-    "updatedAt": "2026-07-24T01:39:52.872Z",
+    "updatedAt": "2026-07-25T08:18:44.785Z",
     "createdAt": "2026-06-04T18:55:49.823Z"
   }
 ]

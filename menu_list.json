@@ -1,0 +1,3715 @@
+﻿{
+    "value":  [
+                  {
+                      "_id":  "6a649464d11edf151a48d4dd",
+                      "id":  "bad-apple-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.457Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Bad Apple Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  300,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:17.155Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4e7",
+                      "id":  "big-advance",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.065Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Big Advance",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.038Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4e9",
+                      "id":  "big-gold-flake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.197Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Big Gold Flake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.200Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d439",
+                      "id":  "black-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.796Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Hot Coffee/Black Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Black Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  58,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coffee",
+                      "subCategoryName":  "Coffee",
+                      "subcategory":  "Coffee",
+                      "updatedAt":  "2026-07-25T11:01:02.933Z"
+                  },
+                  {
+                      "_id":  "6a649451d11edf151a48d427",
+                      "id":  "black-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:44.966Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Black Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Black Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:00:59.797Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d45b",
+                      "id":  "blue-curacao-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.917Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Blue Curacao Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Blue Curacao Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  108,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:06.403Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d487",
+                      "id":  "blush-bowl-pasta",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.623Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pasta/Blush Bowl Pasta (Pink Sauce Pasta).jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Blush Bowl Pasta (Pink Sauce Pasta)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pasta",
+                      "subCategoryName":  "Pasta",
+                      "subcategory":  "Pasta",
+                      "updatedAt":  "2026-07-25T11:01:09.953Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d46b",
+                      "id":  "brownie-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.001Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Brownie Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Brownie Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:07.815Z"
+                  },
+                  {
+                      "_id":  "6a649457d11edf151a48d473",
+                      "id":  "butterscotch-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.509Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Butterscotch Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Butterscotch Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.446Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d447",
+                      "id":  "caramel-cold-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.710Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Caramel Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Caramel Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  128,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:04.321Z"
+                  },
+                  {
+                      "_id":  "6a64945fd11edf151a48d4a2",
+                      "id":  "cheese-indulgence-burger",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:59.539Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Burger/Cheese Indulgence Burger.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cheese Indulgence Burger",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  128,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "burger",
+                      "subCategoryName":  "Burger",
+                      "subcategory":  "Burger",
+                      "updatedAt":  "2026-07-25T11:01:11.969Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4b3",
+                      "id":  "cheese-luxe-maggi",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.812Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Maggi/Cheese Luxe Maggi.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cheese Luxe Maggi",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  133,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "maggi",
+                      "subCategoryName":  "Maggi",
+                      "subcategory":  "Maggi",
+                      "updatedAt":  "2026-07-25T11:01:13.743Z"
+                  },
+                  {
+                      "_id":  "6a64945ad11edf151a48d48f",
+                      "id":  "cheesy-melt-garlic-bread",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:54.410Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Garlic Bread/Cheesy Melt Garlic Bread.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cheesy Melt Garlic Bread",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "garlic-bread",
+                      "subCategoryName":  "Garlic Bread",
+                      "subcategory":  "Garlic Bread",
+                      "updatedAt":  "2026-07-25T11:01:10.611Z"
+                  },
+                  {
+                      "_id":  "6a64945ed11edf151a48d498",
+                      "id":  "chilli-blaze-potato",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:58.392Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/French-Fries/Chilli Blaze Potato.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Chilli Blaze Potato",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  148,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "french-fries",
+                      "subCategoryName":  "French Fries",
+                      "subcategory":  "French Fries",
+                      "updatedAt":  "2026-07-25T11:01:11.187Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4c9",
+                      "id":  "choco-lava-cake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "dessert",
+                      "createdAt":  "2026-07-25T10:48:03.192Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Dessert/Choco Lava Cake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Choco Lava Cake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  128,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:15.563Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d44b",
+                      "id":  "chocolate-cold-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.967Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Chocolate Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Chocolate Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:04.606Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4f9",
+                      "id":  "classic-regular",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:06.172Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Classic Regular",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:19.517Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4eb",
+                      "id":  "connect",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.320Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Connect",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  25,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.350Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d437",
+                      "id":  "core-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.659Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Hot Coffee/Core Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Core Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  68,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coffee",
+                      "subCategoryName":  "Coffee",
+                      "subcategory":  "Coffee",
+                      "updatedAt":  "2026-07-25T11:01:02.764Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4d3",
+                      "id":  "cranberry-coolberg",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:03.838Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cranberry Coolberg",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  109,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coolberg",
+                      "subCategoryName":  "Coolberg",
+                      "subcategory":  "Coolberg",
+                      "updatedAt":  "2026-07-25T11:01:16.349Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d459",
+                      "id":  "cranberry-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.811Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Cranberry Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cranberry Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:06.231Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d463",
+                      "id":  "cranberry-slush",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.460Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Slush/Cranberry Slush.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Cranberry Slush",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  108,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-slush",
+                      "subCategoryName":  "Ice Slush",
+                      "subcategory":  "Ice Slush",
+                      "updatedAt":  "2026-07-25T11:01:07.231Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d46d",
+                      "id":  "dark-chocolate-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.109Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Dark Chocolate Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Dark Chocolate Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:07.962Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4f5",
+                      "id":  "double-brust",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.931Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Double Brust",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:19.195Z"
+                  },
+                  {
+                      "_id":  "6a64945ed11edf151a48d49a",
+                      "id":  "fiery-peri-peri-fries",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:58.532Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/French-Fries/Fiery Peri-Peri Fries.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Fiery Peri-Peri Fries",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "french-fries",
+                      "subCategoryName":  "French Fries",
+                      "subcategory":  "French Fries",
+                      "updatedAt":  "2026-07-25T11:01:11.354Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4f1",
+                      "id":  "fine-touch",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.682Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Fine Touch",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  25,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.845Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4c3",
+                      "id":  "fusion-gravy-momos",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.814Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Dumplings/Fusion Gravy Momos.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Fusion Gravy Momos",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  198,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "dumplings",
+                      "subCategoryName":  "Dumplings",
+                      "subcategory":  "Dumplings",
+                      "updatedAt":  "2026-07-25T11:01:15.154Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d485",
+                      "id":  "garden-fresh-sandwich",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.482Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Sandwich/Garden Fresh Sandwich.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Garden Fresh Sandwich",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  93,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "sandwich",
+                      "subCategoryName":  "Sandwich",
+                      "subcategory":  "Sandwich",
+                      "updatedAt":  "2026-07-25T11:01:09.795Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4bd",
+                      "id":  "garden-harvest-pizza",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.451Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pizza/Garden Harvest Pizza.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Garden Harvest Pizza",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  278,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pizza",
+                      "subCategoryName":  "Pizza",
+                      "subcategory":  "Pizza",
+                      "updatedAt":  "2026-07-25T11:01:14.679Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4ad",
+                      "id":  "garlic-essence-noodles",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.449Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Noodles/Garlic Essence Noodles.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Garlic Essence Noodles",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "noodles",
+                      "subCategoryName":  "Noodles",
+                      "subcategory":  "Noodles",
+                      "updatedAt":  "2026-07-25T11:01:12.845Z"
+                  },
+                  {
+                      "_id":  "6a64945ed11edf151a48d49c",
+                      "id":  "golden-crisp-fries",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:58.739Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/French-Fries/Golden Crisp Fries.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Golden Crisp Fries",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "french-fries",
+                      "subCategoryName":  "French Fries",
+                      "subcategory":  "French Fries",
+                      "updatedAt":  "2026-07-25T11:01:11.514Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4c5",
+                      "id":  "golden-crunch-momos",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.943Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Dumplings/Golden Crunch Momos.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Golden Crunch Momos",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "dumplings",
+                      "subCategoryName":  "Dumplings",
+                      "subcategory":  "Dumplings",
+                      "updatedAt":  "2026-07-25T11:01:15.311Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d455",
+                      "id":  "green-apple-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.559Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Green Apple Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Green Apple Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:05.956Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d461",
+                      "id":  "green-apple-slush",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.316Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Slush/Green Apple Slush.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Green Apple Slush",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  108,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-slush",
+                      "subCategoryName":  "Ice Slush",
+                      "subcategory":  "Ice Slush",
+                      "updatedAt":  "2026-07-25T11:01:07.072Z"
+                  },
+                  {
+                      "_id":  "6a649452d11edf151a48d429",
+                      "id":  "green-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:46.567Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Green Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Green Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:01:00.772Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d44f",
+                      "id":  "guava-chilli-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.187Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Guava Chilli Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Guava Chilli Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:04.947Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4af",
+                      "id":  "harvest-veg-noodles",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.571Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Noodles/Harvest Veg Noodles.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Harvest Veg Noodles",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  108,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "noodles",
+                      "subCategoryName":  "Noodles",
+                      "subcategory":  "Noodles",
+                      "updatedAt":  "2026-07-25T11:01:13.178Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d445",
+                      "id":  "hazelnut-cold-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.574Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Hazelnut Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Hazelnut Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  148,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:04.164Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d48b",
+                      "id":  "herbed-bechamel-pasta",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.881Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pasta/Herbed Béchamel Pasta (White Sauce Pasta).jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Herbed Béchamel Pasta (White Sauce Pasta)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pasta",
+                      "subCategoryName":  "Pasta",
+                      "subcategory":  "Pasta",
+                      "updatedAt":  "2026-07-25T11:01:10.288Z"
+                  },
+                  {
+                      "_id":  "6a64945ed11edf151a48d495",
+                      "id":  "honey-chilli-glazed-potato",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:58.226Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/French-Fries/Honey Chilli Glazed Potato.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Honey Chilli Glazed Potato",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "french-fries",
+                      "subCategoryName":  "French Fries",
+                      "subcategory":  "French Fries",
+                      "updatedAt":  "2026-07-25T11:01:11.045Z"
+                  },
+                  {
+                      "_id":  "6a649452d11edf151a48d42f",
+                      "id":  "honey-lemon-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.143Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Honey Lemon Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Honey Lemon Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:01:01.328Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4cd",
+                      "id":  "hot-brownie",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "dessert",
+                      "createdAt":  "2026-07-25T10:48:03.426Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Dessert/Hot Brownie.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Hot Brownie",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  108,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:15.880Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d435",
+                      "id":  "hot-chocolate",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.534Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Hot Coffee/Hot Chocolate.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Hot Chocolate",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coffee",
+                      "subCategoryName":  "Coffee",
+                      "subcategory":  "Coffee",
+                      "updatedAt":  "2026-07-25T11:01:02.487Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4f7",
+                      "id":  "ice-brust",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:06.053Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Ice Brust",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:19.348Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d443",
+                      "id":  "infusion-heritage-cold-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.448Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Infusion Heritage Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Heritage Cold Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  168,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:03.997Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d433",
+                      "id":  "infusion-heritage-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.413Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Hot Coffee/Infusion Heritage Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Heritage Hot Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coffee",
+                      "subCategoryName":  "Coffee",
+                      "subcategory":  "Coffee",
+                      "updatedAt":  "2026-07-25T11:01:02.183Z"
+                  },
+                  {
+                      "_id":  "6a649458d11edf151a48d47f",
+                      "id":  "infusion-heritage-melt",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.093Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Sandwich/Infusion Heritage Melt.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Heritage Melt",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  173,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "sandwich",
+                      "subCategoryName":  "Sandwich",
+                      "subcategory":  "Sandwich",
+                      "updatedAt":  "2026-07-25T11:01:09.349Z"
+                  },
+                  {
+                      "_id":  "6a64945ed11edf151a48d49e",
+                      "id":  "infusion-loaded-stack",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:58.882Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Burger/Infusion Loaded Stack.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Loaded Stack",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  188,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "burger",
+                      "subCategoryName":  "Burger",
+                      "subcategory":  "Burger",
+                      "updatedAt":  "2026-07-25T11:01:11.639Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4b1",
+                      "id":  "infusion-maxxed-maggi",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.695Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Maggi/Infusion Maxxed Maggi.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Maxxed Maggi",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  163,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "maggi",
+                      "subCategoryName":  "Maggi",
+                      "subcategory":  "Maggi",
+                      "updatedAt":  "2026-07-25T11:01:13.291Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d43b",
+                      "id":  "infusion-signature-ice-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.915Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Tea/Infusion Signature Ice Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Signature Ice Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  128,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-tea",
+                      "subCategoryName":  "Ice Tea",
+                      "subcategory":  "Ice Tea",
+                      "updatedAt":  "2026-07-25T11:01:03.153Z"
+                  },
+                  {
+                      "_id":  "6a64945dd11edf151a48d493",
+                      "id":  "infusion-velvet-cheese-fries",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:55.882Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/French-Fries/Infusion Velvet Cheese Fries.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Velvet Cheese Fries",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  188,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "french-fries",
+                      "subCategoryName":  "French Fries",
+                      "subcategory":  "French Fries",
+                      "updatedAt":  "2026-07-25T11:01:10.881Z"
+                  },
+                  {
+                      "_id":  "6a649460d11edf151a48d4a9",
+                      "id":  "infusion-wok-hakka",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.186Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Noodles/Infusion Wok Hakka.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Infusion Wok Hakka",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  178,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "noodles",
+                      "subCategoryName":  "Noodles",
+                      "subcategory":  "Noodles",
+                      "updatedAt":  "2026-07-25T11:01:12.428Z"
+                  },
+                  {
+                      "_id":  "6a64945ad11edf151a48d48d",
+                      "id":  "jalapeno-corn-stuffed-garlic-bread",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:54.067Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Garlic Bread/Jalapeño Corn Stuffed Garlic Bread.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Jalapeno Corn Stuffed Garlic Bread",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  188,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:10.447Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4d5",
+                      "id":  "jugaaro-coolberg",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:03.953Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Jugaaro Coolberg",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  109,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coolberg",
+                      "subCategoryName":  "Coolberg",
+                      "subcategory":  "Coolberg",
+                      "updatedAt":  "2026-07-25T11:01:16.509Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4b9",
+                      "id":  "just-maggi",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.118Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Maggi/Just Maggi.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Just Maggi",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "maggi",
+                      "subCategoryName":  "Maggi",
+                      "subcategory":  "Maggi",
+                      "updatedAt":  "2026-07-25T11:01:14.350Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d465",
+                      "id":  "kala-khatta-slush",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.599Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Slush/Kala Khatta Slush.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Kala Khatta Slush",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-slush",
+                      "subCategoryName":  "Ice Slush",
+                      "subcategory":  "Ice Slush",
+                      "updatedAt":  "2026-07-25T11:01:07.367Z"
+                  },
+                  {
+                      "_id":  "6a649457d11edf151a48d46f",
+                      "id":  "kit-kat-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.235Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Kit-Kat Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  158,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.107Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d469",
+                      "id":  "kunafa-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.862Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Kunafa Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  198,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:07.668Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4c1",
+                      "id":  "kurkure-delight-momos",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.691Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Dumplings/Kurkure Delight Momos.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Kurkure Delight Momos",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  228,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "dumplings",
+                      "subCategoryName":  "Dumplings",
+                      "subcategory":  "Dumplings",
+                      "updatedAt":  "2026-07-25T11:01:14.985Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d441",
+                      "id":  "lemon-ice-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.302Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Tea/Lemon ice tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Lemon Ice Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  88,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-tea",
+                      "subCategoryName":  "Ice Tea",
+                      "subcategory":  "Ice Tea",
+                      "updatedAt":  "2026-07-25T11:01:03.634Z"
+                  },
+                  {
+                      "_id":  "6a649452d11edf151a48d42d",
+                      "id":  "lemon-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.001Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Lemon Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Lemon Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:01:01.151Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d45d",
+                      "id":  "lime-mint-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.053Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Lime \u0026 Mint Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Lime \u0026 Mint Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:06.718Z"
+                  },
+                  {
+                      "_id":  "6a649457d11edf151a48d475",
+                      "id":  "mango-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.632Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Mango Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Mango Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.613Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4bf",
+                      "id":  "margherita-delight",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.572Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pizza/Margherita Delight.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Margherita Delight",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  248,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pizza",
+                      "subCategoryName":  "Pizza",
+                      "subcategory":  "Pizza",
+                      "updatedAt":  "2026-07-25T11:01:14.795Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4f3",
+                      "id":  "marlboro-red",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.812Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Marlboro Red",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:19.032Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d451",
+                      "id":  "masala-lemonade-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.313Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Masala Lemonade Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Masala Lemonade Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:05.099Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4ef",
+                      "id":  "mild-classic",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.532Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Mild Classic",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.678Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d449",
+                      "id":  "mocha-cold-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.841Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Mocha Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Mocha Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  128,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:04.450Z"
+                  },
+                  {
+                      "_id":  "6a649457d11edf151a48d471",
+                      "id":  "oreo-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.394Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Oreo Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Oreo Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  158,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.279Z"
+                  },
+                  {
+                      "_id":  "6a64945fd11edf151a48d4a0",
+                      "id":  "paneer-bliss-burger",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:59.258Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Burger/Paneer Bliss Burger.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Paneer Bliss Burger",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  158,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "burger",
+                      "subCategoryName":  "Burger",
+                      "subcategory":  "Burger",
+                      "updatedAt":  "2026-07-25T11:01:11.801Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d481",
+                      "id":  "paneer-tikka-melt",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.224Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Paneer Tikka Melt",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  143,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "sandwich",
+                      "subCategoryName":  "Sandwich",
+                      "subcategory":  "Sandwich",
+                      "updatedAt":  "2026-07-25T11:01:09.477Z"
+                  },
+                  {
+                      "_id":  "6a649462d11edf151a48d4bb",
+                      "id":  "paneer-tikka-supreme",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.228Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pizza/Paneer Tikka Supreme.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Paneer Tikka Supreme",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  318,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pizza",
+                      "subCategoryName":  "Pizza",
+                      "subcategory":  "Pizza",
+                      "updatedAt":  "2026-07-25T11:01:14.528Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4d1",
+                      "id":  "peach-coolberg",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:03.670Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Peach Coolberg",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  109,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coolberg",
+                      "subCategoryName":  "Coolberg",
+                      "subcategory":  "Coolberg",
+                      "updatedAt":  "2026-07-25T11:01:16.195Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d43f",
+                      "id":  "peach-ice-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.172Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Tea/Peach Ice Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Peach Ice Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-tea",
+                      "subCategoryName":  "Ice Tea",
+                      "subcategory":  "Ice Tea",
+                      "updatedAt":  "2026-07-25T11:01:03.482Z"
+                  },
+                  {
+                      "_id":  "6a649450d11edf151a48d425",
+                      "id":  "personal-blend-chai",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:44.412Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Personal Blend Chai.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Personal Blend Chai",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  73,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:00:59.638Z"
+                  },
+                  {
+                      "_id":  "6a649458d11edf151a48d47b",
+                      "id":  "prab-protein-milk-shake-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:52.748Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Coffee).webp",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Prab Protein Milk-shake (Coffee)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  125,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:09.090Z"
+                  },
+                  {
+                      "_id":  "6a649458d11edf151a48d479",
+                      "id":  "prab-protein-milk-shake-double-chocolate",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:52.014Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Double Chocolate).jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Prab Protein Milk-shake (Double Chocolate)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  85,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.921Z"
+                  },
+                  {
+                      "_id":  "6a64945ad11edf151a48d491",
+                      "id":  "pure-garlic-bread",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:54.671Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Garlic Bread/Pure Garlic Bread.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Pure Garlic Bread",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "garlic-bread",
+                      "subCategoryName":  "Garlic Bread",
+                      "subcategory":  "Garlic Bread",
+                      "updatedAt":  "2026-07-25T11:01:10.737Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4e3",
+                      "id":  "redbull-250ml-",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.827Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Redbull (250ml)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  125,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:17.734Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4df",
+                      "id":  "rio-punch-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.586Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Rio Punch Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  300,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:17.445Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4ab",
+                      "id":  "schezwan-blaze-noodles",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.304Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Noodles/Schezwan Blaze Noodles.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Schezwan Blaze Noodles",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  158,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "noodles",
+                      "subCategoryName":  "Noodles",
+                      "subcategory":  "Noodles",
+                      "updatedAt":  "2026-07-25T11:01:12.673Z"
+                  },
+                  {
+                      "_id":  "6a649454d11edf151a48d44d",
+                      "id":  "signature-coffee",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.069Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Cold Coffee/Signature Coffee.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Signature Coffee",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "cold-coffee",
+                      "subCategoryName":  "Cold Coffee",
+                      "subcategory":  "Cold Coffee",
+                      "updatedAt":  "2026-07-25T11:01:04.740Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d431",
+                      "id":  "signature-infusion-chai",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:47.282Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Signature Infusion Chai.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Signature Infusion Chai",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  43,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:01:01.531Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4cb",
+                      "id":  "sizzling-brownie-with-ice-cream",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "dessert",
+                      "createdAt":  "2026-07-25T10:48:03.316Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Dessert/Sizzling Brownie with Ice Cream.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Sizzling Brownie with Ice Cream",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:15.719Z"
+                  },
+                  {
+                      "_id":  "6a649460d11edf151a48d4a7",
+                      "id":  "spiced-aloo-burger",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.060Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Burger/Spiced Aloo Burger.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Spiced Aloo Burger",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  78,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "burger",
+                      "subCategoryName":  "Burger",
+                      "subcategory":  "Burger",
+                      "updatedAt":  "2026-07-25T11:01:12.278Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d453",
+                      "id":  "spicy-mango-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.431Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Spicy Mango Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Spicy Mango Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:05.805Z"
+                  },
+                  {
+                      "_id":  "6a649458d11edf151a48d47d",
+                      "id":  "storia-coconut-water",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "coconut-water",
+                      "createdAt":  "2026-07-25T10:47:52.966Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Coconut Water/Storia Coconut Water.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Storia Coconut Water",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  60,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:09.244Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4cf",
+                      "id":  "strawberry-coolberg",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:03.547Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Strawberry Coolberg",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  109,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "coolberg",
+                      "subCategoryName":  "Coolberg",
+                      "subcategory":  "Coolberg",
+                      "updatedAt":  "2026-07-25T11:01:16.028Z"
+                  },
+                  {
+                      "_id":  "6a649457d11edf151a48d477",
+                      "id":  "strawberry-shake",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:51.823Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Milk Shakes/Strawberry Shake.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Strawberry Shake",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  138,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "milk-shakes",
+                      "subCategoryName":  "Milk Shakes",
+                      "subcategory":  "Milk Shakes",
+                      "updatedAt":  "2026-07-25T11:01:08.764Z"
+                  },
+                  {
+                      "_id":  "6a649456d11edf151a48d467",
+                      "id":  "strawberry-slush",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.738Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Slush/Strawberry Slush.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Strawberry Slush",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-slush",
+                      "subCategoryName":  "Ice Slush",
+                      "subcategory":  "Ice Slush",
+                      "updatedAt":  "2026-07-25T11:01:07.530Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4b5",
+                      "id":  "tandoori-twist-maggi",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:01.920Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Maggi/Tandoori Twist Maggi.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Tandoori Twist Maggi",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  123,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "maggi",
+                      "subCategoryName":  "Maggi",
+                      "subcategory":  "Maggi",
+                      "updatedAt":  "2026-07-25T11:01:14.071Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d489",
+                      "id":  "tomato-basil-pasta",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.762Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Pasta/Tomato Basil Pasta (Red Sauce Pasta).jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Tomato Basil Pasta (Red Sauce Pasta)",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  148,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "pasta",
+                      "subCategoryName":  "Pasta",
+                      "subcategory":  "Pasta",
+                      "updatedAt":  "2026-07-25T11:01:10.122Z"
+                  },
+                  {
+                      "_id":  "6a649459d11edf151a48d483",
+                      "id":  "trio-delight-sandwich",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:47:53.352Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Sandwich/Trio Delight Sandwich.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Trio Delight Sandwich",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  113,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "sandwich",
+                      "subCategoryName":  "Sandwich",
+                      "subcategory":  "Sandwich",
+                      "updatedAt":  "2026-07-25T11:01:09.644Z"
+                  },
+                  {
+                      "_id":  "6a649452d11edf151a48d42b",
+                      "id":  "tulsi-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "hot-drinks",
+                      "createdAt":  "2026-07-25T10:47:46.860Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Hot Drinks/Chai/Tulsi Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Tulsi Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  63,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "chai",
+                      "subCategoryName":  "Chai",
+                      "subcategory":  "Chai",
+                      "updatedAt":  "2026-07-25T11:01:00.979Z"
+                  },
+                  {
+                      "_id":  "6a649465d11edf151a48d4ed",
+                      "id":  "ultra-mild",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cigarettes",
+                      "createdAt":  "2026-07-25T10:48:05.428Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Ultra Mild",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  28,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:18.522Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4d9",
+                      "id":  "ultra-original-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.222Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Ultra Original Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  300,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:16.838Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4db",
+                      "id":  "ultra-pink-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.338Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Ultra Pink Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  300,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:16.983Z"
+                  },
+                  {
+                      "_id":  "6a649463d11edf151a48d4d7",
+                      "id":  "ultra-white-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.076Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Ultra White Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  350,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:16.677Z"
+                  },
+                  {
+                      "_id":  "6a649460d11edf151a48d4a5",
+                      "id":  "veg-essence-burger",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:00.081Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Burger/Veg Essence Burger.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Veg Essence Burger",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "burger",
+                      "subCategoryName":  "Burger",
+                      "subcategory":  "Burger",
+                      "updatedAt":  "2026-07-25T11:01:12.113Z"
+                  },
+                  {
+                      "_id":  "6a649461d11edf151a48d4b7",
+                      "id":  "veggie-comfort-maggi",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "snacks",
+                      "createdAt":  "2026-07-25T10:48:02.020Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Snacks/Maggi/Veggie Comfort Maggi.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Veggie Comfort Maggi",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  93,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "maggi",
+                      "subCategoryName":  "Maggi",
+                      "subcategory":  "Maggi",
+                      "updatedAt":  "2026-07-25T11:01:14.199Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4e5",
+                      "id":  "water-bottle",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "water-bottles",
+                      "createdAt":  "2026-07-25T10:48:04.947Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Water Bottle",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  30,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T11:01:17.876Z"
+                  },
+                  {
+                      "_id":  "6a649453d11edf151a48d43d",
+                      "id":  "watermelon-ice-tea",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:48.037Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Tea/Watermelon Ice Tea.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Watermelon Ice Tea",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  98,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-tea",
+                      "subCategoryName":  "Ice Tea",
+                      "subcategory":  "Ice Tea",
+                      "updatedAt":  "2026-07-25T11:01:03.319Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d457",
+                      "id":  "watermelon-mojito",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:49.692Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Mojito/Watermelon Mojito.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Watermelon Mojito",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "mojito",
+                      "subCategoryName":  "Mojito",
+                      "subcategory":  "Mojito",
+                      "updatedAt":  "2026-07-25T11:01:06.082Z"
+                  },
+                  {
+                      "_id":  "6a649455d11edf151a48d45f",
+                      "id":  "watermelon-slush",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:47:50.171Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Ice Slush/Watermelon Slush.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "Watermelon Slush",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "one",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  118,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "ice-slush",
+                      "subCategoryName":  "Ice Slush",
+                      "subcategory":  "Ice Slush",
+                      "updatedAt":  "2026-07-25T11:01:06.917Z"
+                  },
+                  {
+                      "_id":  "6a649464d11edf151a48d4e1",
+                      "id":  "white-pineapple-monster",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "cold-drinks",
+                      "createdAt":  "2026-07-25T10:48:04.702Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "White Pineapple Monster",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  300,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "energy-drinks",
+                      "subCategoryName":  "Energy Drinks",
+                      "subcategory":  "Energy Drinks",
+                      "updatedAt":  "2026-07-25T11:01:17.590Z"
+                  },
+                  {
+                      "_id":  "6a647d6dd11edf151a48cea0",
+                      "id":  "test-pizza",
+                      "outletId":  "6a5cadad7aed56a342c4ea44",
+                      "__v":  0,
+                      "active":  true,
+                      "addons":  [
+
+                                 ],
+                      "categoryId":  "pizza",
+                      "createdAt":  "2026-07-25T09:10:05.552Z",
+                      "deletedAt":  null,
+                      "description":  "",
+                      "featured":  false,
+                      "image":  "",
+                      "isActive":  true,
+                      "isDeleted":  false,
+                      "name":  "test pizza",
+                      "serveOptions":  [
+
+                                       ],
+                      "sizes":  [
+                                    {
+                                        "id":  "regular",
+                                        "name":  "Regular",
+                                        "label":  "Regular",
+                                        "price":  5,
+                                        "sortOrder":  1
+                                    }
+                                ],
+                      "subCategoryId":  "",
+                      "subCategoryName":  "",
+                      "subcategory":  "",
+                      "updatedAt":  "2026-07-25T09:18:47.334Z"
+                  }
+              ],
+    "Count":  106
+}
