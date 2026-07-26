@@ -213,9 +213,10 @@ async function rawFetch(path, options = {}) {
   const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
   const token = getAuthToken();
-  const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+  const isFormData = typeof FormData !== "undefined" && options.body instanceof FormData;
+  const headers = isFormData ? { ...(options.headers || {}) } : { "Content-Type": "application/json", ...(options.headers || {}) };
   if (import.meta.env.DEV) {
-    console.debug("[apiClient] request", { path, method, hasToken: Boolean(token), tokenPreview: token ? `${String(token).slice(0, 8)}...` : null });
+    console.debug("[apiClient] request", { path, method, hasToken: Boolean(token), tokenPreview: token ? `${String(token).slice(0, 8)}...` : null, isFormData });
   }
   if (token && !headers.Authorization && !headers.authorization) {
     headers.Authorization = `Bearer ${token}`;
