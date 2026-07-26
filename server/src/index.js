@@ -13,6 +13,7 @@ import bcrypt from "bcryptjs";
 import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store, usingMongo, getCurrentOutletId } from "./db.js";
 import { defaultRecipes } from "./seed.js";
 import outletService from "./services/outletService.js";
+import { deleteWebsiteMediaForOutlet, getWebsiteContentForOutlet, publishWebsiteContentForOutlet, saveWebsiteContentDraftForOutlet } from "./services/websiteContentService.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,7 +22,6 @@ app.set("trust proxy", 1);
 
 const uploadsDir = path.join(__dirname, "../uploads");
 fs.mkdirSync(uploadsDir, { recursive: true });
-const allowedUploadMimeTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]);
 const uploadStorage = multer.diskStorage({
   destination: (_req, _file, callback) => callback(null, uploadsDir),
   filename: (_req, file, callback) => {
@@ -29,17 +29,36 @@ const uploadStorage = multer.diskStorage({
     callback(null, `${crypto.randomUUID()}${extension}`);
   }
 });
-const upload = multer({
-  storage: uploadStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (_req, file, callback) => {
-    if (!allowedUploadMimeTypes.has(file.mimetype)) {
-      callback(new Error("Please upload a JPG, PNG, WEBP, or GIF image."));
-      return;
+
+function createUploadMiddleware(allowedMimeTypes, maxSize, errorMessage) {
+  return multer({
+    storage: uploadStorage,
+    limits: { fileSize: maxSize },
+    fileFilter: (_req, file, callback) => {
+      if (!allowedMimeTypes.has(file.mimetype)) {
+        callback(new Error(errorMessage));
+        return;
+      }
+      callback(null, true);
     }
-    callback(null, true);
-  }
-});
+  });
+}
+
+const imageUpload = createUploadMiddleware(
+  new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"]),
+  5 * 1024 * 1024,
+  "Please upload a JPG, PNG, WEBP, or GIF image."
+);
+const videoUpload = createUploadMiddleware(
+  new Set(["video/mp4", "video/quicktime", "video/webm", "video/x-m4v", "video/avi"]),
+  100 * 1024 * 1024,
+  "Please upload an MP4, MOV, or WEBM video file."
+);
+const documentUpload = createUploadMiddleware(
+  new Set(["application/pdf", "image/png", "image/jpeg", "image/jpg"]),
+  10 * 1024 * 1024,
+  "Please upload a PDF or image file."
+);
 
 const port = Number(process.env.PORT || 4000);
 const clientDist = path.join(__dirname, "../../client/dist");
@@ -778,6 +797,68 @@ app.get("/api/outlets/:id", async (req, res, next) => {
     const outlet = await outletService.getOutletById(req.params.id);
     if (!outlet) return res.status(404).json({ message: "Outlet not found." });
     return res.json(outlet);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.get("/api/website-content", async (req, res, next) => {
+  try {
+    const outletRef = req.query.outletSlug || req.query.outletId || req.query.outlet || "";
+    res.json(await getWebsiteContentForOutlet(outletRef, { mode: req.query.mode === "draft" ? "draft" : "published" }));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.put("/api/website-content/:outletRef", requireAdmin, async (req, res, next) => {
+  try {
+    const payload = req.body || {};
+    const outletRef = decodeURIComponent(req.params.outletRef);
+    res.json(await saveWebsiteContentDraftForOutlet(outletRef, payload));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/website-content/:outletRef/publish", requireAdmin, async (req, res, next) => {
+  try {
+    const payload = req.body || {};
+    const outletRef = decodeURIComponent(req.params.outletRef);
+    res.json(await publishWebsiteContentForOutlet(outletRef, payload));
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post("/api/website-content/:outletRef/upload-video", requireAdmin, (req, res, next) => {
+  videoUpload.single("file")(req, res, (error) => {
+    if (error) return next(error);
+    if (!req.file) return res.status(400).json({ message: "Please choose a video file to upload." });
+    return res.json({ url: `/uploads/${req.file.filename}` });
+  });
+});
+
+app.post("/api/website-content/:outletRef/upload-image", requireAdmin, (req, res, next) => {
+  imageUpload.single("file")(req, res, (error) => {
+    if (error) return next(error);
+    if (!req.file) return res.status(400).json({ message: "Please choose an image file to upload." });
+    return res.json({ url: `/uploads/${req.file.filename}` });
+  });
+});
+
+app.post("/api/website-content/:outletRef/upload-fssai", requireAdmin, (req, res, next) => {
+  documentUpload.single("file")(req, res, (error) => {
+    if (error) return next(error);
+    if (!req.file) return res.status(400).json({ message: "Please choose a certificate file to upload." });
+    return res.json({ url: `/uploads/${req.file.filename}` });
+  });
+});
+
+app.delete("/api/website-content/:outletRef/media", requireAdmin, async (req, res, next) => {
+  try {
+    const outletRef = decodeURIComponent(req.params.outletRef);
+    res.json(await deleteWebsiteMediaForOutlet(outletRef, req.query.key || ""));
   } catch (error) {
     next(error);
   }

@@ -19,177 +19,15 @@ import {
   Trophy,
   Utensils
 } from "lucide-react";
-import birthdayTreatsImage from "../assets/Images/Birthday-Treats.png";
-import coldDrinksShakesImage from "../assets/Images/Cold-Drinks&Shakes.jpg";
-import collegeHangoutsImage from "../assets/Images/College-Hangouts.webp";
-import coupleDatesImage from "../assets/Images/Couple-Dates.jpg";
-import dessertsImage from "../assets/Images/Desserts.jpg";
-import dineInExperienceImage from "../assets/Images/Dine-In-Experience.png";
-import eveningSnacksImage from "../assets/Images/Evening-Snacks.webp";
-import familyTimeImage from "../assets/Images/Family-Time.jpg";
-import freshSnacksImage from "../assets/Images/Fresh-Snacks.jpg";
-import friendsMeetupImage from "../assets/Images/Friends-Meetup.webp";
-import matchScreeningsImage from "../assets/Images/Match-Screenings.png";
-import quickBitesImage from "../assets/Images/Quick-Bites.webp";
-import signatureChaiCoffeeImage from "../assets/Images/Signature-Chai&Coffee.jpg";
-import workChillImage from "../assets/Images/Work&Chill.png";
-import cafeHeroVideo from "../assets/videos/cafe-hero-video.mp4";
-import cafeStoryVideo from "../assets/videos/cafe-story.mp4";
-import liveMusicVideo from "../assets/videos/live-music.mp4";
-import liveProjectorVideo from "../assets/videos/live-projector.mp4";
-import review1Video from "../assets/videos/review-1.mp4";
-import review2Video from "../assets/videos/review-2.mp4";
-import review3Video from "../assets/videos/review-3.mp4";
-import review4Video from "../assets/videos/review-4.mp4";
-import review5Video from "../assets/videos/review-5.mp4";
+import { api } from "../services/apiClient";
+import { createEmptyWebsiteContent, normalizeWebsiteContentPayload } from "../services/websiteContentService";
 
 const instagramUrl = "https://www.instagram.com/theinfusionsaga?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==";
 const instagramFooterUrl = instagramUrl;
 const facebookUrl = "https://facebook.com/theinfusionsaga";
 const twitterUrl = "https://x.com/theinfusionsaga";
 const feedbackUrl = "https://www.google.com/maps/place/THE+INFUSION+SAGA/@26.8225601,75.8622093,17z/data=!4m8!3m7!1s0x396dc966259bc005:0x6f80b79a5e8920d9!8m2!3d26.8225601!4d75.8622093!9m1!1b1!16s%2Fg%2F11z235wkw8?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D";
-const supportEmail = "theinfusionsaga@gmail.com";
-const fssaiImagePath = "/images/fssai.png";
-
-const serveItems = [
-  {
-    title: "Dine-in Experience",
-    description: "Comfortable seating, cozy vibes, and space to actually enjoy your time.",
-    icon: HeartHandshake,
-    image: dineInExperienceImage
-  },
-  {
-    title: "Quick Bites",
-    description: "Easy, satisfying plates for short breaks and spontaneous plans.",
-    icon: Utensils,
-    image: quickBitesImage
-  },
-  {
-    title: "Cold Drinks & Shakes",
-    description: "Refreshing drinks, chilled shakes, mojitos, and mood-lifting sips.",
-    icon: CupSoda,
-    image: coldDrinksShakesImage
-  },
-  {
-    title: "Fresh Snacks",
-    description: "Cafe style snacks and quick bites prepared for everyday cravings.",
-    icon: Sandwich,
-    image: freshSnacksImage
-  },
-  {
-    title: "Desserts",
-    description: "Sweet treats, indulgent moments, and a little celebration in every bite.",
-    icon: CakeSlice,
-    image: dessertsImage
-  },
-  {
-    title: "Signature Chai & Coffee",
-    description: "Handcrafted beverages made fresh daily with a comforting cafe finish.",
-    icon: Coffee,
-    image: signatureChaiCoffeeImage
-  }
-];
-
-const bestForItems = [
-  { title: "Couple Dates", description: "A cozy setting for relaxed conversations and shared treats.", icon: Heart, image: coupleDatesImage },
-  { title: "Friends Meetup", description: "Comfortable space for catching up over snacks and drinks.", icon: HeartHandshake, image: friendsMeetupImage },
-  { title: "College Hangouts", description: "Student-friendly cafe energy for everyday plans after class.", icon: Sparkles, image: collegeHangoutsImage },
-  { title: "Birthday Treats", description: "Sweet moments, desserts, and celebration-ready cafe vibes.", icon: CakeSlice, image: birthdayTreatsImage },
-  { title: "Work & Chill", description: "A calm corner for light work, coffee, and easy breaks.", icon: Timer, image: workChillImage },
-  { title: "Evening Snacks", description: "Fresh bites and beverages for your evening cravings.", icon: Sandwich, image: eveningSnacksImage },
-  { title: "Family Time", description: "Warm service and comfortable seating for simple family outings.", icon: ShieldCheck, image: familyTimeImage },
-  { title: "Match Screenings", description: "Shared screen moments with food, friends, and cafe energy.", icon: Trophy, image: matchScreeningsImage }
-];
-
-const visualMoments = [
-  {
-    title: "Live Projector Nights",
-    description:
-      "Sports screenings, movie nights, match screenings, and a group viewing experience that turns ordinary evenings into shared cafe moments.",
-    icon: Trophy
-  },
-  {
-    title: "Live Music Evenings",
-    description:
-      "Acoustic evenings, weekend performances, warm cafe atmosphere, and a relaxing vibe designed for slow conversations and good company.",
-    icon: Music
-  }
-];
-
-const customerExperiences = [
-  {
-    name: "Ravikant Sharma",
-    review: "Great Coffee, a welcoming atmosphere, and conversations that feel effortless.☕✨"
-  },
-  {
-    name: "Harsh Desai",
-    review: "I love the ambiance, a place that feels familiar.💛"
-  },
-  {
-    name: "Vedica",
-    review: "A newly opened cafe serving good vibes and good food.🥰"
-  },
-  {
-    name: "Vedica",
-    review: "I keep coming back here, and honestly, it's the staff that makes this place special — always so polite and friendly! 💖"
-  },
-  {
-    name: "Arpana",
-    review: "I love the cold coffee and the vibe of this place.😊❤️"
-  }
-];
-
-const defaultAboutVideoSources = [
-  cafeHeroVideo,
-  cafeStoryVideo,
-  liveProjectorVideo,
-  liveMusicVideo,
-  review1Video,
-  review2Video,
-  review3Video,
-  review4Video,
-  review5Video
-];
-
-const highStreetAboutVideoSources = [
-  liveProjectorVideo,
-  liveMusicVideo,
-  cafeStoryVideo,
-  review3Video,
-  review4Video,
-  review5Video,
-  review1Video
-];
-
-// Outlet-specific content overrides. Keep default values (Near SKIT) in the existing constants above.
-const OUTLET_CONTENT = {
-  "near-high-street": {
-    navTitle: "Near High Street - Capital Mall",
-    heroTitle: "Near High Street Capital Mall",
-    heroDescription: "A breezy cafe experience with rooftop views, outdoor garden seating and family-friendly vibes.",
-    serveItems: [
-      { title: "Rooftop View", description: "Open-air seating with skyline views and evening ambience.", icon: Trophy, image: coupleDatesImage },
-      { title: "Indoor AC Sitting", description: "Comfortable air-conditioned indoor seating for relaxed dining.", icon: ShieldCheck, image: dineInExperienceImage },
-      { title: "Outdoor Garden Sitting", description: "Fresh greenery and outdoor tables for breezy evenings.", icon: Sparkles, image: friendsMeetupImage },
-      { title: "Fresh Greenery", description: "Lush plants and a green atmosphere to unwind.", icon: HeartHandshake, image: familyTimeImage },
-      { title: "Evening Ambience", description: "Soft lighting and music for pleasant evenings.", icon: Music, image: eveningSnacksImage },
-      { title: "Family Friendly Seating", description: "Spacious tables and a warm setting for families.", icon: Heart, image: freshSnacksImage }
-    ],
-    bestForItems: [
-      { title: "Couple Dates", description: "A serene rooftop for conversations and shared moments.", icon: Heart, image: coupleDatesImage },
-      { title: "Friends Meetup", description: "Open tables for casual meetups and group evenings.", icon: HeartHandshake, image: friendsMeetupImage },
-      { title: "Family Time", description: "Comfortable seating and a warm atmosphere for family dinners.", icon: ShieldCheck, image: familyTimeImage },
-      { title: "Evening Snacks", description: "Perfect for late snacks and evening hangouts.", icon: Sandwich, image: eveningSnacksImage }
-    ],
-    visualMoments: visualMoments,
-    customerExperiences: [
-      { name: "Anjali Patel", review: "Lovely rooftop, great ambience and friendly staff!" },
-      { name: "Saurabh", review: "Perfect for evening meetups — the garden seating is delightful." },
-      { name: "Neha", review: "Food was great and the AC seating is very comfortable." }
-    ],
-    aboutVideoSources: highStreetAboutVideoSources
-  }
-};
+const defaultSupportEmail = "theinfusionsaga@gmail.com";
 
 const footerColumns = [
   {
@@ -368,18 +206,44 @@ function getOutletSlugFromPath() {
 export default function AboutCafe({ navigate }) {
   const [modal, setModal] = React.useState(null);
   const [fssaiMissing, setFssaiMissing] = React.useState(false);
+  const [content, setContent] = React.useState(() => createEmptyWebsiteContent(""));
+  const [loading, setLoading] = React.useState(true);
   const outletSlug = getOutletSlugFromPath();
-  const outletOverride = OUTLET_CONTENT[String(outletSlug || "").toLowerCase()] || null;
-  const content = {
-    navTitle: outletOverride?.navTitle || "THE INFUSION SAGA",
-    heroTitle: outletOverride?.heroTitle || "Welcome to The Infusion Saga",
-    heroDescription: outletOverride?.heroDescription || "A cozy cafe experience crafted for conversations, comfort, unforgettable flavors, and the kind of everyday moments that deserve a beautiful place.",
-    serveItems: outletOverride?.serveItems || serveItems,
-    bestForItems: outletOverride?.bestForItems || bestForItems,
-    visualMoments: outletOverride?.visualMoments || visualMoments,
-    customerExperiences: outletOverride?.customerExperiences || customerExperiences,
-    aboutVideoSources: outletOverride?.aboutVideoSources || defaultAboutVideoSources
-  };
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadContent() {
+      setLoading(true);
+      try {
+        const data = await api(`/website-content?outletSlug=${encodeURIComponent(outletSlug || "")}`);
+        if (isMounted) setContent(normalizeWebsiteContentPayload(data, outletSlug || ""));
+      } catch (error) {
+        if (isMounted) setContent(createEmptyWebsiteContent(outletSlug || ""));
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadContent();
+    return () => { isMounted = false; };
+  }, [outletSlug]);
+
+  const socialLinks = content?.socialLinks || {};
+  const supportEmail = content?.support?.email || defaultSupportEmail;
+  const serveItems = (content?.whatWeServe || []).map((item) => ({ ...item, icon: HeartHandshake }));
+  const bestForItems = (content?.bestFor || []).map((item) => ({ ...item, icon: Heart }));
+  const visualMoments = (content?.visualMoments || []).map((item) => ({ ...item, icon: Trophy }));
+  const customerExperiences = (content?.customerReviews || []).map((item) => ({ name: item.name, review: item.review, rating: item.rating, videoUrl: item.videoUrl, customerImage: item.customerImage }));
+  const heroVideo = content?.hero?.videoUrl || "";
+  const storyVideo = content?.videos?.[0]?.url || content?.hero?.videoUrl || "";
+  const fssaiImagePath = content?.fssai?.fileUrl || "/images/fssai.png";
+  const ctaButtonLink = content?.hero?.buttonLink || "/menu";
+  const ctaButtonText = content?.hero?.buttonText || "Explore Menu";
+  const navTitle = content?.hero?.title || "THE INFUSION SAGA";
+  const storyText = content?.about?.story || "The outlet story will appear here once it is published.";
+  const storyVision = content?.about?.vision || "";
+  const storyMission = content?.about?.mission || "";
+  const storyFuturePlans = content?.about?.futurePlans || "";
 
   function scrollToSection(sectionId) {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -449,7 +313,7 @@ export default function AboutCafe({ navigate }) {
           >
             <ArrowLeft size={19} />
           </button>
-          <p className="text-center text-sm font-black uppercase tracking-[0.2em] text-stone-950 sm:text-base">{content.navTitle}</p>
+          <p className="text-center text-sm font-black uppercase tracking-[0.2em] text-stone-950 sm:text-base">{navTitle}</p>
           <span className="h-11 w-11" aria-hidden="true" />
         </nav>
       </header>
@@ -458,15 +322,15 @@ export default function AboutCafe({ navigate }) {
         <div className="about-hero-grid grid min-h-[calc(100vh-7rem)] items-center gap-7 lg:grid-cols-2">
           <div className="about-hero-copy max-w-3xl">
             <h1 className="text-5xl font-black leading-[0.95] text-stone-950 sm:text-6xl lg:text-7xl">
-              {content.heroTitle}
+              {content.hero.title || "Welcome to The Infusion Saga"}
             </h1>
             <p className="mt-6 max-w-2xl text-base font-bold leading-8 text-stone-700 sm:text-lg">
-              {content.heroDescription}
+              {content.hero.description || "A cozy cafe experience for conversations, comfort, and memorable flavors."}
             </p>
             <div className="about-hero-actions mt-8 flex flex-col gap-3 sm:flex-row">
-              <PremiumButton onClick={() => navigate("/")}>Explore Menu</PremiumButton>
+              <PremiumButton href={ctaButtonLink}>{ctaButtonText || "Explore Menu"}</PremiumButton>
               <a
-                href={instagramUrl}
+                href={socialLinks.instagram || instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="about-secondary-button inline-flex items-center justify-center gap-2 rounded-full border border-white/70 bg-white/50 px-6 py-3.5 text-sm font-black text-stone-950 shadow-[0_16px_34px_rgba(67,45,28,0.12)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:bg-white/72"
@@ -476,32 +340,21 @@ export default function AboutCafe({ navigate }) {
               </a>
             </div>
           </div>
-          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" videoSrc={content.aboutVideoSources[0]} />
+          <VideoPlaceholder label="Cafe Hero Video" className="min-h-[22rem] lg:min-h-[34rem]" videoSrc={heroVideo} />
         </div>
       </SectionShell>
 
       <SectionShell id="our-story" eyebrow="Our story" title="Cafe culture, crafted warmly">
         <div className="about-story-card grid gap-6 rounded-[2.25rem] border border-white/65 bg-white/42 p-4 shadow-[0_28px_80px_rgba(67,45,28,0.16)] backdrop-blur-2xl sm:p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-7">
-          <VideoPlaceholder label="Cafe Story Video" className="min-h-[20rem] lg:min-h-full" videoSrc={content.aboutVideoSources[1]} />
+          <VideoPlaceholder label="Cafe Story Video" className="min-h-[20rem] lg:min-h-full" videoSrc={storyVideo} />
           <div className="about-story-copy flex flex-col justify-center rounded-[1.75rem] bg-white/28 p-4 sm:p-6">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-rose-900/70">THE INFUSION SAGA</p>
             <h2 className="mt-3 text-3xl font-black leading-tight text-stone-950 sm:text-4xl">More than a menu, it is a modern cafe pause.</h2>
             <div className="mt-5 space-y-4 text-sm font-semibold leading-7 text-stone-700 sm:text-base sm:leading-8">
-              <p>
-                {content.heroDescription}
-                From signature chai and handcrafted coffees to refreshing mojitos, shakes, snacks, and desserts, every
-                item is made to give customers a fresh cafe experience.
-              </p>
-              <p>
-                The cafe was created for people who wanted more than a quick order. It is a place for conversations after class,
-                calm work breaks, casual dates, family treats, and evenings where food, drinks, music, and ambience come together naturally.
-              </p>
-              <p>
-                <span className="rounded-full bg-black px-3 py-1 text-sm font-black text-white">Our vision:</span> Serve fresh ingredients, memorable signature drinks, and cafe-style snacks inside a space that feels
-                comfortable, student friendly, and welcoming without losing its premium mood. Every detail is meant to make customers feel
-                relaxed the moment they enter. In the future, we are planning to scale The Infusion Saga into more outlets while keeping
-                the same quality, comfort, and cafe experience.
-              </p>
+              <p>{storyText}</p>
+              {storyVision ? <p>{storyVision}</p> : null}
+              {storyMission ? <p>{storyMission}</p> : null}
+              {storyFuturePlans ? <p>{storyFuturePlans}</p> : null}
             </div>
           </div>
         </div>
@@ -509,7 +362,7 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell eyebrow="Freshly crafted" title="What We Serve">
         <Carousel>
-          {content.serveItems.map((item) => (
+          {serveItems.map((item) => (
             <ServiceCard key={item.title} item={item} />
           ))}
         </Carousel>
@@ -517,11 +370,11 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell id="visual-moments" eyebrow="Visual moments" title="Experiences beyond the table">
         <div className="grid gap-5 lg:grid-cols-2">
-          {content.visualMoments.map((moment, index) => {
+          {visualMoments.map((moment) => {
             const Icon = moment.icon;
             return (
-              <article key={moment.title} className="about-cinematic-card about-lift overflow-hidden rounded-[2rem] border border-white/65 bg-white/46 shadow-[0_24px_72px_rgba(67,45,28,0.16)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_82px_rgba(67,45,28,0.22)]">
-                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" videoSrc={content.aboutVideoSources[2 + index]} />
+              <article key={moment.title || moment.id} className="about-cinematic-card about-lift overflow-hidden rounded-[2rem] border border-white/65 bg-white/46 shadow-[0_24px_72px_rgba(67,45,28,0.16)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_82px_rgba(67,45,28,0.22)]">
+                <VideoPlaceholder label={`${moment.title} Video`} className="min-h-[20rem] rounded-none border-0 shadow-none" videoSrc={moment.videoUrl} />
                 <div className="p-6">
                   <span className="grid h-13 w-13 place-items-center rounded-2xl bg-black p-3 text-white">
                     <Icon size={25} />
@@ -537,17 +390,17 @@ export default function AboutCafe({ navigate }) {
 
       <SectionShell eyebrow="Every visit matters" title="Best For">
         <Carousel>
-          {content.bestForItems.map((item) => (
-            <ServiceCard key={item.title} item={item} />
+          {bestForItems.map((item) => (
+            <ServiceCard key={item.title || item.id} item={item} />
           ))}
         </Carousel>
       </SectionShell>
 
       <SectionShell title="Customer Experiences">
         <Carousel>
-          {content.customerExperiences.map((experience, index) => (
+          {customerExperiences.map((experience, index) => (
             <article key={`${experience.name}-${index}`} className="about-review-card about-lift w-[18rem] shrink-0 overflow-hidden rounded-[1.75rem] border border-white/65 bg-white/50 shadow-[0_22px_60px_rgba(67,45,28,0.15)] backdrop-blur-2xl transition duration-300 hover:-translate-y-1 sm:w-[21rem]">
-              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" videoSrc={content.aboutVideoSources[4 + index] || content.aboutVideoSources[index % content.aboutVideoSources.length]} />
+              <VideoPlaceholder label="Customer Video" className="min-h-[15rem] rounded-none border-0 shadow-none" videoSrc={experience.videoUrl} />
               <div className="p-5">
                 <p className="text-lg font-black text-stone-950">{experience.name}</p>
                 <div className="mt-2"><StarRating /></div>

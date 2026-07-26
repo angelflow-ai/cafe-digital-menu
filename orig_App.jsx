@@ -41,7 +41,6 @@ import { CategoryChips, SubcategoryChips } from "./components/CategoryFilters";
 import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import AboutCafe from "./pages/AboutCafe";
-import WebsiteManagement from "./components/WebsiteManagement";
 import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
@@ -667,7 +666,7 @@ function formatOrderDateTime(createdAt) {
     const month = date.toLocaleString("en-IN", { month: "short" });
     const year = date.getFullYear();
     const time = date.toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
-    return `${day} ${month} ${year} ‚Ä¢ ${time}`;
+    return `${day} ${month} ${year} G«Û ${time}`;
   } catch (e) {
     return "Date unavailable";
   }
@@ -680,7 +679,7 @@ function OrderLineCard({ line, order, highlightDetails = false }) {
   const addonText = getAddonDisplay(safeLine);
   const finalTotal = getFinalItemTotal(safeLine);
   const sizeLabel = normalizeVisibleSizeLabel(safeLine);
-  const serveText = safeLine.serveType ? ` ‚Ä¢ ${safeLine.serveType}` : "";
+  const serveText = safeLine.serveType ? ` G«Û ${safeLine.serveType}` : "";
   const itemName = safeLine.name || safeLine.title || safeLine.itemId || "Item";
   const orderTimeLabel = getOrderTimeLabel(order);
   const highlightClassName = highlightDetails ? "text-rose-600 font-black" : "";
@@ -691,8 +690,8 @@ function OrderLineCard({ line, order, highlightDetails = false }) {
         <p className="text-[15px] font-black uppercase tracking-[0.02em] text-blue-700">{itemName}</p>
         <p className="mt-1 text-sm font-semibold text-stone-700">
           {sizeLabel ? <>{sizeLabel}</> : null}
-          {serveText ? <>{sizeLabel ? " ‚Ä¢ " : ""}<span className={highlightClassName}>{serveText}</span></> : null}
-          {(sizeLabel || serveText) ? " ‚Ä¢ " : ""}
+          {serveText ? <>{sizeLabel ? " G«Û " : ""}<span className={highlightClassName}>{serveText}</span></> : null}
+          {(sizeLabel || serveText) ? " G«Û " : ""}
           {quantity} x {rupees(basePrice)}
           {addonText ? <span className={highlightClassName}>{addonText}</span> : null}
           {" = "}{rupees(finalTotal)}
@@ -1129,10 +1128,11 @@ function CustomerApp({ navigate, route, counterMode = false }) {
 
     const timer = setTimeout(() => {
       setOrderPlaced(null);
+      navigate("/");
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [orderPlaced]);
+  }, [navigate, orderPlaced]);
 
   useEffect(() => {
     function onStorage(event) {
@@ -1651,7 +1651,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
         </div>
         <input
           required
-          placeholder="Price (‚Çπ)"
+          placeholder="Price (GÈ¶)"
           type="number"
           min="0"
           step="0.01"
@@ -1683,7 +1683,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
                   className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-black text-stone-700 ring-1 ring-stone-200"
                 >
                   {option}
-                  <span className="text-stone-400">√ó</span>
+                  <span className="text-stone-400">+˘</span>
                 </button>
               ))}
             </div>
@@ -1723,7 +1723,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
                     </div>
                     <button type="button" onClick={() => removeAddon(addon.id)} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black text-stone-700">Remove</button>
                   </div>
-                  <div className="mt-2 text-xs font-semibold text-stone-600">Price: ‚Çπ{addon.price}</div>
+                  <div className="mt-2 text-xs font-semibold text-stone-600">Price: GÈ¶{addon.price}</div>
                 </div>
               ))}
             </div>
@@ -2171,10 +2171,10 @@ function PaymentModal({ data, onClose, onIHavePaid }) {
           {/* Order Summary */}
           <div className="upi-order-summary">
             <p className="upi-order-summary-header">{data.customerName}</p>
-            <p>{data.phone} ‚Ä¢ Table {data.tableNumber}</p>
+            <p>{data.phone} G«Û Table {data.tableNumber}</p>
             <div style={{ marginTop: "8px" }}>
               {safeItems.map((line, idx) => (
-                <p key={idx}>‚Ä¢ {formatOrderItemLine(line)}</p>
+                <p key={idx}>G«Û {formatOrderItemLine(line)}</p>
               ))}
             </div>
             <p className="upi-order-summary-header" style={{ marginTop: "8px" }}>Total: {rupees(data.total)}</p>
@@ -2292,11 +2292,12 @@ function OrderTracking({ orderId }) {
         setTimeout(() => {
           setModal({ show: false, type: null });
           try { localStorage.removeItem('infusion-cart'); } catch (e) {}
+          window.location.href = '/';
         }, 2000);
       }
       if (current === 'payment issue' || current === 'rejected' || current === 'payment rejected') {
         setModal({ show: true, type: 'payment_issue' });
-        // do NOT redirect or clear cart ‚Äî customer stays on page until issue is resolved
+        // do NOT redirect or clear cart G«ˆ customer stays on page until issue is resolved
       }
     }
     prevStatusRef.current = current;
@@ -2366,7 +2367,7 @@ function OrderTracking({ orderId }) {
               {order.items.map((line, idx) => (
                 <div key={idx} className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="font-black text-stone-950">{line.name}</p>
-                  <p className="mt-1 text-xs text-stone-600">{normalizeVisibleSizeLabel(line)}{line.serveType ? ` ‚Ä¢ ${line.serveType}` : ""}</p>
+                  <p className="mt-1 text-xs text-stone-600">{normalizeVisibleSizeLabel(line)}{line.serveType ? ` G«Û ${line.serveType}` : ""}</p>
                   <p className="mt-2 text-sm text-stone-700">{formatOrderItemLine(line)}</p>
                 </div>
               ))}
@@ -2432,7 +2433,7 @@ function OrderTracking({ orderId }) {
               <button onClick={() => { setShowTalkText(true); }} className="rounded-full bg-white border border-rose-200 px-4 py-2 text-sm font-black text-rose-600">Talk to Biller</button>
             </div>
             {showTalkText && <p className="mt-3 text-sm text-stone-700">Please visit the counter and talk to the biller for quick verification.</p>}
-            <p className="mt-3 text-xs text-stone-500">Order ID: {order.orderId} ‚Ä¢ Table {order.tableNumber ?? order.table ?? '-'}</p>
+            <p className="mt-3 text-xs text-stone-500">Order ID: {order.orderId} G«Û Table {order.tableNumber ?? order.table ?? '-'}</p>
           </div>
         </div>
       )}
@@ -2526,7 +2527,7 @@ function BrandHeader({ query, setQuery }) {
             className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/80 p-1 text-sm font-black text-stone-600 transition hover:bg-white"
             aria-label="Clear search"
           >
-            ‚úï
+            G£Ú
           </button>
         )}
       </label>
@@ -2536,8 +2537,8 @@ function BrandHeader({ query, setQuery }) {
 
 function QuickAccessSection({ quickAccessMode, onQuickAccess, showWaterBottle = true, showCigarettes = true }) {
   const buttons = [
-    { key: "water", label: "üíß Water Bottles", tone: "bg-white/65 hover:bg-white/80", visible: showWaterBottle },
-    { key: "cigarettes", label: "üö¨ Cigarettes", tone: "bg-white/65 hover:bg-white/80", visible: showCigarettes }
+    { key: "water", label: "=É∆∫ Water Bottles", tone: "bg-white/65 hover:bg-white/80", visible: showWaterBottle },
+    { key: "cigarettes", label: "=É‹º Cigarettes", tone: "bg-white/65 hover:bg-white/80", visible: showCigarettes }
   ].filter((button) => button.visible);
 
   if (!buttons.length) return null;
@@ -2632,7 +2633,7 @@ function DetailModal({ item, onClose, onAdd }) {
 
           <div className="detail-image-wrap">
             {showCigaretteFallback ? (
-              <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">üö¨</div>
+              <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">=É‹º</div>
             ) : (
               <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image" onError={handleMenuImageError} />
             )}
@@ -2881,7 +2882,7 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
             <div className="detail-header px-4 pb-3 pt-4">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
-                  <span className="text-xl">üö¨</span>
+                  <span className="text-xl">=É‹º</span>
                 </div>
                 <div>
                   <h2 className="detail-title text-[26px]">Cigarettes</h2>
@@ -2907,7 +2908,7 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
           <div className="detail-header px-4 pb-3 pt-4">
             <div className="flex items-center gap-3">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
-                <span className="text-xl">üö¨</span>
+                <span className="text-xl">=É‹º</span>
               </div>
               <div>
                 <h2 className="detail-title text-[26px]">Cigarettes</h2>
@@ -2940,7 +2941,7 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
             </div>
             <div className="sticky bottom-0 z-10 px-1 pb-1 pt-0 sm:pb-2">
               <button type="button" onClick={handleAddSelected} className="add-cart-btn mb-0 w-full !py-2 !text-xs">Add To Cart</button>
-              <p className="mt-1 text-center text-[10px] font-semibold text-white/90">‚ö† Cigarettes are injurious to health.</p>
+              <p className="mt-1 text-center text-[10px] font-semibold text-white/90">G‹· Cigarettes are injurious to health.</p>
             </div>
           </div>
         </div>
@@ -2970,14 +2971,14 @@ function getCartFallbackIcon(line) {
   const isWaterBottleItem = safeCategory.includes("water") || safeName.includes("water bottle") || safeName.includes("water-bottle") || safeName.includes("water bottles");
 
   if (isCigaretteItem) {
-    return <span className="text-[1.35rem] leading-none" aria-hidden="true">üö¨</span>;
+    return <span className="text-[1.35rem] leading-none" aria-hidden="true">=É‹º</span>;
   }
 
   if (isWaterBottleItem) {
     return <Droplets size={24} className="text-[#2196F3]" strokeWidth={2.1} aria-hidden="true" />;
   }
 
-  return <span className="text-[1.15rem] leading-none" aria-hidden="true">üçΩÔ∏è</span>;
+  return <span className="text-[1.15rem] leading-none" aria-hidden="true">=ÉÏ+n+≈</span>;
 }
 
 function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter }) {
@@ -3058,7 +3059,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                 )}
                 <div className="min-w-0 flex-1">
                   <p className="font-black">{safeLine.name || "Item"}</p>
-                  <p className="text-xs font-bold text-stone-500">{normalizeVisibleSizeLabel(safeLine)}{safeLine.serveType ? ` ‚Ä¢ ${safeLine.serveType}` : ""} - {rupees(getBasePrice(safeLine))} each</p>
+                  <p className="text-xs font-bold text-stone-500">{normalizeVisibleSizeLabel(safeLine)}{safeLine.serveType ? ` G«Û ${safeLine.serveType}` : ""} - {rupees(getBasePrice(safeLine))} each</p>
                   {(() => {
                     const addonText = getAddonEachText(safeLine);
                     return addonText ? <p className="mt-1 text-xs font-semibold text-stone-600">{addonText}</p> : null;
@@ -4263,7 +4264,6 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     { key: "history", label: "Order History" },
     { key: "profit", label: "Total Profit" },
     { key: "compare", label: "Compare Outlets" },
-    { key: "website", label: "Website Management" },
     { key: "outlets", label: "Outlets & QR Codes" }
   ];
 
@@ -4466,7 +4466,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <h3 className="text-base font-black text-stone-950">{item.name}</h3>
-                        <p className="text-sm text-stone-600">{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId} ‚Ä¢ {item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</p>
+                        <p className="text-sm text-stone-600">{categories.find((cat) => cat.id === item.categoryId)?.name || item.categoryId} G«Û {item.subCategoryName || item.subcategoryName || item.subcategory || "-"}</p>
                       </div>
                       <span className={`rounded-full px-3 py-1 text-xs font-black ${item.active ? "bg-emerald-100 text-emerald-700" : "bg-stone-200 text-stone-700"}`}>{item.active ? "Active" : "Inactive"}</span>
                     </div>
@@ -4514,7 +4514,6 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
         {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(filteredOrders, filteredCocRequests)} />}
         {tab === "profit" && <TotalProfitPage orders={filteredOrders} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} items={items} />}
         {tab === "compare" && <CompareOutlets orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
-        {tab === "website" && <WebsiteManagement outletSlug={selectedOutletFilter === "all" ? "" : selectedOutletFilter} outletId={activeOutletId} selectedOutletFilter={selectedOutletFilter} />}
         {tab === "outlets" && <OutletQrManager />}
       </div>
       <ConfirmDialog
@@ -4754,12 +4753,12 @@ function PendingVerification({ orders, onSaved }) {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <h2 className="text-lg font-black sm:text-xl">
-                  <span className="sm:hidden">{order.customerName || "Customer"} ‚Ä¢ Table {order.tableNumber ?? order.table ?? "-"}</span>
+                  <span className="sm:hidden">{order.customerName || "Customer"} G«Û Table {order.tableNumber ?? order.table ?? "-"}</span>
                   <span className="hidden sm:inline">{order.customerName}</span>
                 </h2>
                 <p className="text-sm font-bold leading-5 text-stone-500">
-                  <span className="sm:hidden">{order.phone || "-"} ‚Ä¢ {rupees(order.total)} ‚Ä¢ {paymentLabel}</span>
-                  <span className="hidden sm:inline">Order {order.orderId || order.id || order._id} ‚Ä¢ Table {order.tableNumber} ‚Ä¢ {order.phone} ‚Ä¢ {rupees(order.total)}</span>
+                  <span className="sm:hidden">{order.phone || "-"} G«Û {rupees(order.total)} G«Û {paymentLabel}</span>
+                  <span className="hidden sm:inline">Order {order.orderId || order.id || order._id} G«Û Table {order.tableNumber} G«Û {order.phone} G«Û {rupees(order.total)}</span>
                 </p>
               </div>
               {sourceLabel && (
@@ -4967,7 +4966,7 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-xl font-black">{safeOrder.customerName || "Customer"}</h2>
-              <p className="text-sm font-bold text-stone-500">Order {safeOrder.orderId || safeOrder.id || safeOrder._id || "-"} ‚Ä¢ Table {safeOrder.tableNumber ?? safeOrder.table ?? "-"} ‚Ä¢ {safeOrder.phone || "-"} ‚Ä¢ {rupees(safeOrder.total || 0)}</p>
+              <p className="text-sm font-bold text-stone-500">Order {safeOrder.orderId || safeOrder.id || safeOrder._id || "-"} G«Û Table {safeOrder.tableNumber ?? safeOrder.table ?? "-"} G«Û {safeOrder.phone || "-"} G«Û {rupees(safeOrder.total || 0)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {sourceLabel && (
@@ -5075,8 +5074,8 @@ function CocAdmin({ cocRequests, onSaved }) {
           <article key={requestId || safeRequest._id || safeRequest.id} className="rounded-[1.5rem] bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black">{safeRequest.customerName || "Customer"} ‚Ä¢ Table {safeRequest.tableNumber ?? safeRequest.table ?? "-"}</h2>
-              <p className="text-sm font-bold text-stone-500">{safeRequest.phone || "-"} ‚Ä¢ {rupees(safeRequest.total || 0)} ‚Ä¢ {safeRequest.paymentMethod === 'cash' ? 'Cash on Counter' : 'Online'}</p>
+              <h2 className="text-xl font-black">{safeRequest.customerName || "Customer"} G«Û Table {safeRequest.tableNumber ?? safeRequest.table ?? "-"}</h2>
+              <p className="text-sm font-bold text-stone-500">{safeRequest.phone || "-"} G«Û {rupees(safeRequest.total || 0)} G«Û {safeRequest.paymentMethod === 'cash' ? 'Cash on Counter' : 'Online'}</p>
             </div>
             {sourceLabel && (
               <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
@@ -5438,11 +5437,11 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-base font-black">{item.name}</h3>
-                      <p className="text-sm text-stone-600">{item.quantity} {item.unit} ‚Ä¢ {rupees(item.purchasePrice || 0)}</p>
+                      <p className="text-sm text-stone-600">{item.quantity} {item.unit} G«Û {rupees(item.purchasePrice || 0)}</p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-black ${statusClass}`}>{status}</span>
                   </div>
-                  <p className="mt-2 text-sm text-stone-500">Min stock: {item.minStock} {item.unit} ‚Ä¢ Supplier: {item.supplier || "-"}</p>
+                  <p className="mt-2 text-sm text-stone-500">Min stock: {item.minStock} {item.unit} G«Û Supplier: {item.supplier || "-"}</p>
                   {selectedOutletFilter !== "all" && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">-</button>
@@ -5700,9 +5699,9 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
                       <p className="font-black text-stone-900">{transaction.itemName}</p>
                       <p className="mt-2 text-sm font-bold text-emerald-700">+{transaction.quantityAdded} {transaction.unit}</p>
                       {transaction.purchasePrice != null && (
-                        <p className="mt-1 text-xs font-semibold text-stone-700">Purchase Price: ‚Çπ{Number(transaction.purchasePrice).toFixed(2)}</p>
+                        <p className="mt-1 text-xs font-semibold text-stone-700">Purchase Price: GÈ¶{Number(transaction.purchasePrice).toFixed(2)}</p>
                       )}
-                      <p className="mt-1 text-xs text-stone-500">{formattedDate} ‚Ä¢ {formattedTime}</p>
+                      <p className="mt-1 text-xs text-stone-500">{formattedDate} G«Û {formattedTime}</p>
                       {transaction.note && (
                         <p className="mt-2 text-xs text-stone-600 italic">{transaction.note}</p>
                       )}
@@ -5964,7 +5963,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
             return (
               <div key={index} className="rounded-3xl bg-stone-50 p-3">
                 <p className="font-black">{material?.name || ingredient.name || ingredient.rawMaterialId || ingredient.inventoryId || ingredient.ingredientId || "Unknown raw material"}</p>
-                <p>{ingredient.amount} {ingredient.unit} {ingredient.serveType ? `‚Ä¢ ${ingredient.serveType}` : ""}</p>
+                <p>{ingredient.amount} {ingredient.unit} {ingredient.serveType ? `G«Û ${ingredient.serveType}` : ""}</p>
               </div>
             );
           })}
@@ -6004,7 +6003,7 @@ function LowStockAlerts({ rawMaterials, localInventoryItems = [] }) {
           })}
         </div>
       ) : (
-        <p className="rounded-[1.5rem] bg-white p-5 text-sm font-bold text-stone-500">All inventory levels are healthy. ‚úì</p>
+        <p className="rounded-[1.5rem] bg-white p-5 text-sm font-bold text-stone-500">All inventory levels are healthy. G£Ù</p>
       )}
     </section>
   );
@@ -6183,7 +6182,7 @@ function SalesAnalytics({ orders = [] }) {
     const dates = Object.keys(salesByDate).sort((a, b) => salesByDate[a].dateObj - salesByDate[b].dateObj);
     const maxSales = dates.length > 0 ? Math.max(...dates.map((d) => salesByDate[d].sales)) : 0;
     const totalOrders = Array.isArray(filteredOrders) ? filteredOrders.length : 0;
-    const dateRangeLabel = `${range.start.toLocaleDateString("en-IN")} ‚Äì ${range.end.toLocaleDateString("en-IN")}`;
+    const dateRangeLabel = `${range.start.toLocaleDateString("en-IN")} G«Ù ${range.end.toLocaleDateString("en-IN")}`;
 
     return { salesByDate, totalSales, totalOrders, dates, maxSales, dateRangeLabel };
   }, [orders, filterType, activeCustomRange]);
@@ -6278,7 +6277,7 @@ function SalesAnalytics({ orders = [] }) {
           </div>
           <div>
             <p className="text-xs font-semibold text-stone-600">Avg Order Value</p>
-            <p className="mt-2 text-2xl font-black text-black">{totalOrders > 0 ? rupees(totalSales / totalOrders) : "‚Çπ0"}</p>
+            <p className="mt-2 text-2xl font-black text-black">{totalOrders > 0 ? rupees(totalSales / totalOrders) : "GÈ¶0"}</p>
           </div>
         </div>
 
@@ -6300,7 +6299,7 @@ function SalesAnalytics({ orders = [] }) {
                 <div className="flex justify-between text-[11px] text-stone-400">
                   <span>{rupees(maxSales)}</span>
                   <span>{rupees(Math.round(maxSales / 2))}</span>
-                  <span>‚Çπ0</span>
+                  <span>GÈ¶0</span>
                 </div>
               </div>
               <div className="absolute inset-x-4 top-12 bottom-14 border-t border-stone-200" />
@@ -6325,7 +6324,7 @@ function SalesAnalytics({ orders = [] }) {
           </div>
         ) : (
           <div className="py-16 text-center">
-            <p className="text-lg text-stone-400">üìä No sales data</p>
+            <p className="text-lg text-stone-400">=ÉÙË No sales data</p>
             <p className="text-sm text-stone-500 mt-1">for selected period</p>
           </div>
         )}
@@ -6559,13 +6558,13 @@ function TotalProfitPage({ orders = [], rawMaterials = [], recipes = [], items =
         </div>
 
         <div className="mt-6 rounded-[1.5rem] bg-blue-50 p-5">
-          <p className="text-sm font-bold text-blue-700">‚ÑπÔ∏è How Profit is Calculated</p>
+          <p className="text-sm font-bold text-blue-700">G‰¶n+≈ How Profit is Calculated</p>
           <ul className="mt-3 space-y-2 text-sm text-blue-900">
-            <li>‚úì Includes completed QR (Online Payment) and COC (Cash-On-Counter) orders in the selected date range</li>
-            <li>‚úì Inventory cost is calculated using recipe mappings (how much raw material each item uses)</li>
-            <li>‚úì Raw material costs are based on their unit cost stored in inventory</li>
-            <li>‚úì Missing recipe mappings are treated as 0 cost (not included)</li>
-            <li>‚úó Cancelled, payment-rejected, or unpaid orders are excluded</li>
+            <li>G£Ù Includes completed QR (Online Payment) and COC (Cash-On-Counter) orders in the selected date range</li>
+            <li>G£Ù Inventory cost is calculated using recipe mappings (how much raw material each item uses)</li>
+            <li>G£Ù Raw material costs are based on their unit cost stored in inventory</li>
+            <li>G£Ù Missing recipe mappings are treated as 0 cost (not included)</li>
+            <li>G£˘ Cancelled, payment-rejected, or unpaid orders are excluded</li>
           </ul>
         </div>
       </div>
@@ -6665,7 +6664,7 @@ function CompareOutlets({ orders, rawMaterials, recipes, items }) {
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-black text-stone-900">{outlet.name}</h3>
                   {isTopOutlet && (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 uppercase tracking-wider animate-pulse">üèÜ Top Performer</span>
+                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 uppercase tracking-wider animate-pulse">=É≈Â Top Performer</span>
                   )}
                 </div>
                 <div className="space-y-4">
@@ -6731,11 +6730,11 @@ function CompareOutlets({ orders, rawMaterials, recipes, items }) {
                   <td className="py-4 font-semibold text-stone-700">{metric.label}</td>
                   <td className={`font-black ${winnerIdx === 0 ? "text-emerald-600 font-extrabold" : "text-stone-900"}`}>
                     {metric.format(val0)}
-                    {winnerIdx === 0 && <span className="ml-1.5 text-xs text-emerald-600">‚ñ≤ Higher</span>}
+                    {winnerIdx === 0 && <span className="ml-1.5 text-xs text-emerald-600">G˚¶ Higher</span>}
                   </td>
                   <td className={`font-black ${winnerIdx === 1 ? "text-emerald-600 font-extrabold" : "text-stone-900"}`}>
                     {metric.format(val1)}
-                    {winnerIdx === 1 && <span className="ml-1.5 text-xs text-emerald-600">‚ñ≤ Higher</span>}
+                    {winnerIdx === 1 && <span className="ml-1.5 text-xs text-emerald-600">G˚¶ Higher</span>}
                   </td>
                   <td className="font-bold text-stone-600">
                     {diff === 0 ? (
@@ -6972,7 +6971,7 @@ function OrderHistory({ orders }) {
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
-                  <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} ‚Ä¢ {order.phone}</p>
+                  <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} G«Û {order.phone}</p>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-2">
                   <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
@@ -7165,8 +7164,8 @@ function PosBilling({ items, categories, onSaved }) {
             {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
           </select>
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setWaterBottleModalOpen(true)} className="rounded-full bg-sky-50 px-3 py-2 text-sm font-black text-sky-700 ring-1 ring-sky-200">üíß Water Bottle</button>
-            <button type="button" onClick={() => setCigarettesModalOpen(true)} className="rounded-full bg-rose-50 px-3 py-2 text-sm font-black text-rose-700 ring-1 ring-rose-200">üö¨ Cigarettes</button>
+            <button type="button" onClick={() => setWaterBottleModalOpen(true)} className="rounded-full bg-sky-50 px-3 py-2 text-sm font-black text-sky-700 ring-1 ring-sky-200">=É∆∫ Water Bottle</button>
+            <button type="button" onClick={() => setCigarettesModalOpen(true)} className="rounded-full bg-rose-50 px-3 py-2 text-sm font-black text-rose-700 ring-1 ring-rose-200">=É‹º Cigarettes</button>
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
