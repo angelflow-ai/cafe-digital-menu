@@ -35,6 +35,20 @@ function normalizeLineItem(item) {
   };
 }
 
+export function getReceiptAddress(order = {}, outletSlug = "") {
+  const explicitAddress = String(order.address || order.outletAddress || order.location || order.addressLine || "").trim();
+  if (explicitAddress) return explicitAddress;
+
+  const slug = String(outletSlug || order.outletSlug || order.outlet?.slug || "").trim().toLowerCase();
+  if (slug.includes("near-skit") || slug.includes("skit")) {
+    return "Near SKIT, Jaipur";
+  }
+  if (slug.includes("near-high-street") || slug.includes("high-street")) {
+    return "High Street Mall, behind R-Tech, Jagatpura, Shri Kishanpura, Jaipur, Rajasthan 302017";
+  }
+  return "High Street Mall, behind R-Tech, Jagatpura, Shri Kishanpura, Jaipur, Rajasthan 302017";
+}
+
 function getReceiptOrderType(order) {
   const explicitType = String(order.orderType || order.type || "").toLowerCase();
   const paymentMethod = String(order.paymentMethod || order.payment || "").toLowerCase();
@@ -85,8 +99,9 @@ export function normalizeReceiptOrder(order = {}) {
   };
 }
 
-export default function PrintableReceipt({ order, copyType = "customer", receiptWidth, fontSize }) {
+export default function PrintableReceipt({ order, copyType = "customer", receiptWidth, fontSize, outletSlug }) {
   const normalizedOrder = normalizeReceiptOrder(order);
+  const receiptAddress = getReceiptAddress(normalizedOrder, outletSlug);
   const receiptId = normalizedOrder.orderId;
   const createdAt = normalizedOrder.createdAt;
   const items = Array.isArray(normalizedOrder.items) ? normalizedOrder.items.map(normalizeLineItem) : [];
@@ -105,10 +120,8 @@ export default function PrintableReceipt({ order, copyType = "customer", receipt
           <div className="receipt-header">
             <img src={logoUrl} alt="The Infusion Saga" className="receipt-logo" />
             <div className="receipt-title">THE INFUSION SAGA</div>
-            <div className="receipt-address">A155, Ramnagariya Rd, Mahadev Nagar, Jagatpura, Jaipur, Rajasthan</div>
+            <div className="receipt-address">Address: {receiptAddress}</div>
           </div>
-
-          <div className="receipt-line" />
 
           <div className="receipt-center-text">{label}</div>
 

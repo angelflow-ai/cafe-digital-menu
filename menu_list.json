@@ -3675,41 +3675,6 @@
                       "subcategory":  "Energy Drinks",
                       "updatedAt":  "2026-07-25T11:01:17.590Z"
                   },
-                  {
-                      "_id":  "6a647d6dd11edf151a48cea0",
-                      "id":  "test-pizza",
-                      "outletId":  "6a5cadad7aed56a342c4ea44",
-                      "__v":  0,
-                      "active":  true,
-                      "addons":  [
-
-                                 ],
-                      "categoryId":  "pizza",
-                      "createdAt":  "2026-07-25T09:10:05.552Z",
-                      "deletedAt":  null,
-                      "description":  "",
-                      "featured":  false,
-                      "image":  "",
-                      "isActive":  true,
-                      "isDeleted":  false,
-                      "name":  "test pizza",
-                      "serveOptions":  [
-
-                                       ],
-                      "sizes":  [
-                                    {
-                                        "id":  "regular",
-                                        "name":  "Regular",
-                                        "label":  "Regular",
-                                        "price":  5,
-                                        "sortOrder":  1
-                                    }
-                                ],
-                      "subCategoryId":  "",
-                      "subCategoryName":  "",
-                      "subcategory":  "",
-                      "updatedAt":  "2026-07-25T09:18:47.334Z"
-                  }
               ],
     "Count":  106
 }

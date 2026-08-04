@@ -28,6 +28,8 @@ import "./styles.css";
 import QRCode from "qrcode";
 import PrintableReceipt, { normalizeReceiptOrder } from "./PrintableReceipt";
 import logoUrl from "./assets/infusion-saga-logo.png";
+import swiggyIcon from "./assets/icons/swiggy.webp";
+import zomatoIcon from "./assets/icons/zomato.webp";
 import ordersStore from "./ordersStore";
 import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
@@ -1197,6 +1199,9 @@ function CustomerApp({ navigate, route, counterMode = false }) {
 
   const cartTotals = calculateTotals(cart);
 
+  // Detect whether this is a table-specific ordering page (e.g. /menu/:outlet/table/:tableId)
+  const isTableOrder = !!window.location.pathname.match(/\/table\/([^/]+)/i);
+
   // If the route is exactly `/menu/:outletSlug` (no extra segments), show the outlet About/Landing page.
   const isMenuOutletRoot = (() => {
     try {
@@ -1395,9 +1400,26 @@ function CustomerApp({ navigate, route, counterMode = false }) {
           onAbout={() => navigate("/about-cafe")}
           onOrderOnCounter={handleOrderOnCounterClick}
           onBack={counterMode ? () => navigate("/") : undefined}
+          isTableOrder={isTableOrder}
         />
         <BrandHeader query={query} setQuery={setQuery} />
-        <QuickAccessSection quickAccessMode={quickAccessMode} onQuickAccess={handleQuickAccess} showWaterBottle={showWaterBottleQuickAccess} showCigarettes={showCigaretteQuickAccess} />
+        {isTableOrder ? (
+          <QuickAccessSection quickAccessMode={quickAccessMode} onQuickAccess={handleQuickAccess} showWaterBottle={showWaterBottleQuickAccess} showCigarettes={showCigaretteQuickAccess} />
+        ) : (
+          <section className="quick-access-compact mx-auto w-full max-w-3xl rounded-[24px] border border-white/60 bg-white/35 p-3 shadow-glass backdrop-blur-xl sm:p-4">
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.32em] text-stone-950 sm:text-[11px]">Order Online</p>
+            <div className="mt-3 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a href="#" aria-label="Order on Swiggy" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+                <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
+                <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
+              </a>
+              <a href="#" aria-label="Order on Zomato" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+                <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" />
+                <span className="text-sm font-semibold leading-none">Order on Zomato</span>
+              </a>
+            </div>
+          </section>
+        )}
         <CategoryChips categories={orderedCategories} active={activeCategory} setActive={handleSetActiveCategory} />
         {loadSubcategoryConfig()[activeCategory] ? (
           <SubcategoryChips options={loadSubcategoryConfig()[activeCategory]} active={selectedSubcategory} setActive={setSelectedSubcategory} />
@@ -1410,6 +1432,7 @@ function CustomerApp({ navigate, route, counterMode = false }) {
           counterMode={counterMode}
           onDetail={setDetail}
           onAdd={handleAddToCart}
+          isTableOrder={isTableOrder}
         />
       </section>
       {detail && <DetailModal key={detail.id} item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
@@ -2462,7 +2485,7 @@ function OrderTracking({ orderId }) {
   );
 }
 
-function TopBar({ cartCount, onCart, onAbout, onOrderOnCounter, onBack }) {
+function TopBar({ cartCount, onCart, onAbout, onOrderOnCounter, onBack, isTableOrder = false }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
@@ -2480,13 +2503,15 @@ function TopBar({ cartCount, onCart, onAbout, onOrderOnCounter, onBack }) {
         >
           <Instagram size={22} />
         </a>
-        <button
-          type="button"
-          onClick={onOrderOnCounter}
-          className="rounded-full bg-black px-4 py-3 text-xs font-black text-white transition hover:bg-stone-800"
-        >
-          Order On Counter
-        </button>
+        {isTableOrder && (
+          <button
+            type="button"
+            onClick={onOrderOnCounter}
+            className="rounded-full bg-black px-4 py-3 text-xs font-black text-white transition hover:bg-stone-800"
+          >
+            Order On Counter
+          </button>
+        )}
       </div>
       <div className="flex gap-2 sm:gap-3">
         <button
@@ -2498,10 +2523,12 @@ function TopBar({ cartCount, onCart, onAbout, onOrderOnCounter, onBack }) {
         >
           <Info size={21} />
         </button>
-        <button className="icon-button relative bg-black text-white" aria-label="Open cart" onClick={onCart}>
-          <ShoppingCart size={21} />
-          {cartCount > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-300 px-1 text-[11px] font-black text-black">{cartCount}</span>}
-        </button>
+        {isTableOrder && (
+          <button className="icon-button relative bg-black text-white" aria-label="Open cart" onClick={onCart}>
+            <ShoppingCart size={21} />
+            {cartCount > 0 && <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-rose-300 px-1 text-[11px] font-black text-black">{cartCount}</span>}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,16 @@
+{
+  "name": "The Infusion Saga",
+  "short_name": "Infusion Saga",
+  "description": "The Infusion Saga cafe and restaurant experience.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4A0006",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

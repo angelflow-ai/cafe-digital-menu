@@ -11,8 +11,8 @@
       "openingTime": "",
       "closingTime": "",
       "id": "outlet-near-skit",
-      "createdAt": "2026-07-21T11:15:04.762Z",
-      "updatedAt": "2026-07-21T11:15:04.762Z"
+      "createdAt": "2026-08-04T02:47:58.922Z",
+      "updatedAt": "2026-08-04T02:47:58.922Z"
     },
     {
       "name": "The Infusion Saga - Near High Street",
@@ -25,8 +25,8 @@
       "openingTime": "",
       "closingTime": "",
       "id": "outlet-near-high-street",
-      "createdAt": "2026-07-21T11:15:04.791Z",
-      "updatedAt": "2026-07-21T11:15:04.791Z"
+      "createdAt": "2026-08-04T02:47:58.922Z",
+      "updatedAt": "2026-08-04T02:47:58.922Z"
     }
   ],
   "categories": [
@@ -70,8 +70,6 @@
       "name": "Water Bottles",
       "icon": "Droplet",
       "sortOrder": 32,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -79,8 +77,6 @@
       "name": "Cigarettes",
       "icon": "Smoking",
       "sortOrder": 35,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     }
   ],
@@ -89,189 +85,126 @@
       "id": "personal-blend-chai",
       "name": "Personal Blend Chai",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Personal Blend Chai.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "black-tea",
       "name": "Black Tea",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Black Tea.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "green-tea",
       "name": "Green Tea",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Green Tea.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "tulsi-tea",
       "name": "Tulsi Tea",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Tulsi Tea.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon-tea",
       "name": "Lemon Tea",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Lemon Tea.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-lemon-tea",
       "name": "Honey Lemon Tea",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Honey Lemon Tea.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 48,
-          "sortOrder": 1
+          "price": 48
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "signature-infusion-chai",
       "name": "Signature Infusion Chai",
       "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
       "subcategory": "Chai",
+      "description": "",
       "image": "/assets/images/Hot Drinks/Chai/Signature Infusion Chai.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 28,
-          "sortOrder": 1
+          "price": 28
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -764,26 +697,18 @@
       "id": "kunafa-shake",
       "name": "Kunafa Shake",
       "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "milk-shakes",
-      "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
+      "description": "",
       "image": "/assets/images/Cold Drinks/Milk Shakes/Kunafa Shake.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 198,
-          "sortOrder": 1
+          "price": 198
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -826,26 +751,18 @@
       "id": "kit-kat-shake",
       "name": "Kit-Kat Shake",
       "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "milk-shakes",
-      "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
+      "description": "",
       "image": "/assets/images/Cold Drinks/Milk Shakes/Kit-Kat Shake.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 158,
-          "sortOrder": 1
+          "price": 158
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -924,49 +841,253 @@
       "id": "prab-protein-milk-shake-double-chocolate",
       "name": "Prab Protein Milk-shake (Double Chocolate)",
       "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "milk-shakes",
-      "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
+      "description": "",
       "image": "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Double Chocolate).jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 85,
-          "sortOrder": 1
+          "price": 85
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
       "id": "prab-protein-milk-shake-coffee",
       "name": "Prab Protein Milk-shake (Coffee)",
       "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "milk-shakes",
-      "subCategoryName": "Milk Shakes",
       "subcategory": "Milk Shakes",
+      "description": "",
       "image": "/assets/images/Cold Drinks/Milk Shakes/Prab Protein Milk-shake (Coffee).webp",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 125,
-          "sortOrder": 1
+          "price": 125
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "strawberry-coolberg",
+      "name": "Strawberry Coolberg",
+      "categoryId": "cold-drinks",
+      "subcategory": "Coolberg",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 109
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "peach-coolberg",
+      "name": "Peach Coolberg",
+      "categoryId": "cold-drinks",
+      "subcategory": "Coolberg",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 109
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cranberry-coolberg",
+      "name": "Cranberry Coolberg",
+      "categoryId": "cold-drinks",
+      "subcategory": "Coolberg",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 109
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "jugaaro-coolberg",
+      "name": "Jugaaro Coolberg",
+      "categoryId": "cold-drinks",
+      "subcategory": "Coolberg",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 109
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-white-monster",
+      "name": "Ultra White Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 350
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-original-monster",
+      "name": "Ultra Original Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 300
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-pink-monster",
+      "name": "Ultra Pink Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 300
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "bad-apple-monster",
+      "name": "Bad Apple Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 300
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "rio-punch-monster",
+      "name": "Rio Punch Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 300
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "white-pineapple-monster",
+      "name": "White Pineapple Monster",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 300
+        }
+      ],
+      "active": true,
+      "isDeleted": false,
+      "deletedAt": null,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "redbull-250ml-",
+      "name": "Redbull (250ml)",
+      "categoryId": "cold-drinks",
+      "subcategory": "Energy Drinks",
+      "description": "",
+      "image": "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg",
+      "sizes": [
+        {
+          "id": "one",
+          "name": "Regular",
+          "label": "Regular",
+          "price": 125
+        }
+      ],
       "active": true,
       "isDeleted": false,
       "deletedAt": null,
@@ -977,25 +1098,16 @@
       "name": "Storia Coconut Water",
       "categoryId": "coconut-water",
       "description": "",
-      "subCategoryId": "",
-      "subCategoryName": "",
-      "subcategory": "",
       "image": "/assets/images/Coconut Water/Storia Coconut Water.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 60,
-          "sortOrder": 1
+          "price": 60
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -1020,26 +1132,18 @@
       "id": "paneer-tikka-melt",
       "name": "Paneer Tikka Melt",
       "categoryId": "snacks",
-      "description": "",
-      "subCategoryId": "sandwich",
-      "subCategoryName": "Sandwich",
       "subcategory": "Sandwich",
+      "description": "",
       "image": "/assets/images/Snacks/Sandwich/Paneer Tikka Melt.jpg",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 143,
-          "sortOrder": 1
+          "price": 143
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -1649,10 +1753,7 @@
           "price": 148
         }
       ],
-      "active": false,
-      "isActive": false,
-      "isDeleted": false,
-      "deletedAt": null,
+      "active": true,
       "outletId": "outlet-near-skit"
     },
     {
@@ -1707,315 +1808,20 @@
       "outletId": "outlet-near-skit"
     },
     {
-      "id": "strawberry-coolberg",
-      "name": "Strawberry Coolberg",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "coolberg",
-      "subCategoryName": "Coolberg",
-      "subcategory": "Coolberg",
-      "image": "/assets/images/Cold Drinks/Coolberg/Strawberry Coolberg.png",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 109,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "peach-coolberg",
-      "name": "Peach Coolberg",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "coolberg",
-      "subCategoryName": "Coolberg",
-      "subcategory": "Coolberg",
-      "image": "/assets/images/Cold Drinks/Coolberg/Peach Coolberg.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 109,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "cranberry-coolberg",
-      "name": "Cranberry Coolberg",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "coolberg",
-      "subCategoryName": "Coolberg",
-      "subcategory": "Coolberg",
-      "image": "/assets/images/Cold Drinks/Coolberg/Cranberry Coolberg.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 109,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "jugaaro-coolberg",
-      "name": "Jugaaro Coolberg",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "coolberg",
-      "subCategoryName": "Coolberg",
-      "subcategory": "Coolberg",
-      "image": "/assets/images/Cold Drinks/Coolberg/Jugaaro Coolberg.webp",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 109,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "ultra-white-monster",
-      "name": "Ultra White Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra White Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 350,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "ultra-original-monster",
-      "name": "Ultra Original Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Original Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 300,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "ultra-pink-monster",
-      "name": "Ultra Pink Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Ultra Pink Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 300,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "bad-apple-monster",
-      "name": "Bad Apple Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Bad Apple Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 300,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "rio-punch-monster",
-      "name": "Rio Punch Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Rio Punch Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 300,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "white-pineapple-monster",
-      "name": "White Pineapple Monster",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/White Pineapple Monster.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 300,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "redbull-250ml-",
-      "name": "Redbull (250ml)",
-      "categoryId": "cold-drinks",
-      "description": "",
-      "subCategoryId": "energy-drinks",
-      "subCategoryName": "Energy Drinks",
-      "subcategory": "Energy Drinks",
-      "image": "/assets/images/Cold Drinks/Energy Drinks/Red Bull.jpg",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 125,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
-    },
-    {
       "id": "water-bottle",
       "name": "Water Bottle",
       "categoryId": "water-bottles",
       "description": "",
-      "subCategoryId": "",
-      "subCategoryName": "",
-      "subcategory": "",
       "image": "",
       "sizes": [
         {
-          "id": "regular",
+          "id": "one",
           "name": "Regular",
           "label": "Regular",
-          "price": 30,
-          "sortOrder": 1
+          "price": 30
         }
       ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -2033,8 +1839,6 @@
         }
       ],
       "active": true,
-      "isDeleted": false,
-      "deletedAt": null,
       "outletId": "outlet-near-skit"
     },
     {
@@ -2189,80 +1993,9 @@
       ],
       "active": true,
       "outletId": "outlet-near-skit"
-    },
-    {
-      "id": "test-item",
-      "name": "test item",
-      "categoryId": "hot-drinks",
-      "description": "",
-      "subCategoryId": "chai",
-      "subCategoryName": "Chai",
-      "subcategory": "Chai",
-      "image": "",
-      "sizes": [
-        {
-          "id": "regular",
-          "name": "Regular",
-          "label": "Regular",
-          "price": 10,
-          "sortOrder": 1
-        }
-      ],
-      "serveOptions": [],
-      "addons": [],
-      "featured": false,
-      "active": true,
-      "isActive": true,
-      "isDeleted": false,
-      "deletedAt": null,
-      "outletId": "outlet-near-skit"
     }
   ],
-  "orders": [
-    {
-      "outletId": "outlet-near-skit",
-      "orderId": "INF-506114-981",
-      "customerName": "nnn",
-      "phone": "1111111111",
-      "tableNumber": "T3",
-      "tableNo": "T3",
-      "paymentMethod": "cash",
-      "source": "coc",
-      "orderType": "COC",
-      "notes": "",
-      "items": [
-        {
-          "itemId": "peach-coolberg",
-          "name": "Peach Coolberg",
-          "sizeId": "regular",
-          "sizeName": "Regular",
-          "size": "Regular",
-          "variant": "Regular",
-          "serveType": "",
-          "quantity": 1,
-          "basePrice": 109,
-          "originalPrice": 109,
-          "unitPrice": 109,
-          "lineTotal": 109,
-          "finalLineTotal": 109,
-          "addons": {
-            "selectedAddons": [],
-            "extraCheese": false,
-            "extraCheesePrice": 0
-          },
-          "addOns": []
-        }
-      ],
-      "total": 109,
-      "totalAmount": 109,
-      "status": "confirmed",
-      "paymentStatus": "pending",
-      "deductionStatus": "pending",
-      "id": "coc-1784794506114",
-      "createdAt": "2026-07-23T08:15:06.114Z",
-      "updatedAt": "2026-07-23T08:15:11.058Z"
-    }
-  ],
+  "orders": [],
   "tables": [],
   "rawMaterials": [
     {
@@ -2274,8 +2007,7 @@
       "minStock": 2500,
       "costPerUnit": 0.8,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coffee-powder",
@@ -2286,8 +2018,7 @@
       "minStock": 2000,
       "costPerUnit": 1.5,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "milk",
@@ -2298,8 +2029,7 @@
       "minStock": 8000,
       "costPerUnit": 0.04,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sugar",
@@ -2310,8 +2040,7 @@
       "minStock": 5000,
       "costPerUnit": 0.02,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "water",
@@ -2322,8 +2051,7 @@
       "minStock": 15000,
       "costPerUnit": 0.001,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ice-cubes",
@@ -2334,8 +2062,7 @@
       "minStock": 5000,
       "costPerUnit": 0.005,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kulhad-cup",
@@ -2346,8 +2073,7 @@
       "minStock": 100,
       "costPerUnit": 3,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "glass",
@@ -2358,8 +2084,7 @@
       "minStock": 50,
       "costPerUnit": 10,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bread-slice",
@@ -2370,8 +2095,7 @@
       "minStock": 120,
       "costPerUnit": 5,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-slice",
@@ -2382,8 +2106,7 @@
       "minStock": 80,
       "costPerUnit": 8,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pasta",
@@ -2394,8 +2117,7 @@
       "minStock": 3000,
       "costPerUnit": 0.12,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "noodles",
@@ -2406,8 +2128,7 @@
       "minStock": 3000,
       "costPerUnit": 0.1,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic",
@@ -2418,8 +2139,7 @@
       "minStock": 800,
       "costPerUnit": 0.3,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "potato",
@@ -2430,8 +2150,7 @@
       "minStock": 4000,
       "costPerUnit": 0.05,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tomato-sauce",
@@ -2442,8 +2161,7 @@
       "minStock": 2000,
       "costPerUnit": 0.15,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chili-sauce",
@@ -2454,8 +2172,7 @@
       "minStock": 1500,
       "costPerUnit": 0.18,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "veg-mix",
@@ -2466,8 +2183,7 @@
       "minStock": 3000,
       "costPerUnit": 0.12,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "water-drinking-water-for-beverages",
@@ -2478,8 +2194,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-tea-leaves",
@@ -2490,8 +2205,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-tea-leaves",
@@ -2502,8 +2216,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tulsi-tea-leaves",
@@ -2514,8 +2227,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon-tea-blend-powder",
@@ -2526,8 +2238,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey",
@@ -2538,8 +2249,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "ginger",
@@ -2550,8 +2260,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cardamom",
@@ -2562,8 +2271,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cinnamon",
@@ -2574,8 +2282,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cloves",
@@ -2586,8 +2293,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "salt",
@@ -2598,8 +2304,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-pepper",
@@ -2610,8 +2315,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chaat-masala",
@@ -2622,8 +2326,51 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tea-concentrate",
+      "name": "Tea Concentrate",
+      "category": "Beverages",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "sugar-syrup",
+      "name": "Sugar Syrup",
+      "category": "Beverages",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "lemon-juice",
+      "name": "Lemon Juice",
+      "category": "Beverages",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chilled-milk",
+      "name": "Chilled Milk",
+      "category": "Dairy",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "instant-coffee-coffee-powder",
@@ -2634,8 +2381,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cocoa-powder",
@@ -2646,8 +2392,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chocolate-syrup",
@@ -2658,8 +2403,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "caramel-syrup",
@@ -2670,8 +2414,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hazelnut-syrup",
@@ -2682,8 +2425,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mocha-syrup",
@@ -2694,8 +2436,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "vanilla-syrup",
@@ -2706,8 +2447,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "blue-curacao-syrup",
@@ -2718,8 +2458,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-apple-syrup",
@@ -2730,8 +2469,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cranberry-syrup",
@@ -2742,8 +2480,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-syrup",
@@ -2754,8 +2491,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kala-khatta-syrup",
+      "name": "Kala Khatta Syrup",
+      "category": "Beverages",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peach-syrup",
@@ -2766,8 +2513,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mango-pulp-mango-syrup",
@@ -2778,8 +2524,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mango-syrup",
@@ -2790,8 +2535,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-lemon-concentrate",
@@ -2802,8 +2546,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mint-leaves",
@@ -2814,8 +2557,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lime-lemon-juice",
@@ -2826,8 +2568,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon",
@@ -2838,8 +2579,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "soda-water-club-soda",
@@ -2850,8 +2590,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "soda",
@@ -2862,8 +2601,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sparkling-water-black-soda",
@@ -2874,8 +2612,40 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "vanilla-ice-cream",
+      "name": "Vanilla Ice Cream",
+      "category": "Dairy",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chocolate-ice-cream",
+      "name": "Chocolate Ice Cream",
+      "category": "Dairy",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "butterscotch-ice-cream",
+      "name": "Butterscotch Ice Cream",
+      "category": "Dairy",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "protein-powder-double-chocolate",
@@ -2886,8 +2656,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "protein-powder-coffee",
@@ -2898,8 +2667,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kunafa-mix",
@@ -2910,8 +2678,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "pistachio-crushed",
+      "name": "Pistachio Crushed",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "brownies-pieces-for-shakes",
@@ -2922,8 +2700,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "dark-chocolate-compound",
+      "name": "Dark Chocolate Compound",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "oreo-cookies-crumbled",
@@ -2934,8 +2722,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kitkat-crushed",
+      "name": "KitKat Crushed",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kitkat-bars-mini",
@@ -2946,8 +2744,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "butterscotch-syrup",
@@ -2958,8 +2755,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coolberg-strawberry",
@@ -2970,8 +2766,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coolberg-peach",
@@ -2982,8 +2777,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coolberg-cranberry",
@@ -2994,8 +2788,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "coolberg-jugaaro",
@@ -3006,8 +2799,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "strawberry-syrup",
@@ -3018,8 +2810,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "vanilla-ice-cream-for-milkshakes",
@@ -3030,8 +2821,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "storia-coconut-water-packaged-bottle",
@@ -3042,8 +2832,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "storia-coconut-water",
@@ -3054,8 +2843,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "guava-syrup",
+      "name": "Guava Syrup",
+      "category": "Beverages",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "guava-juice-guava-pulp",
@@ -3066,8 +2865,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chilli-powder",
+      "name": "Chilli Powder",
+      "category": "Spices",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-chilli-powder",
@@ -3078,8 +2887,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-salt",
@@ -3090,8 +2898,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "masala-mix",
+      "name": "Masala Mix",
+      "category": "Beverages",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "jal-jeera-masala-lemonade-mix",
@@ -3102,8 +2920,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mango-puree",
@@ -3114,8 +2931,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "mango-pulp",
+      "name": "Mango Pulp",
+      "category": "Beverages",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "spicy-mango-mix-mango-chilli",
@@ -3126,8 +2953,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cranberry-juice",
@@ -3138,8 +2964,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-juice",
@@ -3150,8 +2975,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "green-apple-juice",
@@ -3162,8 +2986,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lemon-ice-tea-mix",
@@ -3174,8 +2997,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peach-ice-tea-mix",
@@ -3186,8 +3008,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "watermelon-ice-tea-mix",
@@ -3198,8 +3019,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mojito-mint-syrup",
@@ -3210,8 +3030,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "masala-lemonade-syrup",
@@ -3222,8 +3041,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-ultra-white-can",
@@ -3234,8 +3052,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-ultra-white",
@@ -3246,8 +3063,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-ultra-original-can",
@@ -3258,8 +3074,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-original",
@@ -3270,8 +3085,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-ultra-pink-can",
@@ -3282,8 +3096,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-pink",
@@ -3294,8 +3107,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-bad-apple-can",
@@ -3306,8 +3118,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-rio-punch-can",
@@ -3318,8 +3129,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "monster-white-pineapple-can",
@@ -3330,8 +3140,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "redbull-250-ml-can",
@@ -3342,8 +3151,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "redbull-250ml",
@@ -3354,8 +3162,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sandwich-bread-loaf",
@@ -3366,8 +3173,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sandwich-bread",
@@ -3378,8 +3184,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "burger-buns",
@@ -3390,8 +3195,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "burger-bun",
@@ -3402,8 +3206,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-blocks",
@@ -3414,8 +3217,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-slices-processed-cheese",
@@ -3426,8 +3228,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mozzarella-cheese",
@@ -3438,8 +3239,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheddar-cheese",
@@ -3450,8 +3250,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bread-rolls-sub-roll-for-melts",
@@ -3462,8 +3261,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "lettuce",
@@ -3474,8 +3272,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tomato",
@@ -3486,8 +3283,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cucumber",
@@ -3498,8 +3294,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "onion",
@@ -3510,8 +3305,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "onions",
@@ -3522,8 +3316,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "capsicum",
@@ -3534,8 +3327,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bell-peppers-capsicum",
@@ -3546,8 +3338,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cabbage",
+      "name": "Cabbage",
+      "category": "Vegetables",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "carrot",
@@ -3558,8 +3360,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "corn-kernels",
@@ -3570,8 +3371,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "olives",
@@ -3582,8 +3382,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "jalape-os",
@@ -3594,8 +3393,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mushrooms",
@@ -3606,8 +3404,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "vegetable-patties-veg-burger-patty",
@@ -3618,8 +3415,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "veg-burger-patty",
@@ -3630,8 +3426,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "paneer-patty",
+      "name": "Paneer Patty",
+      "category": "Dairy",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "aloo-patty",
@@ -3642,8 +3448,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "burger-sauce",
+      "name": "Burger Sauce",
+      "category": "Sauces",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-tikka-cubes-marination",
@@ -3654,8 +3470,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-slices",
@@ -3666,8 +3481,62 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "sweet-corn",
+      "name": "Sweet Corn",
+      "category": "Vegetables",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "sandwich-sauce",
+      "name": "Sandwich Sauce",
+      "category": "Sauces",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tikka-sauce",
+      "name": "Tikka Sauce",
+      "category": "Sauces",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "green-chutney",
+      "name": "Green Chutney",
+      "category": "Sauces",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "seasoning-mix",
+      "name": "Seasoning Mix",
+      "category": "Spices",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mayonnaise",
@@ -3678,8 +3547,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tomato-ketchup",
@@ -3690,8 +3558,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mustard-sauce",
@@ -3702,8 +3569,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bbq-sauce",
@@ -3714,8 +3580,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peri-peri-seasoning",
@@ -3726,8 +3591,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "spiced-aloo-patty",
@@ -3738,8 +3602,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.107Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "penne-pasta-shells",
@@ -3750,8 +3613,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-sauce-tomato-basil-sauce",
@@ -3762,8 +3624,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-sauce",
@@ -3774,8 +3635,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "white-sauce-b-chamel-mix",
@@ -3786,8 +3646,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "white-sauce",
@@ -3798,8 +3657,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pink-sauce-mix-tomato-cream",
@@ -3810,8 +3668,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pink-sauce",
@@ -3822,8 +3679,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cooking-oil",
@@ -3834,8 +3690,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "olive-oil",
@@ -3846,8 +3701,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "butter",
@@ -3858,8 +3712,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic-cloves",
@@ -3870,8 +3723,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "wheat-flour-for-sauces",
@@ -3882,8 +3734,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "fresh-cream",
@@ -3894,8 +3745,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "milk-cream",
@@ -3906,8 +3756,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-parmesan-mozzarella",
@@ -3918,8 +3767,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hakka-noodles",
@@ -3930,8 +3778,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "schezwan-sauce",
@@ -3942,8 +3789,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "soy-sauce",
@@ -3954,8 +3800,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "vinegar",
@@ -3966,8 +3811,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "maggi-noodles",
@@ -3978,8 +3822,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "maggi-masala",
@@ -3990,8 +3833,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "extra-cheese-add-on-mix",
@@ -4002,8 +3844,40 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "maggi-noodles-packet",
+      "name": "Maggi Noodles Packet",
+      "category": "Grains",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "maggi-masala-packet",
+      "name": "Maggi Masala Packet",
+      "category": "Spices",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tandoori-sauce",
+      "name": "Tandoori Sauce",
+      "category": "Sauces",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "tandoori-masala-mix",
@@ -4014,8 +3888,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "potatoes-for-fries",
@@ -4026,8 +3899,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "frozen-french-fries",
@@ -4038,8 +3910,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "potato-bites",
+      "name": "Potato Bites",
+      "category": "Frozen",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "vegetable-oil-for-frying",
@@ -4050,8 +3932,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "peri-peri-masala",
@@ -4062,8 +3943,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "french-fries-seasoning-peri-peri-chilli",
@@ -4074,8 +3954,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-chilli-glaze",
@@ -4086,8 +3965,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "honey-chilli-sauce",
@@ -4098,8 +3976,29 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chilli-sauce",
+      "name": "Chilli Sauce",
+      "category": "Sauces",
+      "unit": "ml",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "sesame-seeds",
+      "name": "Sesame Seeds",
+      "category": "Spices",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic-bread-loaf",
@@ -4110,8 +4009,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic-bread",
@@ -4122,8 +4020,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "garlic-bread-base",
+      "name": "Garlic Bread Base",
+      "category": "Bakery",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "garlic-butter",
@@ -4134,8 +4042,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "corn-kernels-for-stuffed-garlic-bread",
@@ -4146,8 +4053,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "corn",
@@ -4158,8 +4064,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "jalapeno",
@@ -4170,8 +4075,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-sauce",
@@ -4182,8 +4086,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "cheese-spread",
@@ -4194,8 +4097,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "bread-crumbs",
@@ -4206,8 +4108,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "frozen-momos-wrappers",
@@ -4218,8 +4119,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "momos",
@@ -4230,8 +4130,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "veg-momo-filling-veg-spices-mix",
@@ -4242,8 +4141,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "kurkure-crumbs-panko-crumbs-for-crispy-momos",
@@ -4254,8 +4152,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "momos-chutney",
@@ -4266,8 +4163,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "gravy-sauce-for-momos",
@@ -4278,8 +4174,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pizza-dough-base",
@@ -4290,8 +4185,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pizza-base",
@@ -4302,8 +4196,18 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "pizza-base-piece",
+      "name": "Pizza Base Piece",
+      "category": "Bakery",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pizza-sauce",
@@ -4314,8 +4218,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "pizza-seasoning",
@@ -4326,8 +4229,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "oregano",
@@ -4338,8 +4240,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chilli-flakes",
@@ -4350,8 +4251,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "paneer-tikka-topping",
@@ -4362,8 +4262,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mixed-pizza-vegetables",
@@ -4374,8 +4273,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.108Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "mixed-veggies-bell-pepper-onion-tomato-corn",
@@ -4386,212 +4284,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "red-velvet-cake-mix",
-      "name": "Red velvet cake mix",
-      "category": "Bakery",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "chocolate-cake-mix",
-      "name": "Chocolate cake mix",
-      "category": "Bakery",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "chocolate-chips-chunks",
-      "name": "Chocolate chips / chunks",
-      "category": "Bakery",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "vanilla-ice-cream-for-sizzling-brownie",
-      "name": "Vanilla ice cream (for sizzling brownie)",
-      "category": "Dairy",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "brownie-base-pre-baked",
-      "name": "Brownie base (pre‑baked)",
-      "category": "Bakery",
-      "unit": "g",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ice-cream-cups",
-      "name": "Ice cream cups",
-      "category": "Frozen",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "water-bottle",
-      "name": "Water Bottle",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "big-advance",
-      "name": "Big Advance",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "big-gold-flake",
-      "name": "Big Gold Flake",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "connect",
-      "name": "Connect",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ultra-mild",
-      "name": "Ultra Mild",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "mild-classic",
-      "name": "Mild Classic",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "fine-touch",
-      "name": "Fine Touch",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "marlboro-red",
-      "name": "Marlboro Red",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "double-brust",
-      "name": "Double Brust",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ice-brust",
-      "name": "Ice Brust",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "classic-regular",
-      "name": "Classic Regular",
-      "category": "Packaged",
-      "unit": "pcs",
-      "stock": 0,
-      "minStock": 0,
-      "costPerUnit": 0,
-      "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-velvet-lava-cake",
@@ -4602,8 +4295,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "choco-lava-cake",
@@ -4614,8 +4306,7 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "chocolate-sauce",
@@ -4626,64 +4317,223 @@
       "minStock": 0,
       "costPerUnit": 0,
       "active": true,
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "red-velvet-cake-mix",
+      "name": "Red velvet cake mix",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chocolate-cake-mix",
+      "name": "Chocolate cake mix",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chocolate-chips-chunks",
+      "name": "Chocolate chips / chunks",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "vanilla-ice-cream-for-sizzling-brownie",
+      "name": "Vanilla ice cream (for sizzling brownie)",
+      "category": "Dairy",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "brownie-base-pre-baked",
+      "name": "Brownie base (pre‑baked)",
+      "category": "Bakery",
+      "unit": "g",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ice-cream-cups",
+      "name": "Ice cream cups",
+      "category": "Frozen",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "water-bottle",
+      "name": "Water Bottle",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "big-advance",
+      "name": "Big Advance",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "big-gold-flake",
+      "name": "Big Gold Flake",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "connect",
+      "name": "Connect",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-mild",
+      "name": "Ultra Mild",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "mild-classic",
+      "name": "Mild Classic",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "fine-touch",
+      "name": "Fine Touch",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "marlboro-red",
+      "name": "Marlboro Red",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "double-brust",
+      "name": "Double Brust",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ice-brust",
+      "name": "Ice Brust",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "classic-regular",
+      "name": "Classic Regular",
+      "category": "Packaged",
+      "unit": "pcs",
+      "stock": 0,
+      "minStock": 0,
+      "costPerUnit": 0,
+      "active": true,
+      "outletId": "outlet-near-skit"
     }
   ],
   "recipes": [
-    {
-      "id": "black-coffee",
-      "itemId": "black-coffee",
-      "ingredients": [
-        {
-          "rawMaterialId": "coffee-powder",
-          "amount": 15,
-          "unit": "g",
-          "serveType": ""
-        },
-        {
-          "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml",
-          "serveType": ""
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
     {
       "id": "personal-blend-chai",
       "itemId": "personal-blend-chai",
       "ingredients": [
         {
           "rawMaterialId": "tea-leaves",
-          "amount": 5,
+          "amount": 4,
           "unit": "g"
         },
         {
           "rawMaterialId": "milk",
-          "amount": 150,
+          "amount": 120,
           "unit": "ml"
         },
         {
           "rawMaterialId": "water",
-          "amount": 100,
+          "amount": 60,
           "unit": "ml"
         },
         {
           "rawMaterialId": "sugar",
-          "amount": 10,
+          "amount": 8,
           "unit": "g"
-        },
-        {
-          "rawMaterialId": "kulhad-cup",
-          "amount": 1,
-          "unit": "pcs",
-          "serveType": "Kulhad"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "black-tea",
@@ -4691,306 +4541,21 @@
       "ingredients": [
         {
           "rawMaterialId": "tea-leaves",
-          "amount": 5,
+          "amount": 3,
           "unit": "g"
         },
         {
           "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml"
-        },
-        {
-          "rawMaterialId": "sugar",
-          "amount": 10,
-          "unit": "g"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "infusion-heritage-coffee",
-      "itemId": "infusion-heritage-coffee",
-      "ingredients": [
-        {
-          "rawMaterialId": "coffee-powder",
-          "amount": 15,
-          "unit": "g"
-        },
-        {
-          "rawMaterialId": "milk",
           "amount": 180,
           "unit": "ml"
         },
         {
           "rawMaterialId": "sugar",
-          "amount": 10,
+          "amount": 6,
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "margherita-delight",
-      "itemId": "margherita-delight",
-      "ingredients": [
-        {
-          "rawMaterialId": "bread-slice",
-          "amount": 2,
-          "unit": "pcs"
-        },
-        {
-          "rawMaterialId": "cheese-slice",
-          "amount": 1,
-          "unit": "pcs"
-        },
-        {
-          "rawMaterialId": "tomato-sauce",
-          "amount": 30,
-          "unit": "ml"
-        },
-        {
-          "rawMaterialId": "veg-mix",
-          "amount": 50,
-          "unit": "g"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "storia-coconut-water",
-      "itemId": "storia-coconut-water",
-      "ingredients": [
-        {
-          "rawMaterialId": "storia-coconut-water",
-          "amount": 1,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "strawberry-coolberg",
-      "itemId": "strawberry-coolberg",
-      "ingredients": [
-        {
-          "rawMaterialId": "coolberg-strawberry",
-          "amount": 1,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "peach-coolberg",
-      "itemId": "peach-coolberg",
-      "ingredients": [
-        {
-          "rawMaterialId": "coolberg-peach",
-          "amount": 1,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "cranberry-coolberg",
-      "itemId": "cranberry-coolberg",
-      "ingredients": [
-        {
-          "rawMaterialId": "coolberg-cranberry",
-          "amount": 1,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "jugaaro-coolberg",
-      "itemId": "jugaaro-coolberg",
-      "ingredients": [
-        {
-          "rawMaterialId": "coolberg-jugaaro",
-          "amount": 1,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ultra-white-monster",
-      "itemId": "ultra-white-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-ultra-white",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ultra-original-monster",
-      "itemId": "ultra-original-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-original",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "ultra-pink-monster",
-      "itemId": "ultra-pink-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-pink",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "bad-apple-monster",
-      "itemId": "bad-apple-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-bad-apple-can",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "rio-punch-monster",
-      "itemId": "rio-punch-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-rio-punch-can",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "white-pineapple-monster",
-      "itemId": "white-pineapple-monster",
-      "ingredients": [
-        {
-          "rawMaterialId": "monster-white-pineapple-can",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "redbull-250ml-",
-      "itemId": "redbull-250ml-",
-      "ingredients": [
-        {
-          "rawMaterialId": "redbull-250-ml-can",
-          "amount": 1,
-          "unit": "pcs"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "green-tea",
-      "itemId": "green-tea",
-      "ingredients": [
-        {
-          "rawMaterialId": "green-tea-leaves",
-          "amount": 5,
-          "unit": "g"
-        },
-        {
-          "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "tulsi-tea",
-      "itemId": "tulsi-tea",
-      "ingredients": [
-        {
-          "rawMaterialId": "tulsi-tea-leaves",
-          "amount": 5,
-          "unit": "g"
-        },
-        {
-          "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "lemon-tea",
-      "itemId": "lemon-tea",
-      "ingredients": [
-        {
-          "rawMaterialId": "lemon-tea-blend-powder",
-          "amount": 5,
-          "unit": "g"
-        },
-        {
-          "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
-    },
-    {
-      "id": "honey-lemon-tea",
-      "itemId": "honey-lemon-tea",
-      "ingredients": [
-        {
-          "rawMaterialId": "honey",
-          "amount": 5,
-          "unit": "g"
-        },
-        {
-          "rawMaterialId": "lemon",
-          "amount": 10,
-          "unit": "ml"
-        },
-        {
-          "rawMaterialId": "water",
-          "amount": 150,
-          "unit": "ml"
-        }
-      ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "signature-infusion-chai",
@@ -5017,8 +4582,29 @@
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-heritage-coffee",
+      "itemId": "infusion-heritage-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 6,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "milk",
+          "amount": 150,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hot-chocolate",
@@ -5040,8 +4626,7 @@
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "core-coffee",
@@ -5063,8 +4648,2355 @@
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "black-coffee",
+      "itemId": "black-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-signature-ice-tea",
+      "itemId": "infusion-signature-ice-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "tea-concentrate",
+          "amount": 120,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "watermelon-ice-tea",
+      "itemId": "watermelon-ice-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "tea-concentrate",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "watermelon-syrup",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 8,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "peach-ice-tea",
+      "itemId": "peach-ice-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "tea-concentrate",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "peach-syrup",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 8,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "lemon-ice-tea",
+      "itemId": "lemon-ice-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "tea-concentrate",
+          "amount": 110,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 2,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-heritage-cold-coffee",
+      "itemId": "infusion-heritage-cold-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "hazelnut-cold-coffee",
+      "itemId": "hazelnut-cold-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "hazelnut-syrup",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "caramel-cold-coffee",
+      "itemId": "caramel-cold-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "caramel-syrup",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "mocha-cold-coffee",
+      "itemId": "mocha-cold-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cocoa-powder",
+          "amount": 5,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chocolate-cold-coffee",
+      "itemId": "chocolate-cold-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "signature-coffee",
+      "itemId": "signature-coffee",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "coffee-powder",
+          "amount": 4,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 80,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "guava-chilli-mojito",
+      "itemId": "guava-chilli-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "guava-syrup",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chilli-powder",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "black-salt",
+          "amount": 1,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "masala-lemonade-mojito",
+      "itemId": "masala-lemonade-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "masala-mix",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "black-salt",
+          "amount": 1,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "spicy-mango-mojito",
+      "itemId": "spicy-mango-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "mango-syrup",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chilli-powder",
+          "amount": 1,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "black-salt",
+          "amount": 1,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "green-apple-mojito",
+      "itemId": "green-apple-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "green-apple-syrup",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "watermelon-mojito",
+      "itemId": "watermelon-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "watermelon-syrup",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cranberry-mojito",
+      "itemId": "cranberry-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "cranberry-syrup",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "blue-curacao-mojito",
+      "itemId": "blue-curacao-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "blue-curacao-syrup",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "lime-mint-mojito",
+      "itemId": "lime-mint-mojito",
+      "ingredients": [
+        {
+          "rawMaterialId": "lemon-juice",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soda",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mint-leaves",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "watermelon-slush",
+      "itemId": "watermelon-slush",
+      "ingredients": [
+        {
+          "rawMaterialId": "watermelon-syrup",
+          "amount": 40,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 80,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "green-apple-slush",
+      "itemId": "green-apple-slush",
+      "ingredients": [
+        {
+          "rawMaterialId": "green-apple-syrup",
+          "amount": 40,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 80,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cranberry-slush",
+      "itemId": "cranberry-slush",
+      "ingredients": [
+        {
+          "rawMaterialId": "cranberry-syrup",
+          "amount": 40,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 80,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kala-khatta-slush",
+      "itemId": "kala-khatta-slush",
+      "ingredients": [
+        {
+          "rawMaterialId": "kala-khatta-syrup",
+          "amount": 40,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 80,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "strawberry-slush",
+      "itemId": "strawberry-slush",
+      "ingredients": [
+        {
+          "rawMaterialId": "strawberry-syrup",
+          "amount": 40,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 220,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 80,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kunafa-shake",
+      "itemId": "kunafa-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 80,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "kunafa-mix",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "pistachio-crushed",
+          "amount": 10,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "brownie-shake",
+      "itemId": "brownie-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "brownies-pieces-for-shakes",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "dark-chocolate-shake",
+      "itemId": "dark-chocolate-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chocolate-ice-cream",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "dark-chocolate-compound",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kit-kat-shake",
+      "itemId": "kit-kat-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "kitkat-crushed",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "oreo-shake",
+      "itemId": "oreo-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "oreo-cookies-crumbled",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chocolate-syrup",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "butterscotch-shake",
+      "itemId": "butterscotch-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "butterscotch-ice-cream",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butterscotch-syrup",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "mango-shake",
+      "itemId": "mango-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mango-pulp",
+          "amount": 50,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "strawberry-shake",
+      "itemId": "strawberry-shake",
+      "ingredients": [
+        {
+          "rawMaterialId": "chilled-milk",
+          "amount": 220,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vanilla-ice-cream",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "strawberry-syrup",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar-syrup",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "ice-cubes",
+          "amount": 50,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-heritage-melt",
+      "itemId": "infusion-heritage-melt",
+      "ingredients": [
+        {
+          "rawMaterialId": "bread-slice",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "cheese-slices",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sandwich-sauce",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "paneer-tikka-melt",
+      "itemId": "paneer-tikka-melt",
+      "ingredients": [
+        {
+          "rawMaterialId": "bread-slice",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "paneer-blocks",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tikka-sauce",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "trio-delight-sandwich",
+      "itemId": "trio-delight-sandwich",
+      "ingredients": [
+        {
+          "rawMaterialId": "bread-slice",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cucumber",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cheese-slices",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "sandwich-sauce",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "garden-fresh-sandwich",
+      "itemId": "garden-fresh-sandwich",
+      "ingredients": [
+        {
+          "rawMaterialId": "bread-slice",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cucumber",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "green-chutney",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "blush-bowl-pasta",
+      "itemId": "blush-bowl-pasta",
+      "ingredients": [
+        {
+          "rawMaterialId": "pasta",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "white-sauce",
+          "amount": 70,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "red-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tomato-basil-pasta",
+      "itemId": "tomato-basil-pasta",
+      "ingredients": [
+        {
+          "rawMaterialId": "pasta",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "red-sauce",
+          "amount": 100,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "herbed-bechamel-pasta",
+      "itemId": "herbed-bechamel-pasta",
+      "ingredients": [
+        {
+          "rawMaterialId": "pasta",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "white-sauce",
+          "amount": 110,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "jalapeno-corn-stuffed-garlic-bread",
+      "itemId": "jalapeno-corn-stuffed-garlic-bread",
+      "ingredients": [
+        {
+          "rawMaterialId": "garlic-bread-base",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 60,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "jalapeno",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "garlic-butter",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cheesy-melt-garlic-bread",
+      "itemId": "cheesy-melt-garlic-bread",
+      "ingredients": [
+        {
+          "rawMaterialId": "garlic-bread-base",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 70,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "garlic-butter",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cheese-sauce",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "pure-garlic-bread",
+      "itemId": "pure-garlic-bread",
+      "ingredients": [
+        {
+          "rawMaterialId": "garlic-bread-base",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "garlic-butter",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-velvet-cheese-fries",
+      "itemId": "infusion-velvet-cheese-fries",
+      "ingredients": [
+        {
+          "rawMaterialId": "frozen-french-fries",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cheese-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "honey-chilli-glazed-potato",
+      "itemId": "honey-chilli-glazed-potato",
+      "ingredients": [
+        {
+          "rawMaterialId": "potato-bites",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "honey-chilli-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sesame-seeds",
+          "amount": 3,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "chilli-blaze-potato",
+      "itemId": "chilli-blaze-potato",
+      "ingredients": [
+        {
+          "rawMaterialId": "potato-bites",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 55,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "fiery-peri-peri-fries",
+      "itemId": "fiery-peri-peri-fries",
+      "ingredients": [
+        {
+          "rawMaterialId": "frozen-french-fries",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "peri-peri-masala",
+          "amount": 8,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "golden-crisp-fries",
+      "itemId": "golden-crisp-fries",
+      "ingredients": [
+        {
+          "rawMaterialId": "frozen-french-fries",
+          "amount": 180,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "salt",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-loaded-stack",
+      "itemId": "infusion-loaded-stack",
+      "ingredients": [
+        {
+          "rawMaterialId": "burger-bun",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "veg-burger-patty",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "cheese-slices",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "lettuce",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "burger-sauce",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "paneer-bliss-burger",
+      "itemId": "paneer-bliss-burger",
+      "ingredients": [
+        {
+          "rawMaterialId": "burger-bun",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "paneer-patty",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "cheese-slices",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "lettuce",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "burger-sauce",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cheese-indulgence-burger",
+      "itemId": "cheese-indulgence-burger",
+      "ingredients": [
+        {
+          "rawMaterialId": "burger-bun",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "veg-burger-patty",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "cheese-slices",
+          "amount": 2,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "cheese-sauce",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "burger-sauce",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "veg-essence-burger",
+      "itemId": "veg-essence-burger",
+      "ingredients": [
+        {
+          "rawMaterialId": "burger-bun",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "veg-burger-patty",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "lettuce",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "burger-sauce",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "spiced-aloo-burger",
+      "itemId": "spiced-aloo-burger",
+      "ingredients": [
+        {
+          "rawMaterialId": "aloo-patty",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "burger-bun",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "burger-sauce",
+          "amount": 18,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-wok-hakka",
+      "itemId": "infusion-wok-hakka",
+      "ingredients": [
+        {
+          "rawMaterialId": "noodles",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cabbage",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "carrot",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "soy-sauce",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "vinegar",
+          "amount": 8,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "schezwan-blaze-noodles",
+      "itemId": "schezwan-blaze-noodles",
+      "ingredients": [
+        {
+          "rawMaterialId": "noodles",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cabbage",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "carrot",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "schezwan-sauce",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "soy-sauce",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "garlic-essence-noodles",
+      "itemId": "garlic-essence-noodles",
+      "ingredients": [
+        {
+          "rawMaterialId": "noodles",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "garlic",
+          "amount": 12,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cabbage",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "soy-sauce",
+          "amount": 12,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "harvest-veg-noodles",
+      "itemId": "harvest-veg-noodles",
+      "ingredients": [
+        {
+          "rawMaterialId": "noodles",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cabbage",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "carrot",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "soy-sauce",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 12,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "infusion-maxxed-maggi",
+      "itemId": "infusion-maxxed-maggi",
+      "ingredients": [
+        {
+          "rawMaterialId": "maggi-noodles-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "maggi-masala-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cheese-luxe-maggi",
+      "itemId": "cheese-luxe-maggi",
+      "ingredients": [
+        {
+          "rawMaterialId": "maggi-noodles-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "maggi-masala-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 45,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "cheese-sauce",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tandoori-twist-maggi",
+      "itemId": "tandoori-twist-maggi",
+      "ingredients": [
+        {
+          "rawMaterialId": "maggi-noodles-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "maggi-masala-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "tandoori-sauce",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 10,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "veggie-comfort-maggi",
+      "itemId": "veggie-comfort-maggi",
+      "ingredients": [
+        {
+          "rawMaterialId": "maggi-noodles-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "maggi-masala-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "carrot",
+          "amount": 20,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 8,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "just-maggi",
+      "itemId": "just-maggi",
+      "ingredients": [
+        {
+          "rawMaterialId": "maggi-noodles-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "maggi-masala-packet",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "butter",
+          "amount": 5,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "paneer-tikka-supreme",
+      "itemId": "paneer-tikka-supreme",
+      "ingredients": [
+        {
+          "rawMaterialId": "pizza-base-piece",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "pizza-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 120,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "paneer-blocks",
+          "amount": 90,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tikka-sauce",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 25,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 4,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "garden-harvest-pizza",
+      "itemId": "garden-harvest-pizza",
+      "ingredients": [
+        {
+          "rawMaterialId": "pizza-base-piece",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "pizza-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 110,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "tomato",
+          "amount": 35,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "sweet-corn",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "jalapeno",
+          "amount": 15,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 4,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "margherita-delight",
+      "itemId": "margherita-delight",
+      "ingredients": [
+        {
+          "rawMaterialId": "pizza-base-piece",
+          "amount": 1,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "pizza-sauce",
+          "amount": 60,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "mozzarella-cheese",
+          "amount": 130,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 4,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "red-velvet-lava-cake",
@@ -5081,13 +7013,12 @@
           "unit": "ml"
         },
         {
-          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "rawMaterialId": "vanilla-ice-cream",
           "amount": 40,
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "choco-lava-cake",
@@ -5104,13 +7035,12 @@
           "unit": "ml"
         },
         {
-          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "rawMaterialId": "vanilla-ice-cream",
           "amount": 30,
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "sizzling-brownie-with-ice-cream",
@@ -5122,7 +7052,7 @@
           "unit": "g"
         },
         {
-          "rawMaterialId": "vanilla-ice-cream-for-sizzling-brownie",
+          "rawMaterialId": "vanilla-ice-cream",
           "amount": 60,
           "unit": "g"
         },
@@ -5142,8 +7072,7 @@
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
     },
     {
       "id": "hot-brownie",
@@ -5165,8 +7094,345 @@
           "unit": "g"
         }
       ],
-      "outletId": "outlet-near-skit",
-      "updatedAt": "2026-07-23T02:56:20.109Z"
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "kurkure-delight-momos",
+      "itemId": "kurkure-delight-momos",
+      "ingredients": [
+        {
+          "rawMaterialId": "momos",
+          "amount": 8,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "kurkure-crumbs-panko-crumbs-for-crispy-momos",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mayonnaise",
+          "amount": 35,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "fusion-gravy-momos",
+      "itemId": "fusion-gravy-momos",
+      "ingredients": [
+        {
+          "rawMaterialId": "momos",
+          "amount": 8,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "gravy-sauce-for-momos",
+          "amount": 120,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "onion",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "capsicum",
+          "amount": 30,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 25,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 15,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "seasoning-mix",
+          "amount": 3,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "golden-crunch-momos",
+      "itemId": "golden-crunch-momos",
+      "ingredients": [
+        {
+          "rawMaterialId": "momos",
+          "amount": 8,
+          "unit": "pcs"
+        },
+        {
+          "rawMaterialId": "bread-crumbs",
+          "amount": 40,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "mayonnaise",
+          "amount": 30,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "chilli-sauce",
+          "amount": 20,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "cooking-oil",
+          "amount": 20,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "storia-coconut-water",
+      "itemId": "storia-coconut-water",
+      "ingredients": [
+        {
+          "rawMaterialId": "storia-coconut-water",
+          "amount": 1,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "strawberry-coolberg",
+      "itemId": "strawberry-coolberg",
+      "ingredients": [
+        {
+          "rawMaterialId": "coolberg-strawberry",
+          "amount": 1,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "peach-coolberg",
+      "itemId": "peach-coolberg",
+      "ingredients": [
+        {
+          "rawMaterialId": "coolberg-peach",
+          "amount": 1,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "cranberry-coolberg",
+      "itemId": "cranberry-coolberg",
+      "ingredients": [
+        {
+          "rawMaterialId": "coolberg-cranberry",
+          "amount": 1,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "jugaaro-coolberg",
+      "itemId": "jugaaro-coolberg",
+      "ingredients": [
+        {
+          "rawMaterialId": "coolberg-jugaaro",
+          "amount": 1,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-white-monster",
+      "itemId": "ultra-white-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-ultra-white",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-original-monster",
+      "itemId": "ultra-original-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-original",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "ultra-pink-monster",
+      "itemId": "ultra-pink-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-pink",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "bad-apple-monster",
+      "itemId": "bad-apple-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-bad-apple-can",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "rio-punch-monster",
+      "itemId": "rio-punch-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-rio-punch-can",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "white-pineapple-monster",
+      "itemId": "white-pineapple-monster",
+      "ingredients": [
+        {
+          "rawMaterialId": "monster-white-pineapple-can",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "redbull-250ml-",
+      "itemId": "redbull-250ml-",
+      "ingredients": [
+        {
+          "rawMaterialId": "redbull-250-ml-can",
+          "amount": 1,
+          "unit": "pcs"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "green-tea",
+      "itemId": "green-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "green-tea-leaves",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 180,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "tulsi-tea",
+      "itemId": "tulsi-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "tulsi-tea-leaves",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 180,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "lemon-tea",
+      "itemId": "lemon-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "lemon-tea-blend-powder",
+          "amount": 2,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "lemon",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 180,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "sugar",
+          "amount": 6,
+          "unit": "g"
+        }
+      ],
+      "outletId": "outlet-near-skit"
+    },
+    {
+      "id": "honey-lemon-tea",
+      "itemId": "honey-lemon-tea",
+      "ingredients": [
+        {
+          "rawMaterialId": "honey",
+          "amount": 12,
+          "unit": "g"
+        },
+        {
+          "rawMaterialId": "lemon",
+          "amount": 10,
+          "unit": "ml"
+        },
+        {
+          "rawMaterialId": "water",
+          "amount": 180,
+          "unit": "ml"
+        }
+      ],
+      "outletId": "outlet-near-skit"
     }
   ],
   "inventoryHistory": []
