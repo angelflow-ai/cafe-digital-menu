@@ -103,6 +103,20 @@ textarea {
   color: var(--luxury-text) !important;
 }
 
+.customer-compact .quick-access-compact button.bg-black,
+.customer-compact .quick-access-compact button.text-white,
+.customer-compact .quick-access-compact button.bg-black:hover,
+.customer-compact .quick-access-compact button.bg-black:focus-visible,
+.customer-compact .quick-access-compact button.bg-black:active {
+  color: #FFF8F4 !important;
+}
+
+.customer-compact .quick-access-compact button.bg-black:hover,
+.customer-compact .quick-access-compact button.bg-black:focus-visible,
+.customer-compact .quick-access-compact button.bg-black:active {
+  background-color: #4A0006 !important;
+}
+
 .customer-compact .quick-access-compact button:hover {
   background: #FAF8F5 !important;
 }
@@ -973,11 +987,13 @@ textarea {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 .detail-card {
   width: 100%;
   max-width: 360px;
-  border-radius: 30px;
+  max-height: min(92dvh, 720px);
+  border-radius: 28px;
   border: 1px solid rgba(255,255,255,0.16);
   background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.07));
   backdrop-filter: blur(24px);
@@ -999,12 +1015,12 @@ textarea {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 18px 0 18px;
+  padding: 14px 14px 0 14px;
   position: relative;
   z-index: 1;
 }
 .detail-title {
-  font-size: 25px;
+  font-size: 22px;
   line-height: 1.05;
   font-weight: 900;
   color: #1F1F1F;
@@ -1015,8 +1031,8 @@ textarea {
   border: 1px solid #ECE8E3;
   color: #1F1F1F;
   border-radius: 999px;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   cursor: pointer;
@@ -1030,57 +1046,59 @@ textarea {
 .detail-image-wrap {
   display: flex;
   justify-content: center;
-  margin-top: 10px;
+  margin-top: 8px;
   position: relative;
   z-index: 1;
 }
 .detail-image {
-  width: min(82vw, 240px);
-  height: min(82vw, 240px);
-  max-width: 240px;
-  max-height: 240px;
+  width: min(74vw, 200px);
+  height: min(74vw, 200px);
+  max-width: 200px;
+  max-height: 200px;
   object-fit: cover;
-  border-radius: 28px;
+  border-radius: 24px;
   box-shadow: 0 16px 36px rgba(15, 23, 42, 0.08);
 }
 .detail-body {
-  padding: 16px 18px 20px 18px;
+  padding: 12px 14px 14px 14px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 10px;
   align-items: stretch;
   position: relative;
   z-index: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 .price-block {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  border-radius: 22px;
+  gap: 4px;
+  border-radius: 18px;
   background: #FAF8F5;
-  padding: 14px 12px;
+  padding: 10px 10px;
   border: 1px solid #ECE8E3;
 }
 .price-label {
-  font-size: 12px;
+  font-size: 11px;
   color: #6B6B6B;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   font-weight: 900;
 }
 .price-value {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 900;
   color: #1F1F1F;
 }
 .section-block {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 .section-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1089,7 +1107,7 @@ textarea {
 .pill-row,
 .pill-column {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 .pill-column {
@@ -1100,8 +1118,8 @@ textarea {
   border: 1px solid #ECE8E3;
   background: #FFFFFF;
   color: #1F1F1F;
-  padding: 10px 13px;
-  font-size: 14px;
+  padding: 8px 11px;
+  font-size: 13px;
   font-weight: 900;
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
@@ -1123,19 +1141,19 @@ textarea {
 .quantity-block {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-.quantity-card {
-  border-radius: 22px;
-  background: #FAF8F5;
-  border: 1px solid #ECE8E3;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
   gap: 10px;
 }
+.quantity-card {
+  border-radius: 18px;
+  background: #FAF8F5;
+  border: 1px solid #ECE8E3;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 .qty-label {
-  font-size: 12px;
+  font-size: 11px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   font-weight: 900;
@@ -1145,11 +1163,11 @@ textarea {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
 }
 .qty-btn {
-  width: 48px;
-  height: 48px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #4A0006;
   border: 1px solid #4A0006;
@@ -1164,9 +1182,9 @@ textarea {
   background: #5B0A10;
 }
 .qty-num {
-  min-width: 44px;
+  min-width: 40px;
   text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 900;
   color: #1F1F1F;
 }
@@ -1174,14 +1192,15 @@ textarea {
   background: linear-gradient(135deg, #4A0006 0%, #5A0A10 100%);
   color: #ffffff;
   border: 1px solid #4A0006;
-  border-radius: 22px;
-  padding: 14px 0;
-  font-size: 15px;
+  border-radius: 18px;
+  padding: 12px 0 14px 0;
+  font-size: 14px;
   font-weight: 900;
   width: 100%;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   box-shadow: 0 12px 24px rgba(74, 0, 6, 0.12);
+  margin-bottom: 2px;
 }
 .add-cart-btn:hover {
   transform: translateY(-1px);

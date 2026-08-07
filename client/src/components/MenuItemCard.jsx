@@ -141,9 +141,9 @@ const MenuItemCard = React.memo(function MenuItemCard({ item, onDetail, onAdd, i
             ) : serveOptions.length > 1 ? (
               <div className="rounded-[16px] border border-[#ECE8E3] bg-[#FAF8F5] p-3 text-sm text-[#1F1F1F] shadow-none">
                 <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#6B6B6B]">Serve</p>
-                <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <div className="mt-2 flex flex-wrap gap-1.5 items-start">
                   {serveOptions.map((option) => (
-                    <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full border px-3 py-2 text-xs font-black transition ${serveType === option ? "border-[#4A0006] bg-[#4A0006] text-[#FFF8F4]" : "border-[#ECE8E3] bg-[#FFFFFF] text-[#1F1F1F] hover:bg-[#FAF8F5]"}`}>
+                    <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full border px-2.5 py-1.5 text-[11px] whitespace-nowrap font-black transition ${serveType === option ? "border-[#4A0006] bg-[#4A0006] text-[#FFF8F4]" : "border-[#ECE8E3] bg-[#FFFFFF] text-[#1F1F1F] hover:bg-[#FAF8F5]"}`}>
                       {option}
                     </button>
                   ))}

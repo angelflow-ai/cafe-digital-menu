@@ -1,5 +1,5 @@
 export const PAYMENT_CONFIG = {
-  UPI_ID: "gpay-12204651313@okbizaxis",
+  UPI_ID: "Q066769047@ybl",
   PAYEE_NAME: "THE INFUSION SAGA"
 };
 

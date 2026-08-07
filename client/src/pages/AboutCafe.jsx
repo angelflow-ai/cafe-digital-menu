@@ -27,6 +27,7 @@ import {
 import { api } from "../services/apiClient";
 import { createEmptyWebsiteContent, normalizeWebsiteContentPayload } from "../services/websiteContentService";
 import cafeHeroVideo from "../assets/videos/cafe-hero-video.mp4";
+import homePageVideo from "../assets/videos/home-page-video.mp4";
 import cafeStoryVideo from "../assets/videos/cafe-story.mp4";
 import liveMusicVideo from "../assets/videos/live-music.mp4";
 import liveProjectorVideo from "../assets/videos/live-projector.mp4";
@@ -513,12 +514,13 @@ function VideoPlaceholder({ label, className = "", videoSrc }) {
       <div className="absolute inset-5 rounded-[1.25rem] border border-[#4A0006]/10 bg-white/25" />
       <div className="relative z-10 h-full min-h-inherit">
         {videoSrc ? (
-          <SafeVideo
+          <video
             src={videoSrc}
-            alt={label}
             className="h-full w-full rounded-[1.5rem] object-cover object-center"
-            fallbackImage={outletOneImage}
             controls
+            playsInline
+            preload="metadata"
+            loading="lazy"
             aria-label={label}
           />
         ) : (
@@ -708,7 +710,7 @@ export default function AboutCafe({ navigate }) {
   const bestForItems = (pageContent?.bestFor || []).map((item) => ({ ...item, icon: item.icon || Heart }));
   const visualMoments = (pageContent?.visualMoments || []).map((item) => ({ ...item, icon: item.icon || Trophy }));
   const customerExperiences = (pageContent?.customerReviews || []).map((item) => ({ name: item.name, review: item.review, rating: item.rating, videoUrl: item.videoUrl, customerImage: item.customerImage }));
-  const heroVideo = cafeStoryVideo;
+  const heroVideo = homePageVideo;
   const storyVideo = pageContent?.videos?.[0]?.url || pageContent?.hero?.videoUrl || "";
   const fssaiImagePath = pageContent?.fssai?.fileUrl || "/images/fssai.png";
   const ctaButtonLink = pageContent?.hero?.buttonLink || "/menu";
@@ -875,7 +877,6 @@ export default function AboutCafe({ navigate }) {
           height: 100%;
           object-fit: cover;
           object-position: center;
-          animation: aboutHeroVideoZoom 18s ease-in-out infinite alternate;
           transform-origin: center center;
         }
         .about-hero-shell {
@@ -1044,14 +1045,14 @@ export default function AboutCafe({ navigate }) {
       >
         <div className="about-hero-shell">
           <video
-            src={heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            className="about-hero-video"
-          />
+              src={heroVideo}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              className="about-hero-video"
+            />
           <div className="about-hero-overlay" />
           <div className="about-hero-fade relative z-10 flex max-w-3xl flex-col items-center justify-center px-6 pb-20 pt-16 text-center text-[#FFF8F4] sm:px-8 lg:px-12">
             <p className="text-sm font-semibold uppercase tracking-[0.38em] text-[#F7D9C8]">PREMIUM CAFE EXPERIENCE</p>
@@ -1236,15 +1237,16 @@ export default function AboutCafe({ navigate }) {
             aria-label="Order on Swiggy"
             className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer"
           >
-            <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
+            <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" loading="lazy" />
             <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
           </a>
           <a
             href="#"
+            href="https://share.google/xRo3KIx22cFp1KpgD"
             aria-label="Order on Zomato"
             className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer"
           >
-            <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" />
+            <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" loading="lazy" />
             <span className="text-sm font-semibold leading-none">Order on Zomato</span>
           </a>
         </div>

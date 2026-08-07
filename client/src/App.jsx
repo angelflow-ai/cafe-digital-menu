@@ -620,13 +620,19 @@ function showToast(message, duration = 3000) {
       bottom: '24px',
       left: '50%',
       transform: 'translateX(-50%)',
-      padding: '8px 14px',
+      padding: '10px 16px',
       borderRadius: '999px',
       background: 'rgba(17,24,39,0.95)',
       color: 'white',
       fontWeight: '700',
       zIndex: 9999,
-      boxShadow: '0 6px 18px rgba(0,0,0,0.2)'
+      boxShadow: '0 6px 18px rgba(0,0,0,0.2)',
+      display: 'inline-block',
+      whiteSpace: 'nowrap',
+      width: 'auto',
+      maxWidth: 'min(92vw, 28rem)',
+      textAlign: 'center',
+      fontSize: '14px'
     });
     document.body.appendChild(el);
     setTimeout(() => { el.style.transition = 'opacity 200ms ease'; el.style.opacity = '0'; }, duration - 300);
@@ -1413,7 +1419,7 @@ function CustomerApp({ navigate, route, counterMode = false }) {
                 <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
                 <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
               </a>
-              <a href="#" aria-label="Order on Zomato" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+              <a href="https://share.google/xRo3KIx22cFp1KpgD" aria-label="Order on Zomato" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
                 <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" />
                 <span className="text-sm font-semibold leading-none">Order on Zomato</span>
               </a>
@@ -2373,7 +2379,7 @@ function OrderTracking({ orderId }) {
               )}
             </div>
 
-            <p className="mt-2 text-sm text-stone-600">
+            <p className="mt-2 whitespace-nowrap text-sm text-stone-600 sm:whitespace-normal">
               {paymentState.isPendingVerification && paymentCopy.description}
               {paymentState.isConfirmed && paymentCopy.description}
               {paymentState.isPaymentIssue && (order.rejectionMessage || paymentCopy.description)}
@@ -2647,26 +2653,26 @@ function DetailModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="detail-modal w-full max-w-[380px]">
-        <div className="detail-card">
-          <div className="detail-header">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-3">
+      <div className="detail-modal w-full max-w-[380px] max-h-[94dvh]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none flex max-h-[94dvh] flex-col overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+          <div className="detail-header shrink-0">
             <h2 className="detail-title">{item.name}</h2>
             <button type="button" onClick={onClose} className="detail-close" aria-label="Close">
               <X size={20} />
             </button>
           </div>
 
-          <div className="detail-image-wrap">
+          <div className="detail-image-wrap mt-1 shrink-0">
             {showCigaretteFallback ? (
               <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">🚬</div>
             ) : (
-              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image" onError={handleMenuImageError} />
+              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image !h-[170px]" onError={handleMenuImageError} />
             )}
           </div>
 
-          <div className="detail-body">
-            <div className="price-block">
+          <div className="detail-body flex-1 min-h-0 gap-2 overflow-visible px-3 py-2" style={{ overflow: "visible", overflowY: "visible" }}>
+            <div className="price-block !px-2 !py-2">
               <span className="price-label">PRICE</span>
               <span className="price-value">{rupees(totalPrice)}</span>
             </div>
@@ -2674,7 +2680,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {availableAddons.length > 0 && (
               <div className="section-block">
                 <div className="section-label">Add-ons</div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {availableAddons.map((addon) => {
                     const selected = selectedAddons.some((selectedAddon) => selectedAddon.id === addon.id);
                     return (
@@ -2682,7 +2688,7 @@ function DetailModal({ item, onClose, onAdd }) {
                         key={addon.id}
                         type="button"
                         onClick={() => toggleAddon(addon)}
-                        className={`rounded-3xl border px-4 py-3 text-left text-sm font-black transition ${selected ? "border-black bg-black text-white shadow-lg" : "border-stone-200 bg-white text-stone-900"}`}
+                        className={`rounded-3xl border px-3 py-2.5 text-left text-sm font-black transition ${selected ? "border-black bg-black text-white shadow-lg" : "border-stone-200 bg-white text-stone-900"}`}
                         style={{ width: "100%" }}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -2702,7 +2708,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {sizes.length > 1 && (
               <div className="section-block">
                 <div className="section-label">Choose Size</div>
-                <div className="pill-row">
+                <div className="pill-row gap-2">
                   {sizes.map((size) => (
                     <button
                       key={size.id}
@@ -2729,12 +2735,12 @@ function DetailModal({ item, onClose, onAdd }) {
             {serveOptions.length > 1 && (
               <div className="section-block">
                 <div className="section-label">Choose Serve Option</div>
-                <div className="pill-column">
+                <div className="pill-column gap-2">
                   {serveOptions.map((option) => (
                     <button
                       key={option}
                       type="button"
-                      className={`pill-button pill-option ${serveType === option ? 'selected' : ''}`}
+                      className={`pill-button pill-option flex min-h-[2.75rem] items-center justify-center whitespace-nowrap px-3 py-2 text-center text-[13px] leading-4 ${serveType === option ? 'selected' : ''}`}
                       onClick={() => setServeType(option)}
                     >
                       {option}
@@ -2745,9 +2751,9 @@ function DetailModal({ item, onClose, onAdd }) {
             )}
 
             <div className="quantity-block">
-              <div className="quantity-card">
+              <div className="quantity-card !px-3 !py-2.5">
                 <span className="qty-label">QUANTITY</span>
-                <div className="qty-controls">
+                <div className="qty-controls gap-3">
                   <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="qty-btn">-</button>
                   <span className="qty-num">{quantity}</span>
                   <button type="button" onClick={() => setQuantity((q) => q + 1)} className="qty-btn">+</button>
@@ -2756,8 +2762,10 @@ function DetailModal({ item, onClose, onAdd }) {
             </div>
 
             {/* TOTAL PRICE is shown within PRICE when needed; avoid duplicate display */}
+          </div>
 
-            <button type="button" onClick={handleAddToCart} className="add-cart-btn">Add to cart</button>
+          <div className="shrink-0 border-t border-stone-200 bg-white px-3 pb-3 pt-3">
+            <button type="button" onClick={handleAddToCart} className="add-cart-btn w-full">Add to cart</button>
           </div>
         </div>
       </div>
@@ -2777,11 +2785,27 @@ function WaterBottleModal({ item, onClose, onAdd }) {
     onClose();
   }
 
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
+
   if (isUnavailable) {
     return (
-      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-        <div className="detail-modal w-full max-w-[380px]">
-          <div className="detail-card">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 backdrop-blur-sm sm:p-3">
+        <div className="detail-modal w-full max-w-[340px] max-h-[92dvh] md:max-w-[380px]">
+          <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[92dvh] rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
             <div className="detail-header">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#2196F3]/20 text-[#2196F3] shadow-lg ring-1 ring-[#2196F3]/30">
@@ -2807,9 +2831,9 @@ function WaterBottleModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="detail-modal w-full max-w-[380px]">
-        <div className="detail-card">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 backdrop-blur-sm sm:p-3">
+      <div className="detail-modal w-full max-w-[340px] max-h-[92dvh] md:max-w-[380px]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[92dvh] rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
           <div className="detail-header">
             <div className="flex items-center gap-3">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#2196F3]/20 text-[#2196F3] shadow-lg ring-1 ring-[#2196F3]/30">
@@ -2854,6 +2878,22 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
   const cigaretteItems = useMemo(() => (Array.isArray(items) ? items : []).filter((item) => item && item?.isDeleted !== true && item?.active !== false), [items]);
   const [quantities, setQuantities] = useState(() => Object.fromEntries(cigaretteItems.map((item) => [item.id, 0])));
   const hasUnavailableItems = cigaretteItems.length === 0;
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     setQuantities(Object.fromEntries(cigaretteItems.map((item) => [item.id, 0])));
@@ -2902,10 +2942,10 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
 
   if (hasUnavailableItems) {
     return (
-      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-        <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
-          <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
-            <div className="detail-header px-4 pb-3 pt-4">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-2 backdrop-blur-sm sm:p-3 sm:pb-3">
+        <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[94dvh] md:max-w-[620px] md:max-h-[88dvh]">
+          <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[94dvh] w-full overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:max-h-[88dvh]">
+            <div className="detail-header px-3 pb-2 pt-3">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
                   <span className="text-xl">🚬</span>
@@ -2918,8 +2958,8 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
                 <X size={20} />
               </button>
             </div>
-            <div className="detail-body max-h-[calc(100dvh-132px)] overflow-y-auto p-0 pb-0 sm:max-h-[72vh] md:max-h-none md:overflow-visible">
-              <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-4 text-sm text-stone-500">Cigarettes are not available for online order right now.<br />Please talk to the biller at the counter.</div>
+            <div className="detail-body max-h-[calc(100dvh-7.75rem)] overflow-hidden p-0 pb-0 sm:max-h-[calc(100dvh-8.5rem)]">
+              <div className="rounded-2xl border border-dashed border-stone-200 bg-white/80 p-3 text-sm text-stone-500">Cigarettes are not available for online order right now.<br />Please talk to the biller at the counter.</div>
             </div>
           </div>
         </div>
@@ -2928,10 +2968,10 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-      <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
-        <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
-          <div className="detail-header px-4 pb-3 pt-4">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-2 backdrop-blur-sm sm:p-3 sm:pb-3">
+      <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[94dvh] md:max-w-[620px] md:max-h-[88dvh]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:max-h-[88dvh]">
+          <div className="detail-header shrink-0 px-2.5 pb-0.5 pt-1.5">
             <div className="flex items-center gap-3">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
                 <span className="text-xl">🚬</span>
@@ -2945,29 +2985,31 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
             </button>
           </div>
 
-          <div className="detail-body max-h-[calc(100dvh-132px)] overflow-y-auto p-0 pb-0 sm:max-h-[72vh] md:max-h-none md:overflow-visible">
-            <div className="space-y-2 px-3 pb-1 pt-1 md:space-y-3">
-              {cigaretteItems.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-4 text-sm text-stone-500">No active cigarette items are available right now.</div>
-              ) : cigaretteItems.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-white/70 bg-white/75 p-3 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-black text-stone-900">{item.name}</p>
-                      <p className="text-xs font-semibold text-stone-500">Rs. {getQuickAccessPrice(item)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => updateQuantity(item.id, -1)} className="grid h-8 w-8 place-items-center rounded-full bg-white text-stone-900 shadow-sm ring-1 ring-stone-200">-</button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-black text-stone-900">{quantities[item.id] || 0}</span>
-                      <button type="button" onClick={() => updateQuantity(item.id, 1)} className="grid h-8 w-8 place-items-center rounded-full bg-black text-white shadow-sm">+</button>
+          <div className="detail-body flex flex-1 min-h-0 flex-col overflow-hidden p-0 pb-0">
+            <div className="flex-1 overflow-hidden px-1.75 pb-0 pt-0.25">
+              <div className="flex flex-col gap-0.25 md:gap-0.5">
+                {cigaretteItems.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-stone-200 bg-white p-2.5 text-sm text-stone-500">No active cigarette items are available right now.</div>
+                ) : cigaretteItems.map((item) => (
+                  <div key={item.id} className="bg-white p-1.25 border-b border-stone-200 last:border-b-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-stone-900">{item.name}</p>
+                        <p className="text-xs font-semibold text-stone-500">Rs. {getQuickAccessPrice(item)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => updateQuantity(item.id, -1)} className="grid h-7 w-7 place-items-center rounded-full bg-white text-stone-900 shadow-sm ring-1 ring-stone-200">-</button>
+                        <span className="min-w-[1.5rem] text-center text-sm font-black text-stone-900">{quantities[item.id] || 0}</span>
+                        <button type="button" onClick={() => updateQuantity(item.id, 1)} className="grid h-7 w-7 place-items-center rounded-full bg-black text-white shadow-sm">+</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <div className="sticky bottom-0 z-10 px-1 pb-1 pt-0 sm:pb-2">
+            <div className="shrink-0 border-t border-stone-200 bg-white px-1.75 pb-1 pt-1 sm:pb-1">
               <button type="button" onClick={handleAddSelected} className="add-cart-btn mb-0 w-full !py-2 !text-xs">Add To Cart</button>
-              <p className="mt-1 text-center text-[10px] font-semibold text-white/90">⚠ Cigarettes are injurious to health.</p>
+              <p className="mt-0.25 text-center text-[10px] font-semibold text-[#4A0006]">⚠ Cigarettes are injurious to health.</p>
             </div>
           </div>
         </div>
@@ -7198,7 +7240,7 @@ function PosBilling({ items, categories, onSaved }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleItems.map((item) => (
-            <MenuItemCard key={item.id} item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} />
+            <MenuItemCard key={item.id} item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} isTableOrder />
           ))}
         </div>
       </div>
