@@ -1045,7 +1045,11 @@ app.get("/api/coc-requests", requireStaff, async (req, res, next) => {
 // Admin: approve a COC request (creates real order)
 app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
   try {
-    const order = await store.approveCocRequest(req.params.id);
+    const outletContext = {
+      outletId: req.body?.outletId || req.query?.outletId,
+      outletSlug: req.body?.outletSlug || req.query?.outletSlug
+    };
+    const order = await store.approveCocRequest(req.params.id, outletContext);
     if (!order) return res.status(404).json({ message: "COC request not found. Refresh the list and try again." });
     cacheOrder(order);
     res.json(order);

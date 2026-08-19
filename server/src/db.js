@@ -2055,12 +2055,26 @@ export const store = {
     const selector = buildOrderLookup(id);
     if (!selector) return null;
     const outletId = await getCurrentOutletId(query);
+    const outletSlug = String(getRequestOutletValue(query, "outletSlug") || "").trim();
     const filter = { ...selector };
-    if (outletId) filter.outletId = outletId;
+    if (outletId) {
+      const outletMatches = [{ outletId }];
+      if (outletSlug && outletSlug !== "all" && outletSlug !== String(outletId)) {
+        outletMatches.push({
+          $expr: { $eq: [{ $toString: "$outletId" }, outletSlug] }
+        });
+      }
+      filter.$and = [{ $or: outletMatches }];
+    }
     if (usingMongo()) {
       return Order.findOne(filter).lean({ virtuals: true });
     }
-    return memory.orders.find((item) => (item.id === id || item.orderId === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId)) || null;
+    return memory.orders.find((item) => {
+      const matchesId = item.id === id || item.orderId === id || String(item._id || "") === String(id);
+      const storedOutlet = String(item.outletId || "");
+      const matchesOutletValue = !outletId || storedOutlet === String(outletId) || storedOutlet === outletSlug;
+      return matchesId && matchesOutletValue;
+    }) || null;
   },
   async createOrder(payload) {
     const outletId = await getExplicitOutletId(payload);
@@ -2125,7 +2139,7 @@ export const store = {
     memory.cocRequests = memory.cocRequests || [];
     return [...memory.cocRequests].filter((item) => matchesOutlet(item, outletId)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
-  async approveCocRequest(id) {
+  async approveCocRequest(id, query = {}) {
     memory.cocRequests = memory.cocRequests || [];
     const candidate = String(id || "").trim();
     const index = memory.cocRequests.findIndex((r) => {
@@ -2169,12 +2183,12 @@ export const store = {
       return saved;
     }
 
-    const existingOrder = await this.orderById(candidate);
+    const existingOrder = await this.orderById(candidate, query);
     if (existingOrder) {
       return this.updateOrder(existingOrder._id || existingOrder.id, {
         status: "confirmed",
         paymentStatus: existingOrder.paymentStatus || "pending"
-      });
+      }, query);
     }
 
     return null;

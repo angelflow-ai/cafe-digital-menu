@@ -5986,17 +5986,17 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
   }
 
   return (
-    <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
+    <section className="grid min-w-0 gap-5 lg:grid-cols-[1fr_360px]">
+      <div className="min-w-0 rounded-[1.5rem] bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
             <h2 className="text-xl font-black">Recipe mapping</h2>
             <p className="mt-1 text-sm text-stone-600">Link menu items to raw material usage for automatic stock adjustment.</p>
           </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
-            <button type="button" onClick={handleDeleteRecipe} disabled={deleting} className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 disabled:opacity-50">{deleting ? "Deleting..." : "Delete recipe"}</button>
-            <button type="button" onClick={addIngredient} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Add ingredient</button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="w-full rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50 sm:w-auto">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
+            <button type="button" onClick={handleDeleteRecipe} disabled={deleting} className="w-full rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 disabled:opacity-50 sm:w-auto">{deleting ? "Deleting..." : "Delete recipe"}</button>
+            <button type="button" onClick={addIngredient} className="w-full rounded-full bg-black px-4 py-2 text-xs font-black text-white sm:w-auto">Add ingredient</button>
           </div>
         </div>
         <div className="space-y-4">
@@ -6004,7 +6004,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
             {recipeItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
           {ingredients.map((ingredient, index) => (
-            <div key={index} className="grid gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
+            <div key={index} className="grid min-w-0 gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
               <select value={ingredient.rawMaterialId} onChange={(event) => updateIngredient(index, "rawMaterialId", event.target.value)} className="field bg-white">
                 <option value="">Select raw material</option>
                 {rawMaterials.map((material) => (
@@ -6025,8 +6025,8 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
           <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
         </div>
       </div>
-      <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-black">Current recipe for {selectedItem?.name || "selected item"}</h2>
+      <div className="min-w-0 rounded-[1.5rem] bg-white p-5 shadow-sm">
+        <h2 className="break-words text-xl font-black">Current recipe for {selectedItem?.name || "selected item"}</h2>
         <div className="mt-4 space-y-3 text-sm text-stone-700">
           {(ingredients.length === 0) ? <p>No ingredients configured.</p> : ingredients.map((ingredient, index) => {
             const material = rawMaterials.find((mat) =>
