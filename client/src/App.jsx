@@ -2365,7 +2365,7 @@ function OrderTracking({ orderId }) {
             <p className="mt-2 text-sm text-stone-600">Your order status and details are shown below.</p>
           </div>
 
-          <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-2xl">
+          <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white/90 p-4 sm:p-6 shadow-2xl">
             <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Payment Status</p>
             <div className="mt-3 flex items-center gap-4">
               <p className="text-xl font-black text-stone-950">
@@ -2379,7 +2379,7 @@ function OrderTracking({ orderId }) {
               )}
             </div>
 
-            <p className="mt-2 whitespace-nowrap text-sm text-stone-600 sm:whitespace-normal">
+            <p className="mt-2 text-sm text-stone-600 whitespace-normal break-words">
               {paymentState.isPendingVerification && paymentCopy.description}
               {paymentState.isConfirmed && paymentCopy.description}
               {paymentState.isPaymentIssue && (order.rejectionMessage || paymentCopy.description)}
@@ -5015,7 +5015,9 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
   const [previewFontSize, setPreviewFontSize] = useState(11);
 
   function openPreview(order, copyType = "customer") {
-    setPreviewOrder(preparePrintableOrder(order));
+    const pathMatch = (typeof window !== "undefined") ? window.location.pathname.match(/\/biller\/([^/]+)/i) : null;
+    const routeOutletSlug = pathMatch ? String(pathMatch[1] || "") : "";
+    setPreviewOrder(preparePrintableOrder(order, routeOutletSlug));
     setPreviewCopy(copyType);
     setShowPreview(true);
     setPreviewWidth(300);

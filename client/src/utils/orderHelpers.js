@@ -2,13 +2,18 @@ export function generateOrderId() {
   return `INF-${String(Date.now()).slice(-6)}-${Math.floor(Math.random() * 900 + 100)}`;
 }
 
-export function preparePrintableOrder(order) {
+export function preparePrintableOrder(order, outletSlug) {
   if (!order) return order;
+  const hasExplicitAddress = Boolean(order.address || order.outletAddress || order.location || order.addressLine);
+  const hasOrderOutletSlug = Boolean(order.outletSlug || (order.outlet && order.outlet.slug));
+  const shouldAttachOutletSlug = Boolean(outletSlug) && !hasExplicitAddress && !hasOrderOutletSlug;
+
   return {
     ...order,
     orderId: order.orderId || order.id || order._id || generateOrderId(),
     createdAt: order.createdAt || order.createdAtAt || order.date || new Date().toISOString(),
-    items: Array.isArray(order.items) ? order.items : order.cart || []
+    items: Array.isArray(order.items) ? order.items : order.cart || [],
+    ...(shouldAttachOutletSlug ? { outletSlug } : {})
   };
 }
 
