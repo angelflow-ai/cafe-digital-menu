@@ -1415,7 +1415,7 @@ function CustomerApp({ navigate, route, counterMode = false }) {
           <section className="quick-access-compact mx-auto w-full max-w-3xl rounded-[24px] border border-white/60 bg-white/35 p-3 shadow-glass backdrop-blur-xl sm:p-4">
             <p className="text-center text-[10px] font-black uppercase tracking-[0.32em] text-stone-950 sm:text-[11px]">Order Online</p>
             <div className="mt-3 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#" aria-label="Order on Swiggy" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+              <a href="#" aria-label="Order on Swiggy" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer hidden">
                 <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
                 <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
               </a>
@@ -2605,6 +2605,8 @@ function DetailModal({ item, onClose, onAdd }) {
   const serveOptions = getServeOptions(item);
   const [serveType, setServeType] = useState(serveOptions[0] || "");
   const [quantity, setQuantity] = useState(1);
+  const isTableRoute = !!window.location.pathname.match(/\/table\/([^/]+)/i);
+  const isMenuGeneric = window.location.pathname.startsWith("/menu") && !isTableRoute;
   const [selectedAddons, setSelectedAddons] = useState([]);
 
   const genericAddons = Array.isArray(item.addons) ? item.addons : [];
@@ -2735,12 +2737,12 @@ function DetailModal({ item, onClose, onAdd }) {
             {serveOptions.length > 1 && (
               <div className="section-block">
                 <div className="section-label">Choose Serve Option</div>
-                <div className="pill-column gap-2">
+                <div className={isMenuGeneric ? "pill-row justify-center gap-2" : "pill-column gap-2"}>
                   {serveOptions.map((option) => (
                     <button
                       key={option}
                       type="button"
-                      className={`pill-button pill-option flex min-h-[2.75rem] items-center justify-center whitespace-nowrap px-3 py-2 text-center text-[13px] leading-4 ${serveType === option ? 'selected' : ''}`}
+                      className={`pill-button pill-option flex min-h-[2.75rem] items-center justify-center whitespace-nowrap px-3 py-2 text-center text-[13px] leading-4 ${serveType === option ? "selected" : ""}`}
                       onClick={() => setServeType(option)}
                     >
                       {option}
@@ -2750,23 +2752,27 @@ function DetailModal({ item, onClose, onAdd }) {
               </div>
             )}
 
-            <div className="quantity-block">
-              <div className="quantity-card !px-3 !py-2.5">
-                <span className="qty-label">QUANTITY</span>
-                <div className="qty-controls gap-3">
-                  <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="qty-btn">-</button>
-                  <span className="qty-num">{quantity}</span>
-                  <button type="button" onClick={() => setQuantity((q) => q + 1)} className="qty-btn">+</button>
+            {!isMenuGeneric && (
+              <div className="quantity-block">
+                <div className="quantity-card !px-3 !py-2.5">
+                  <span className="qty-label">QUANTITY</span>
+                  <div className="qty-controls gap-3">
+                    <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="qty-btn">-</button>
+                    <span className="qty-num">{quantity}</span>
+                    <button type="button" onClick={() => setQuantity((q) => q + 1)} className="qty-btn">+</button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* TOTAL PRICE is shown within PRICE when needed; avoid duplicate display */}
           </div>
 
-          <div className="shrink-0 border-t border-stone-200 bg-white px-3 pb-3 pt-3">
-            <button type="button" onClick={handleAddToCart} className="add-cart-btn w-full">Add to cart</button>
-          </div>
+          {!isMenuGeneric && (
+            <div className="shrink-0 border-t border-stone-200 bg-white px-3 pb-3 pt-3">
+              <button type="button" onClick={handleAddToCart} className="add-cart-btn w-full">Add to cart</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
