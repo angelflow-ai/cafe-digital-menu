@@ -35,6 +35,29 @@ const OWNER_SELECTED_OUTLET_FILTER_KEY = "ownerSelectedOutletFilter";
 const inFlight = new Map();
 const LOGIN_RETRY_DELAY_MS = 700;
 const DEFAULT_RETRY_DELAY_MS = 200;
+const LOGIN_MAX_ATTEMPTS = 2;
+
+async function waitForBackendReady() {
+  const deadline = Date.now() + 10000;
+  while (Date.now() < deadline) {
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId = controller ? setTimeout(() => controller.abort(), 1500) : null;
+    try {
+      const response = await fetch(`${API}/health`, {
+        method: "GET",
+        credentials: "include",
+        signal: controller ? controller.signal : undefined
+      });
+      if (response.ok) return true;
+    } catch (_error) {
+      // The API may still be starting; continue until the bounded deadline.
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  return false;
+}
 
 function pathWithoutQuery(path) {
   return String(path || "").split("?")[0];
@@ -319,7 +342,7 @@ export async function api(path, options = {}) {
 
   const promise = (async () => {
     let attempts = 0;
-    const maxAttempts = options.retry === false ? 1 : isLoginRequest(path) ? 4 : 3;
+    const maxAttempts = options.retry === false ? 1 : isLoginRequest(path) ? LOGIN_MAX_ATTEMPTS : 3;
     const baseDelay = isLoginRequest(path) ? LOGIN_RETRY_DELAY_MS : DEFAULT_RETRY_DELAY_MS;
     while (attempts < maxAttempts) {
       attempts += 1;
@@ -330,6 +353,9 @@ export async function api(path, options = {}) {
         const status = err.status || 0;
         const isRetryableNetworkError = !status || status >= 500 || /failed to fetch|network|timed out|aborted/i.test(err.message || "");
         if (attempts >= maxAttempts || (!isRetryableNetworkError && status < 500)) throw err;
+        if (isLoginRequest(path) && !status) {
+          await waitForBackendReady();
+        }
         await new Promise((resolve) => setTimeout(resolve, baseDelay * attempts));
       }
     }

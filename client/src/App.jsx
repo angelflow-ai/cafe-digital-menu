@@ -5210,10 +5210,11 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
   function mergeInventoryItems(apiItems, localItems) {
     const normalizedApiItems = Array.isArray(apiItems)
-      ? apiItems.map(normalizeServerInventoryItem).filter(Boolean).filter((item) => !isHiddenInventoryItem(item))
+      ? apiItems.map(normalizeServerInventoryItem).filter(Boolean).filter((item) => item.isDeleted !== true && !isHiddenInventoryItem(item))
       : [];
+    const hasServerInventory = normalizedApiItems.length > 0;
     const normalizedLocalItems = Array.isArray(localItems)
-      ? localItems.filter((item) => item && item?.isDeleted !== true && !isHiddenInventoryItem(item))
+      ? localItems.filter((item) => item && item?.isDeleted !== true && !isHiddenInventoryItem(item) && (!hasServerInventory || !item?._id))
       : [];
     const seen = new Set();
 
@@ -5284,7 +5285,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     if (!form.name.trim()) return "Item name is required.";
     if (!form.quantity || isNaN(Number(form.quantity))) return "Quantity must be a valid number.";
     if (!form.unit) return "Unit is required.";
-    if (!form.minStock || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
+    if (form.minStock === "" || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
     const purchasePriceValue = form.purchasePrice === "" ? NaN : Number(form.purchasePrice);
     if (requirePurchasePrice) {
       if (form.purchasePrice === "" || isNaN(purchasePriceValue) || purchasePriceValue <= 0) {
@@ -5350,7 +5351,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
       id: item.id,
       name: item.name,
       quantity: item.quantity,
-      unit: item.unit,
+      unit: item.unit === "g" ? "gram" : item.unit === "ml" ? "ml" : item.unit,
       minStock: item.minStock,
       purchasePrice: item.purchasePrice || "",
       supplier: item.supplier || ""
@@ -5648,6 +5649,8 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   const [messageType, setMessageType] = useState("");
   const [saving, setSaving] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [itemPickerOpen, setItemPickerOpen] = useState(false);
+  const [itemSearch, setItemSearch] = useState("");
 
   // Load local inventory items and recent transactions
   useEffect(() => {
@@ -5681,8 +5684,12 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
     return localItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [localItems, selectedOutletFilter, outlets]);
 
-  const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true);
-  const allItems = [...(rawMaterials || []), ...activeLocalItems];
+  const activeServerItems = Array.isArray(rawMaterials) ? rawMaterials.filter((item) => item?.isDeleted !== true) : [];
+  const hasServerInventory = activeServerItems.length > 0;
+  const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true && (!hasServerInventory || !item?._id));
+  const allItems = [...activeServerItems, ...activeLocalItems];
+  const matchingItems = allItems.filter((item) => item.name.toLowerCase().includes(itemSearch.trim().toLowerCase()));
+  const selectedItem = allItems.find((item) => item.id === selectedId);
 
   useEffect(() => {
     if (!allItems.find((item) => item.id === selectedId)) setSelectedId(allItems[0]?.id || "");
@@ -5813,19 +5820,58 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
         <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
           <h3 className="font-black mb-3">Quick add stock</h3>
           <div className="space-y-4">
-            <select required className="field bg-stone-50" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-              <option value="">Select item...</option>
-              {allItems.map((material) => {
-                const isLocal = localItems.find(i => i.id === material.id);
-                const qty = isLocal ? material.quantity : material.stock;
-                const unit = isLocal ? material.unit : material.unit;
-                return (
-                  <option key={material.id} value={material.id}>
-                    {material.name} ({qty}{unit} available)
-                  </option>
-                );
-              })}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                className="field flex w-full items-center justify-between bg-stone-50 text-left"
+                aria-haspopup="listbox"
+                aria-expanded={itemPickerOpen}
+                onClick={() => setItemPickerOpen((open) => !open)}
+              >
+                <span className={selectedItem ? "text-stone-900" : "text-stone-500"}>
+                  {selectedItem ? `${selectedItem.name} (${selectedItem.stock ?? selectedItem.quantity ?? 0}${selectedItem.unit} available)` : "Select item..."}
+                </span>
+                <span aria-hidden="true">⌄</span>
+              </button>
+              {itemPickerOpen && (
+                <div className="absolute left-0 right-0 z-20 mt-2 max-h-80 overflow-hidden rounded-2xl border border-stone-200 bg-white p-2 shadow-lg">
+                  <label className="flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
+                    <Search size={16} className="shrink-0 text-stone-500" />
+                    <input
+                      autoFocus
+                      className="min-w-0 w-full bg-transparent text-sm font-bold outline-none"
+                      placeholder="Search items..."
+                      value={itemSearch}
+                      onChange={(event) => setItemSearch(event.target.value)}
+                    />
+                  </label>
+                  <div role="listbox" className="mt-2 max-h-60 overflow-y-auto">
+                    {matchingItems.length > 0 ? matchingItems.map((material) => {
+                      const isLocal = localItems.find(i => i.id === material.id);
+                      const qty = isLocal ? material.quantity : material.stock;
+                      return (
+                        <button
+                          key={material.id}
+                          type="button"
+                          role="option"
+                          aria-selected={material.id === selectedId}
+                          className="block w-full rounded-xl px-3 py-2 text-left text-sm font-bold hover:bg-stone-100"
+                          onClick={() => {
+                            setSelectedId(material.id);
+                            setItemPickerOpen(false);
+                            setItemSearch("");
+                          }}
+                        >
+                          {material.name} ({qty}{material.unit} available)
+                        </button>
+                      );
+                    }) : (
+                      <p className="px-3 py-3 text-sm font-bold text-stone-500">No items found</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <input required className="field bg-stone-50" type="number" min="0" step="any" placeholder="Quantity to add" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
             <input className="field bg-stone-50" type="number" min="0" step="any" placeholder="Purchase Price (optional)" value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} />
             <textarea className="field min-h-20 resize-none bg-stone-50" placeholder="Note (optional)" value={note} onChange={(event) => setNote(event.target.value)} />

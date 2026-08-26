@@ -767,7 +767,7 @@ export default function AboutCafe({ navigate }) {
       badge: "Open now",
       explorePath: "/near-high-street",
       menuPath: "/menu",
-      titleClassName: "max-w-[13rem] whitespace-nowrap text-[1.4rem] font-black leading-tight text-white sm:text-[1.55rem]",
+      titleClassName: "max-w-full whitespace-normal break-words text-center text-[clamp(1.1rem,6vw,1.4rem)] font-black leading-[1.1] text-white sm:max-w-[13rem] sm:whitespace-nowrap sm:text-left sm:text-[1.55rem]",
       gallery: [],
       heroContent: {},
       reviews: [],
