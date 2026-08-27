@@ -2146,6 +2146,25 @@ export const store = {
   async approveCocRequest(id, query = {}) {
     memory.cocRequests = memory.cocRequests || [];
     const candidate = String(id || "").trim();
+
+    if (usingMongo()) {
+      const existingOrder = await Order.findOne({
+        ...buildOrderLookup(candidate),
+        $or: [
+          { orderType: "OOC", status: "new" },
+          { orderType: "COC", status: "pending" }
+        ]
+      }).lean({ virtuals: true });
+      if (!existingOrder) return null;
+      return this.updateOrder(existingOrder._id || existingOrder.id, {
+        orderType: existingOrder.orderType || "COC",
+        source: existingOrder.source || "coc",
+        status: "confirmed",
+        paymentStatus: existingOrder.paymentStatus || "pending",
+        outletId: existingOrder.outletId
+      }, { outletId: "all" });
+    }
+
     const index = memory.cocRequests.findIndex((r) => {
       const keys = [r.id, r.requestId, r.orderId];
       if (candidate && isSafeMongoOrderId(r._id) && candidate === String(r._id)) return true;

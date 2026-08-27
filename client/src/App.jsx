@@ -3845,7 +3845,7 @@ function OutletQrManager() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="print-only grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: tableCount }, (_, i) => `T${i + 1}`).map((tableNo) => {
           const qrData = qrCodes[tableNo];
           const tableUrl = `${window.location.origin}/menu/${activeOutlet.slug}/table/${tableNo}`;
@@ -4338,7 +4338,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     { key: "history", label: "Order History" },
     { key: "profit", label: "Total Profit" },
     { key: "compare", label: "Compare Outlets" },
-    { key: "website", label: "Website Management" },
+    { key: "website", label: "Website Management", hidden: true },
     { key: "outlets", label: "Outlets & QR Codes" }
   ];
 
@@ -4459,7 +4459,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
                 <div className="rounded-2xl bg-white p-3 shadow-sm">
                   <p className="mb-2 text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Sections</p>
                   <div className="space-y-2">
-                    {ownerTabs.map((tabItem) => {
+                    {ownerTabs.filter((tabItem) => !tabItem.hidden).map((tabItem) => {
                       const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
                       return (
                         <button
@@ -4484,7 +4484,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
           className="mb-4 hidden md:flex flex-row flex-nowrap overflow-x-auto whitespace-nowrap gap-2 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {ownerTabs.map((tabItem) => {
+          {ownerTabs.filter((tabItem) => !tabItem.hidden).map((tabItem) => {
             const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
             return (
               <button
@@ -4589,7 +4589,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
         {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(filteredOrders, filteredCocRequests)} />}
         {tab === "profit" && <TotalProfitPage orders={filteredOrders} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} items={items} />}
         {tab === "compare" && <CompareOutlets orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
-        {tab === "website" && <WebsiteManagement outletSlug={selectedOutletFilter === "all" ? "" : selectedOutletFilter} outletId={activeOutletId} selectedOutletFilter={selectedOutletFilter} />}
+        {false && tab === "website" && <WebsiteManagement outletSlug={selectedOutletFilter === "all" ? "" : selectedOutletFilter} outletId={activeOutletId} selectedOutletFilter={selectedOutletFilter} />}
         {tab === "outlets" && <OutletQrManager />}
       </div>
       <ConfirmDialog
