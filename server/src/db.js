@@ -2371,7 +2371,7 @@ async function buildOrder(payload) {
   const items = [];
 
   for (const raw of payload.items || []) {
-    const menuItem = await store.menuItem(raw.itemId);
+    const menuItem = await store.menuItem(raw.itemId, { outletId: payload.outletId });
     if (!menuItem) throw new Error(`Menu item not found: ${raw.itemId}`);
     const size = menuItem.sizes.find((candidate) => candidate.id === raw.sizeId) || menuItem.sizes[0];
     if (!size || !Number.isFinite(Number(size.price))) throw new Error(`Price missing for ${menuItem.name}`);
