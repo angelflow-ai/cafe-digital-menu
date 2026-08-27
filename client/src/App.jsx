@@ -1,3 +1,13 @@
+const STAFF_FAMILY_QUICK_NAMES = ["Ajit Uncle/Aunty", "Sanam", "Nancy"];
+const STAFF_FAMILY_NAMES = [
+  ...STAFF_FAMILY_QUICK_NAMES,
+  "Manish",
+  "Vinod",
+  "Pankaj",
+  "Vikram",
+  "Sonu",
+  "Didi"
+];
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -3055,7 +3065,7 @@ function getCartFallbackIcon(line) {
   return <span className="text-[1.15rem] leading-none" aria-hidden="true">🍽️</span>;
 }
 
-function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter }) {
+function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false }) {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [tableNumber, setTableNumber] = useState(() => {
@@ -3066,6 +3076,14 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
   const tables = Array.from({ length: 17 }, (_, i) => i + 1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const billerOutletSlug = String(window.location.pathname.match(/^\/biller\/([^/]+)/i)?.[1] || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^outlet-/, "");
+  const staffQuickNames = billerOutletSlug === "near-high-street"
+    ? ["Vikram", "Sonu", "Didi"]
+    : ["Manish", "Vinod", "Pankaj"];
+  const isStaffFamilyCustomer = STAFF_FAMILY_NAMES.includes(customerName);
   const hasUrlTable = (() => {
     const match = window.location.pathname.match(/\/table\/([^/]+)/i);
     return Boolean(match);
@@ -3084,13 +3102,13 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
     setSubmitting(true);
     setError("");
 
-    if (!isValidName(customerName)) {
+    if (!isStaffFamilyCustomer && !isValidName(customerName)) {
       setError("Name should contain only letters and spaces.");
       setSubmitting(false);
       return;
     }
 
-    if (!isValidPhone(phone)) {
+    if (!isStaffFamilyCustomer && !isValidPhone(phone)) {
       setError("Phone number must be exactly 10 digits.");
       setSubmitting(false);
       return;
@@ -3159,6 +3177,29 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
         <p className="mt-2 inline-block rounded-full bg-amber-100/90 px-3 py-1.5 text-xs font-black text-amber-800 shadow-sm animate-pulse">Order Prep 15-20 mins</p>
         {cart.length > 0 && (
           <form onSubmit={submit} className="mt-3 space-y-2">
+            {showStaffFamilyQuickOrder && (
+              <div className="flex flex-wrap gap-2">
+                {STAFF_FAMILY_QUICK_NAMES.map((quickName) => (
+                  <button
+                    key={quickName}
+                    type="button"
+                    onClick={() => setCustomerName(quickName)}
+                    className="rounded-full bg-stone-100 px-3 py-2 text-sm font-black text-stone-800"
+                  >
+                    {quickName}
+                  </button>
+                ))}
+                <select
+                  value={staffQuickNames.includes(customerName) ? customerName : ""}
+                  onChange={(event) => setCustomerName(event.target.value)}
+                  className="rounded-full bg-stone-100 px-3 py-2 text-sm font-black text-stone-800"
+                  aria-label="Select staff name"
+                >
+                  <option value="">Select Staff</option>
+                  {staffQuickNames.map((staffName) => <option key={staffName} value={staffName}>{staffName}</option>)}
+                </select>
+              </div>
+            )}
             <input
               required
               value={customerName}
@@ -3167,7 +3208,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               className="field py-3"
             />
             <input
-              required
+              required={!isStaffFamilyCustomer}
               value={phone}
               onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="Phone"
@@ -3233,6 +3274,20 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                   />
                   Pay Cash (COC)
                 </label>
+                {isStaffFamilyCustomer && (
+                  <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === "pending_payment" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="pending_payment"
+                      checked={paymentMethod === "pending_payment"}
+                      onChange={() => setPaymentMethod("pending_payment")}
+                      required
+                      className="h-4 w-4 accent-black"
+                    />
+                    Pending
+                  </label>
+                )}
               </div>
             </div>
             {error && <p className="text-sm font-bold text-red-700">{error}</p>}
@@ -6932,9 +6987,10 @@ function OrderHistory({ orders }) {
       const paymentStatus = normalizeStatus(order.paymentStatus);
       return ["payment rejected", "payment issue", "rejected"].includes(status) || ["payment rejected", "payment issue", "rejected"].includes(paymentStatus);
     },
+    staffFamily: (order) => STAFF_FAMILY_NAMES.includes(String(order.customerName || order.name || "").trim()),
     customDate: isCustomDateMatch
   };
-  const quickFilters = ["all", "pending", "cancelled", "paymentRejected", "completed"];
+  const quickFilters = ["all", "pending", "cancelled", "paymentRejected", "completed", "staffFamily"];
 
   const visibleOrders = useMemo(() => {
     let allOrders = orders || [];
@@ -7001,6 +7057,7 @@ function OrderHistory({ orders }) {
                 : filterKey === "pending" ? "Pending"
                 : filterKey === "cancelled" ? "Cancelled"
                 : filterKey === "paymentRejected" ? "Payment Rejected"
+                : filterKey === "staffFamily" ? "Staff & Family"
                 : filterKey;
               return (
                 <button
@@ -7089,7 +7146,12 @@ function OrderHistory({ orders }) {
               <div className="flex flex-nowrap items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <h3 className="text-lg font-black sm:text-xl">{order.customerName}</h3>
+                    <h3 className="text-lg font-black sm:text-xl">
+                      {order.customerName}
+                      {STAFF_FAMILY_NAMES.includes(String(order.customerName || "").trim()) && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Staff/Family</span>
+                      )}
+                    </h3>
                     <span className="rounded-full bg-stone-100 px-2 py-1 text-[10px] font-black text-stone-700 sm:px-3 sm:text-sm">
                       {rupees(order.total ?? order.totalAmount ?? order.grandTotal ?? getOrderTotal(order))}
                     </span>
@@ -7212,7 +7274,8 @@ function PosBilling({ items, categories, onSaved }) {
       customerName: details.customerName || "OOC Customer",
       phone: details.phone || "0000000000",
       tableNumber: details.tableNumber || "OOC",
-      paymentMethod: paymentMethod,
+      paymentMethod: paymentMethod === "pending_payment" ? "pending" : paymentMethod,
+      ...(paymentMethod === "pending_payment" ? { paymentStatus: "pending" } : {}),
       orderType: "OOC",
       source: "ooc",
       items: cart.map((line) => ({ itemId: line.itemId, sizeId: line.sizeId, quantity: line.quantity, serveType: line.serveType, unitPrice: line.unitPrice, basePrice: line.basePrice, lineTotal: line.lineTotal, name: line.name, addons: line.addons })),
@@ -7305,7 +7368,7 @@ function PosBilling({ items, categories, onSaved }) {
       </div>
       {detail && <DetailModal item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && (
-        <CartDrawer cart={cart} total={total} onClose={() => setCartOpen(false)} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} />
+        <CartDrawer cart={cart} total={total} onClose={() => setCartOpen(false)} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder />
       )}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal

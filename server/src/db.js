@@ -163,7 +163,7 @@ const orderSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     tableNumber: { type: String, required: true },
     tableNo: { type: String, required: true },
-    paymentMethod: { type: String, enum: ["online", "cash", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
+    paymentMethod: { type: String, enum: ["online", "cash", "pending", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
     orderType: { type: String, default: "" },
     source: { type: String, default: "" },
     notes: { type: String, default: "" },
