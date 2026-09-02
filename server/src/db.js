@@ -22,12 +22,9 @@ const authPersistenceFile = path.join(__dirname, "persisted-auth.json");
 function maskMongoUri(uri) {
   if (!uri || typeof uri !== "string") return "(missing)";
   try {
-    // Remove credentials
-    const withoutCreds = uri.replace(/:\/\/.+@/, "//<redacted>@");
-    // Extract hosts section between '//' and '/' or '?'
-    const match = withoutCreds.match(/:\/\/([^/\?]+)[/\?]?/);
-    const hosts = match ? match[1] : withoutCreds;
-    return String(hosts).replace(/[^,]+/g, (h) => h.replace(/(:\\d+)?$/, (m) => m));
+    const withoutCredentials = uri.replace(/:\/\/[^@/]+@/, "://");
+    const match = withoutCredentials.match(/^[^:]+:\/\/([^/\?]+)/);
+    return match ? match[1] : "(unparseable)";
   } catch (e) {
     return "(unparseable)";
   }
@@ -166,7 +163,7 @@ const orderSchema = new mongoose.Schema(
     phone: { type: String, required: true },
     tableNumber: { type: String, required: true },
     tableNo: { type: String, required: true },
-    paymentMethod: { type: String, enum: ["online", "cash", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
+    paymentMethod: { type: String, enum: ["online", "cash", "pending", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
     orderType: { type: String, default: "" },
     source: { type: String, default: "" },
     notes: { type: String, default: "" },
@@ -1781,7 +1778,7 @@ export const store = {
     const outletId = await resolveCollectionOutletScope("inventory", query);
     const filter = { id, isDeleted: { $ne: true }, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] };
     if (outletId) filter.outletId = outletId;
-    if (usingMongo()) return RawMaterial.findOne(filter).lean();
+    if (usingMongo()) return findRawMaterialById(id, outletId, { isDeleted: { $ne: true }, $nor: [{ id: "paper-cup" }, { name: /^Paper Cup$/i }] });
     return memory.rawMaterials.find((item) => item.id === id && matchesOutlet(item, outletId) && !isDeletedInventoryItem(item) && !isHiddenInventoryItem(item));
   },
   async upsertRawMaterial(payload) {
@@ -1804,12 +1801,19 @@ export const store = {
     if (outletId) clean.outletId = outletId;
     if (!clean.name) throw new Error("Inventory item name is required.");
     if (!["g", "ml", "pcs"].includes(clean.unit)) throw new Error("Inventory unit must be g, ml, or pcs.");
-    if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
     if (usingMongo()) {
+      const existing = await findRawMaterialById(clean.id, outletId);
+      if (existing) {
+        clean.id = existing.id;
+        const { outletId: _outletId, ...updateFields } = clean;
+        return RawMaterial.findOneAndUpdate({ _id: existing._id }, { $set: updateFields }, { new: true, runValidators: true }).lean();
+      }
+      if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
       const filter = { id: clean.id };
       if (outletId) filter.outletId = outletId;
       return RawMaterial.findOneAndUpdate(filter, { $set: clean }, { upsert: true, new: true, setDefaultsOnInsert: true, runValidators: true }).lean();
     }
+    if (clean.costPerUnit <= 0) throw new Error("Purchase price is required.");
     const index = memory.rawMaterials.findIndex((item) => item.id === clean.id && matchesOutlet(item, outletId));
     if (index >= 0) memory.rawMaterials[index] = clean;
     else memory.rawMaterials.push(clean);
@@ -1819,10 +1823,10 @@ export const store = {
   async deleteRawMaterial(id, query = {}) {
     const outletId = await resolveCollectionOutletScope("inventory", query);
     if (usingMongo()) {
-      const filter = { id };
-      if (outletId) filter.outletId = outletId;
+      const existing = await findRawMaterialById(id, outletId);
+      if (!existing) return null;
       return RawMaterial.findOneAndUpdate(
-        filter,
+        { _id: existing._id },
         { isDeleted: true, deletedAt: new Date() },
         { new: true, runValidators: true }
       ).lean();
@@ -1842,10 +1846,10 @@ export const store = {
   async restoreRawMaterial(id, query = {}) {
     const outletId = await resolveCollectionOutletScope("inventory", query);
     if (usingMongo()) {
-      const filter = { id };
-      if (outletId) filter.outletId = outletId;
+      const existing = await findRawMaterialById(id, outletId);
+      if (!existing) return null;
       return RawMaterial.findOneAndUpdate(
-        filter,
+        { _id: existing._id },
         { $set: { isDeleted: false, deletedAt: null } },
         { new: true, runValidators: true }
       ).lean();
@@ -2055,12 +2059,26 @@ export const store = {
     const selector = buildOrderLookup(id);
     if (!selector) return null;
     const outletId = await getCurrentOutletId(query);
+    const outletSlug = String(getRequestOutletValue(query, "outletSlug") || "").trim();
     const filter = { ...selector };
-    if (outletId) filter.outletId = outletId;
+    if (outletId) {
+      const outletMatches = [{ outletId }];
+      if (outletSlug && outletSlug !== "all" && outletSlug !== String(outletId)) {
+        outletMatches.push({
+          $expr: { $eq: [{ $toString: "$outletId" }, outletSlug] }
+        });
+      }
+      filter.$and = [{ $or: outletMatches }];
+    }
     if (usingMongo()) {
       return Order.findOne(filter).lean({ virtuals: true });
     }
-    return memory.orders.find((item) => (item.id === id || item.orderId === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId)) || null;
+    return memory.orders.find((item) => {
+      const matchesId = item.id === id || item.orderId === id || String(item._id || "") === String(id);
+      const storedOutlet = String(item.outletId || "");
+      const matchesOutletValue = !outletId || storedOutlet === String(outletId) || storedOutlet === outletSlug;
+      return matchesId && matchesOutletValue;
+    }) || null;
   },
   async createOrder(payload) {
     const outletId = await getExplicitOutletId(payload);
@@ -2125,9 +2143,28 @@ export const store = {
     memory.cocRequests = memory.cocRequests || [];
     return [...memory.cocRequests].filter((item) => matchesOutlet(item, outletId)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   },
-  async approveCocRequest(id) {
+  async approveCocRequest(id, query = {}) {
     memory.cocRequests = memory.cocRequests || [];
     const candidate = String(id || "").trim();
+
+    if (usingMongo()) {
+      const existingOrder = await Order.findOne({
+        ...buildOrderLookup(candidate),
+        $or: [
+          { orderType: "OOC", status: "new" },
+          { orderType: "COC", status: "pending" }
+        ]
+      }).lean({ virtuals: true });
+      if (!existingOrder) return null;
+      return this.updateOrder(existingOrder._id || existingOrder.id, {
+        orderType: existingOrder.orderType || "COC",
+        source: existingOrder.source || "coc",
+        status: "confirmed",
+        paymentStatus: existingOrder.paymentStatus || "pending",
+        outletId: existingOrder.outletId
+      }, { outletId: "all" });
+    }
+
     const index = memory.cocRequests.findIndex((r) => {
       const keys = [r.id, r.requestId, r.orderId];
       if (candidate && isSafeMongoOrderId(r._id) && candidate === String(r._id)) return true;
@@ -2169,12 +2206,12 @@ export const store = {
       return saved;
     }
 
-    const existingOrder = await this.orderById(candidate);
+    const existingOrder = await this.orderById(candidate, query);
     if (existingOrder) {
       return this.updateOrder(existingOrder._id || existingOrder.id, {
         status: "confirmed",
         paymentStatus: existingOrder.paymentStatus || "pending"
-      });
+      }, query);
     }
 
     return null;
@@ -2334,7 +2371,7 @@ async function buildOrder(payload) {
   const items = [];
 
   for (const raw of payload.items || []) {
-    const menuItem = await store.menuItem(raw.itemId);
+    const menuItem = await store.menuItem(raw.itemId, { outletId: payload.outletId });
     if (!menuItem) throw new Error(`Menu item not found: ${raw.itemId}`);
     const size = menuItem.sizes.find((candidate) => candidate.id === raw.sizeId) || menuItem.sizes[0];
     if (!size || !Number.isFinite(Number(size.price))) throw new Error(`Price missing for ${menuItem.name}`);
@@ -2462,8 +2499,18 @@ function convertQuantity(amount, unit, targetUnit) {
   return value;
 }
 
+async function findRawMaterialById(id, outletId = null, extraFilter = {}) {
+  if (!usingMongo()) return null;
+  const outletFilter = outletId
+    ? { outletId: { $in: [new mongoose.Types.ObjectId(String(outletId)), String(outletId)] } }
+    : {};
+  const identifiers = [{ id }];
+  if (mongoose.isValidObjectId(id)) identifiers.push({ _id: new mongoose.Types.ObjectId(String(id)) });
+  return RawMaterial.collection.findOne({ $or: identifiers, ...outletFilter, ...extraFilter });
+}
+
 async function getRawMaterial(id, outletId = null) {
-  if (usingMongo()) return RawMaterial.findOne({ id, ...(outletId ? { outletId } : {}) }).lean();
+  if (usingMongo()) return findRawMaterialById(id, outletId);
   return memory.rawMaterials.find((item) => item.id === id && matchesOutlet(item, outletId));
 }
 
@@ -2553,7 +2600,9 @@ async function adjustRawMaterialStock(rawMaterialId, change, note, orderId, outl
     if (!targetOutletId) {
       throw new Error("Raw material must be associated with a valid outlet.");
     }
-    const updated = await RawMaterial.findOneAndUpdate({ id: rawMaterialId, outletId: targetOutletId }, { $inc: { stock: change } }, { new: true }).lean();
+    const existing = await findRawMaterialById(rawMaterialId, targetOutletId);
+    if (!existing) throw new Error(`Inventory item not found: ${rawMaterialId}`);
+    const updated = await RawMaterial.findOneAndUpdate({ _id: existing._id }, { $inc: { stock: change } }, { new: true }).lean();
     await InventoryHistory.create({ rawMaterialId, change, note, orderId, purchasePrice, outletId: targetOutletId });
     return {
       material: updated,

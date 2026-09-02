@@ -1,3 +1,13 @@
+const STAFF_FAMILY_QUICK_NAMES = ["Ajit Uncle/Aunty", "Sanam", "Nancy"];
+const STAFF_FAMILY_NAMES = [
+  ...STAFF_FAMILY_QUICK_NAMES,
+  "Manish",
+  "Vinod",
+  "Pankaj",
+  "Vikram",
+  "Sonu",
+  "Didi"
+];
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
@@ -620,13 +630,19 @@ function showToast(message, duration = 3000) {
       bottom: '24px',
       left: '50%',
       transform: 'translateX(-50%)',
-      padding: '8px 14px',
+      padding: '10px 16px',
       borderRadius: '999px',
       background: 'rgba(17,24,39,0.95)',
       color: 'white',
       fontWeight: '700',
       zIndex: 9999,
-      boxShadow: '0 6px 18px rgba(0,0,0,0.2)'
+      boxShadow: '0 6px 18px rgba(0,0,0,0.2)',
+      display: 'inline-block',
+      whiteSpace: 'nowrap',
+      width: 'auto',
+      maxWidth: 'min(92vw, 28rem)',
+      textAlign: 'center',
+      fontSize: '14px'
     });
     document.body.appendChild(el);
     setTimeout(() => { el.style.transition = 'opacity 200ms ease'; el.style.opacity = '0'; }, duration - 300);
@@ -1409,11 +1425,11 @@ function CustomerApp({ navigate, route, counterMode = false }) {
           <section className="quick-access-compact mx-auto w-full max-w-3xl rounded-[24px] border border-white/60 bg-white/35 p-3 shadow-glass backdrop-blur-xl sm:p-4">
             <p className="text-center text-[10px] font-black uppercase tracking-[0.32em] text-stone-950 sm:text-[11px]">Order Online</p>
             <div className="mt-3 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href="#" aria-label="Order on Swiggy" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+              <a href="#" aria-label="Order on Swiggy" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer hidden">
                 <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
                 <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
               </a>
-              <a href="#" aria-label="Order on Zomato" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
+              <a href="https://share.google/xRo3KIx22cFp1KpgD" aria-label="Order on Zomato" className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer">
                 <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" />
                 <span className="text-sm font-semibold leading-none">Order on Zomato</span>
               </a>
@@ -2359,7 +2375,7 @@ function OrderTracking({ orderId }) {
             <p className="mt-2 text-sm text-stone-600">Your order status and details are shown below.</p>
           </div>
 
-          <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white/90 p-6 shadow-2xl">
+          <div className="mt-8 rounded-[2rem] border border-slate-200 bg-white/90 p-4 sm:p-6 shadow-2xl">
             <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-500">Payment Status</p>
             <div className="mt-3 flex items-center gap-4">
               <p className="text-xl font-black text-stone-950">
@@ -2373,7 +2389,7 @@ function OrderTracking({ orderId }) {
               )}
             </div>
 
-            <p className="mt-2 text-sm text-stone-600">
+            <p className="mt-2 text-sm text-stone-600 whitespace-normal break-words">
               {paymentState.isPendingVerification && paymentCopy.description}
               {paymentState.isConfirmed && paymentCopy.description}
               {paymentState.isPaymentIssue && (order.rejectionMessage || paymentCopy.description)}
@@ -2599,6 +2615,8 @@ function DetailModal({ item, onClose, onAdd }) {
   const serveOptions = getServeOptions(item);
   const [serveType, setServeType] = useState(serveOptions[0] || "");
   const [quantity, setQuantity] = useState(1);
+  const isTableRoute = !!window.location.pathname.match(/\/table\/([^/]+)/i);
+  const isMenuGeneric = window.location.pathname.startsWith("/menu") && !isTableRoute;
   const [selectedAddons, setSelectedAddons] = useState([]);
 
   const genericAddons = Array.isArray(item.addons) ? item.addons : [];
@@ -2647,26 +2665,26 @@ function DetailModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="detail-modal w-full max-w-[380px]">
-        <div className="detail-card">
-          <div className="detail-header">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-3">
+      <div className="detail-modal w-full max-w-[380px] max-h-[94dvh]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none flex max-h-[94dvh] flex-col overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
+          <div className="detail-header shrink-0">
             <h2 className="detail-title">{item.name}</h2>
             <button type="button" onClick={onClose} className="detail-close" aria-label="Close">
               <X size={20} />
             </button>
           </div>
 
-          <div className="detail-image-wrap">
+          <div className="detail-image-wrap mt-1 shrink-0">
             {showCigaretteFallback ? (
               <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">🚬</div>
             ) : (
-              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image" onError={handleMenuImageError} />
+              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image !h-[170px]" onError={handleMenuImageError} />
             )}
           </div>
 
-          <div className="detail-body">
-            <div className="price-block">
+          <div className="detail-body flex-1 min-h-0 gap-2 overflow-visible px-3 py-2" style={{ overflow: "visible", overflowY: "visible" }}>
+            <div className="price-block !px-2 !py-2">
               <span className="price-label">PRICE</span>
               <span className="price-value">{rupees(totalPrice)}</span>
             </div>
@@ -2674,7 +2692,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {availableAddons.length > 0 && (
               <div className="section-block">
                 <div className="section-label">Add-ons</div>
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {availableAddons.map((addon) => {
                     const selected = selectedAddons.some((selectedAddon) => selectedAddon.id === addon.id);
                     return (
@@ -2682,7 +2700,7 @@ function DetailModal({ item, onClose, onAdd }) {
                         key={addon.id}
                         type="button"
                         onClick={() => toggleAddon(addon)}
-                        className={`rounded-3xl border px-4 py-3 text-left text-sm font-black transition ${selected ? "border-black bg-black text-white shadow-lg" : "border-stone-200 bg-white text-stone-900"}`}
+                        className={`rounded-3xl border px-3 py-2.5 text-left text-sm font-black transition ${selected ? "border-black bg-black text-white shadow-lg" : "border-stone-200 bg-white text-stone-900"}`}
                         style={{ width: "100%" }}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -2702,7 +2720,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {sizes.length > 1 && (
               <div className="section-block">
                 <div className="section-label">Choose Size</div>
-                <div className="pill-row">
+                <div className="pill-row gap-2">
                   {sizes.map((size) => (
                     <button
                       key={size.id}
@@ -2729,12 +2747,12 @@ function DetailModal({ item, onClose, onAdd }) {
             {serveOptions.length > 1 && (
               <div className="section-block">
                 <div className="section-label">Choose Serve Option</div>
-                <div className="pill-column">
+                <div className={isMenuGeneric ? "pill-row justify-center gap-2" : "pill-column gap-2"}>
                   {serveOptions.map((option) => (
                     <button
                       key={option}
                       type="button"
-                      className={`pill-button pill-option ${serveType === option ? 'selected' : ''}`}
+                      className={`pill-button pill-option flex min-h-[2.75rem] items-center justify-center whitespace-nowrap px-3 py-2 text-center text-[13px] leading-4 ${serveType === option ? "selected" : ""}`}
                       onClick={() => setServeType(option)}
                     >
                       {option}
@@ -2744,21 +2762,27 @@ function DetailModal({ item, onClose, onAdd }) {
               </div>
             )}
 
-            <div className="quantity-block">
-              <div className="quantity-card">
-                <span className="qty-label">QUANTITY</span>
-                <div className="qty-controls">
-                  <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="qty-btn">-</button>
-                  <span className="qty-num">{quantity}</span>
-                  <button type="button" onClick={() => setQuantity((q) => q + 1)} className="qty-btn">+</button>
+            {!isMenuGeneric && (
+              <div className="quantity-block">
+                <div className="quantity-card !px-3 !py-2.5">
+                  <span className="qty-label">QUANTITY</span>
+                  <div className="qty-controls gap-3">
+                    <button type="button" onClick={() => setQuantity((q) => Math.max(1, q - 1))} className="qty-btn">-</button>
+                    <span className="qty-num">{quantity}</span>
+                    <button type="button" onClick={() => setQuantity((q) => q + 1)} className="qty-btn">+</button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* TOTAL PRICE is shown within PRICE when needed; avoid duplicate display */}
-
-            <button type="button" onClick={handleAddToCart} className="add-cart-btn">Add to cart</button>
           </div>
+
+          {!isMenuGeneric && (
+            <div className="shrink-0 border-t border-stone-200 bg-white px-3 pb-3 pt-3">
+              <button type="button" onClick={handleAddToCart} className="add-cart-btn w-full">Add to cart</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -2777,11 +2801,27 @@ function WaterBottleModal({ item, onClose, onAdd }) {
     onClose();
   }
 
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
+
   if (isUnavailable) {
     return (
-      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-        <div className="detail-modal w-full max-w-[380px]">
-          <div className="detail-card">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 backdrop-blur-sm sm:p-3">
+        <div className="detail-modal w-full max-w-[340px] max-h-[92dvh] md:max-w-[380px]">
+          <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[92dvh] rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
             <div className="detail-header">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#2196F3]/20 text-[#2196F3] shadow-lg ring-1 ring-[#2196F3]/30">
@@ -2807,9 +2847,9 @@ function WaterBottleModal({ item, onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-4 backdrop-blur-sm">
-      <div className="detail-modal w-full max-w-[380px]">
-        <div className="detail-card">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center bg-black/50 p-2 backdrop-blur-sm sm:p-3">
+      <div className="detail-modal w-full max-w-[340px] max-h-[92dvh] md:max-w-[380px]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[92dvh] rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)]">
           <div className="detail-header">
             <div className="flex items-center gap-3">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#2196F3]/20 text-[#2196F3] shadow-lg ring-1 ring-[#2196F3]/30">
@@ -2854,6 +2894,22 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
   const cigaretteItems = useMemo(() => (Array.isArray(items) ? items : []).filter((item) => item && item?.isDeleted !== true && item?.active !== false), [items]);
   const [quantities, setQuantities] = useState(() => Object.fromEntries(cigaretteItems.map((item) => [item.id, 0])));
   const hasUnavailableItems = cigaretteItems.length === 0;
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     setQuantities(Object.fromEntries(cigaretteItems.map((item) => [item.id, 0])));
@@ -2902,10 +2958,10 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
 
   if (hasUnavailableItems) {
     return (
-      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-        <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
-          <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
-            <div className="detail-header px-4 pb-3 pt-4">
+      <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-2 backdrop-blur-sm sm:p-3 sm:pb-3">
+        <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[94dvh] md:max-w-[620px] md:max-h-[88dvh]">
+          <div className="detail-card before:!content-none !bg-white !backdrop-blur-none max-h-[94dvh] w-full overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:max-h-[88dvh]">
+            <div className="detail-header px-3 pb-2 pt-3">
               <div className="flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
                   <span className="text-xl">🚬</span>
@@ -2918,8 +2974,8 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
                 <X size={20} />
               </button>
             </div>
-            <div className="detail-body max-h-[calc(100dvh-132px)] overflow-y-auto p-0 pb-0 sm:max-h-[72vh] md:max-h-none md:overflow-visible">
-              <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-4 text-sm text-stone-500">Cigarettes are not available for online order right now.<br />Please talk to the biller at the counter.</div>
+            <div className="detail-body max-h-[calc(100dvh-7.75rem)] overflow-hidden p-0 pb-0 sm:max-h-[calc(100dvh-8.5rem)]">
+              <div className="rounded-2xl border border-dashed border-stone-200 bg-white/80 p-3 text-sm text-stone-500">Cigarettes are not available for online order right now.<br />Please talk to the biller at the counter.</div>
             </div>
           </div>
         </div>
@@ -2928,10 +2984,10 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
   }
 
   return (
-    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-3 backdrop-blur-sm sm:p-4 sm:pb-6">
-      <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[100dvh] md:max-w-[620px] md:max-h-[92vh]">
-        <div className="detail-card max-h-[calc(100dvh-16px)] w-full overflow-hidden rounded-[30px] md:max-h-[92vh] md:overflow-visible">
-          <div className="detail-header px-4 pb-3 pt-4">
+    <div className="product-modal-compact fixed inset-0 z-50 grid place-items-center justify-center bg-black/50 p-2 pb-2 backdrop-blur-sm sm:p-3 sm:pb-3">
+      <div className="cigarette-modal detail-modal w-full max-w-[420px] max-h-[94dvh] md:max-w-[620px] md:max-h-[88dvh]">
+        <div className="detail-card before:!content-none !bg-white !backdrop-blur-none flex max-h-[94dvh] w-full flex-col overflow-hidden rounded-[24px] border border-stone-200 shadow-[0_16px_40px_rgba(15,23,42,0.08)] md:max-h-[88dvh]">
+          <div className="detail-header shrink-0 px-2.5 pb-0.5 pt-1.5">
             <div className="flex items-center gap-3">
               <div className="grid h-12 w-12 place-items-center rounded-2xl bg-rose-100 text-rose-700 shadow-lg ring-1 ring-rose-200">
                 <span className="text-xl">🚬</span>
@@ -2945,29 +3001,31 @@ function CigarettesModal({ items = [], onClose, onAdd }) {
             </button>
           </div>
 
-          <div className="detail-body max-h-[calc(100dvh-132px)] overflow-y-auto p-0 pb-0 sm:max-h-[72vh] md:max-h-none md:overflow-visible">
-            <div className="space-y-2 px-3 pb-1 pt-1 md:space-y-3">
-              {cigaretteItems.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-stone-200 bg-white/80 p-4 text-sm text-stone-500">No active cigarette items are available right now.</div>
-              ) : cigaretteItems.map((item) => (
-                <div key={item.id} className="rounded-3xl border border-white/70 bg-white/75 p-3 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-black text-stone-900">{item.name}</p>
-                      <p className="text-xs font-semibold text-stone-500">Rs. {getQuickAccessPrice(item)}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => updateQuantity(item.id, -1)} className="grid h-8 w-8 place-items-center rounded-full bg-white text-stone-900 shadow-sm ring-1 ring-stone-200">-</button>
-                      <span className="min-w-[1.5rem] text-center text-sm font-black text-stone-900">{quantities[item.id] || 0}</span>
-                      <button type="button" onClick={() => updateQuantity(item.id, 1)} className="grid h-8 w-8 place-items-center rounded-full bg-black text-white shadow-sm">+</button>
+          <div className="detail-body flex flex-1 min-h-0 flex-col overflow-hidden p-0 pb-0">
+            <div className="flex-1 overflow-hidden px-1.75 pb-0 pt-0.25">
+              <div className="flex flex-col gap-0.25 md:gap-0.5">
+                {cigaretteItems.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-stone-200 bg-white p-2.5 text-sm text-stone-500">No active cigarette items are available right now.</div>
+                ) : cigaretteItems.map((item) => (
+                  <div key={item.id} className="bg-white p-1.25 border-b border-stone-200 last:border-b-0">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-black text-stone-900">{item.name}</p>
+                        <p className="text-xs font-semibold text-stone-500">Rs. {getQuickAccessPrice(item)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button type="button" onClick={() => updateQuantity(item.id, -1)} className="grid h-7 w-7 place-items-center rounded-full bg-white text-stone-900 shadow-sm ring-1 ring-stone-200">-</button>
+                        <span className="min-w-[1.5rem] text-center text-sm font-black text-stone-900">{quantities[item.id] || 0}</span>
+                        <button type="button" onClick={() => updateQuantity(item.id, 1)} className="grid h-7 w-7 place-items-center rounded-full bg-black text-white shadow-sm">+</button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-            <div className="sticky bottom-0 z-10 px-1 pb-1 pt-0 sm:pb-2">
+            <div className="shrink-0 border-t border-stone-200 bg-white px-1.75 pb-1 pt-1 sm:pb-1">
               <button type="button" onClick={handleAddSelected} className="add-cart-btn mb-0 w-full !py-2 !text-xs">Add To Cart</button>
-              <p className="mt-1 text-center text-[10px] font-semibold text-white/90">⚠ Cigarettes are injurious to health.</p>
+              <p className="mt-0.25 text-center text-[10px] font-semibold text-[#4A0006]">⚠ Cigarettes are injurious to health.</p>
             </div>
           </div>
         </div>
@@ -3007,7 +3065,7 @@ function getCartFallbackIcon(line) {
   return <span className="text-[1.15rem] leading-none" aria-hidden="true">🍽️</span>;
 }
 
-function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter }) {
+function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false }) {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [tableNumber, setTableNumber] = useState(() => {
@@ -3018,6 +3076,14 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
   const tables = Array.from({ length: 17 }, (_, i) => i + 1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const billerOutletSlug = String(window.location.pathname.match(/^\/biller\/([^/]+)/i)?.[1] || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^outlet-/, "");
+  const staffQuickNames = billerOutletSlug === "near-high-street"
+    ? ["Vikram", "Sonu", "Didi"]
+    : ["Manish", "Vinod", "Pankaj"];
+  const isStaffFamilyCustomer = STAFF_FAMILY_NAMES.includes(customerName);
   const hasUrlTable = (() => {
     const match = window.location.pathname.match(/\/table\/([^/]+)/i);
     return Boolean(match);
@@ -3036,13 +3102,13 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
     setSubmitting(true);
     setError("");
 
-    if (!isValidName(customerName)) {
+    if (!isStaffFamilyCustomer && !isValidName(customerName)) {
       setError("Name should contain only letters and spaces.");
       setSubmitting(false);
       return;
     }
 
-    if (!isValidPhone(phone)) {
+    if (!isStaffFamilyCustomer && !isValidPhone(phone)) {
       setError("Phone number must be exactly 10 digits.");
       setSubmitting(false);
       return;
@@ -3111,6 +3177,29 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
         <p className="mt-2 inline-block rounded-full bg-amber-100/90 px-3 py-1.5 text-xs font-black text-amber-800 shadow-sm animate-pulse">Order Prep 15-20 mins</p>
         {cart.length > 0 && (
           <form onSubmit={submit} className="mt-3 space-y-2">
+            {showStaffFamilyQuickOrder && (
+              <div className="flex flex-wrap gap-2">
+                {STAFF_FAMILY_QUICK_NAMES.map((quickName) => (
+                  <button
+                    key={quickName}
+                    type="button"
+                    onClick={() => setCustomerName(quickName)}
+                    className="rounded-full bg-stone-100 px-3 py-2 text-sm font-black text-stone-800"
+                  >
+                    {quickName}
+                  </button>
+                ))}
+                <select
+                  value={staffQuickNames.includes(customerName) ? customerName : ""}
+                  onChange={(event) => setCustomerName(event.target.value)}
+                  className="rounded-full bg-stone-100 px-3 py-2 text-sm font-black text-stone-800"
+                  aria-label="Select staff name"
+                >
+                  <option value="">Select Staff</option>
+                  {staffQuickNames.map((staffName) => <option key={staffName} value={staffName}>{staffName}</option>)}
+                </select>
+              </div>
+            )}
             <input
               required
               value={customerName}
@@ -3119,7 +3208,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
               className="field py-3"
             />
             <input
-              required
+              required={!isStaffFamilyCustomer}
               value={phone}
               onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="Phone"
@@ -3185,6 +3274,20 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter })
                   />
                   Pay Cash (COC)
                 </label>
+                {isStaffFamilyCustomer && (
+                  <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === "pending_payment" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="pending_payment"
+                      checked={paymentMethod === "pending_payment"}
+                      onChange={() => setPaymentMethod("pending_payment")}
+                      required
+                      className="h-4 w-4 accent-black"
+                    />
+                    Pending
+                  </label>
+                )}
               </div>
             </div>
             {error && <p className="text-sm font-bold text-red-700">{error}</p>}
@@ -3797,7 +3900,7 @@ function OutletQrManager() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="print-only grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {Array.from({ length: tableCount }, (_, i) => `T${i + 1}`).map((tableNo) => {
           const qrData = qrCodes[tableNo];
           const tableUrl = `${window.location.origin}/menu/${activeOutlet.slug}/table/${tableNo}`;
@@ -4290,7 +4393,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     { key: "history", label: "Order History" },
     { key: "profit", label: "Total Profit" },
     { key: "compare", label: "Compare Outlets" },
-    { key: "website", label: "Website Management" },
+    { key: "website", label: "Website Management", hidden: true },
     { key: "outlets", label: "Outlets & QR Codes" }
   ];
 
@@ -4411,7 +4514,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
                 <div className="rounded-2xl bg-white p-3 shadow-sm">
                   <p className="mb-2 text-[11px] font-black uppercase tracking-[0.25em] text-stone-500">Sections</p>
                   <div className="space-y-2">
-                    {ownerTabs.map((tabItem) => {
+                    {ownerTabs.filter((tabItem) => !tabItem.hidden).map((tabItem) => {
                       const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
                       return (
                         <button
@@ -4436,7 +4539,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
           className="mb-4 hidden md:flex flex-row flex-nowrap overflow-x-auto whitespace-nowrap gap-2 pb-2 scrollbar-none [&::-webkit-scrollbar]:hidden"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
-          {ownerTabs.map((tabItem) => {
+          {ownerTabs.filter((tabItem) => !tabItem.hidden).map((tabItem) => {
             const isLowStockAlertButton = tabItem.key === "lowstock" && needsInventoryAttention;
             return (
               <button
@@ -4541,7 +4644,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
         {tab === "history" && <OrderHistory orders={mergeOrderHistoryRecords(filteredOrders, filteredCocRequests)} />}
         {tab === "profit" && <TotalProfitPage orders={filteredOrders} rawMaterials={filteredRawMaterials} recipes={filteredRecipes} items={items} />}
         {tab === "compare" && <CompareOutlets orders={orders} rawMaterials={rawMaterials} recipes={recipes} items={items} />}
-        {tab === "website" && <WebsiteManagement outletSlug={selectedOutletFilter === "all" ? "" : selectedOutletFilter} outletId={activeOutletId} selectedOutletFilter={selectedOutletFilter} />}
+        {false && tab === "website" && <WebsiteManagement outletSlug={selectedOutletFilter === "all" ? "" : selectedOutletFilter} outletId={activeOutletId} selectedOutletFilter={selectedOutletFilter} />}
         {tab === "outlets" && <OutletQrManager />}
       </div>
       <ConfirmDialog
@@ -4967,7 +5070,9 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
   const [previewFontSize, setPreviewFontSize] = useState(11);
 
   function openPreview(order, copyType = "customer") {
-    setPreviewOrder(preparePrintableOrder(order));
+    const pathMatch = (typeof window !== "undefined") ? window.location.pathname.match(/\/biller\/([^/]+)/i) : null;
+    const routeOutletSlug = pathMatch ? String(pathMatch[1] || "") : "";
+    setPreviewOrder(preparePrintableOrder(order, routeOutletSlug));
     setPreviewCopy(copyType);
     setShowPreview(true);
     setPreviewWidth(300);
@@ -5160,10 +5265,11 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
   function mergeInventoryItems(apiItems, localItems) {
     const normalizedApiItems = Array.isArray(apiItems)
-      ? apiItems.map(normalizeServerInventoryItem).filter(Boolean).filter((item) => !isHiddenInventoryItem(item))
+      ? apiItems.map(normalizeServerInventoryItem).filter(Boolean).filter((item) => item.isDeleted !== true && !isHiddenInventoryItem(item))
       : [];
+    const hasServerInventory = normalizedApiItems.length > 0;
     const normalizedLocalItems = Array.isArray(localItems)
-      ? localItems.filter((item) => item && item?.isDeleted !== true && !isHiddenInventoryItem(item))
+      ? localItems.filter((item) => item && item?.isDeleted !== true && !isHiddenInventoryItem(item) && (!hasServerInventory || !item?._id))
       : [];
     const seen = new Set();
 
@@ -5234,7 +5340,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
     if (!form.name.trim()) return "Item name is required.";
     if (!form.quantity || isNaN(Number(form.quantity))) return "Quantity must be a valid number.";
     if (!form.unit) return "Unit is required.";
-    if (!form.minStock || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
+    if (form.minStock === "" || isNaN(Number(form.minStock))) return "Minimum stock must be a valid number.";
     const purchasePriceValue = form.purchasePrice === "" ? NaN : Number(form.purchasePrice);
     if (requirePurchasePrice) {
       if (form.purchasePrice === "" || isNaN(purchasePriceValue) || purchasePriceValue <= 0) {
@@ -5300,7 +5406,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
       id: item.id,
       name: item.name,
       quantity: item.quantity,
-      unit: item.unit,
+      unit: item.unit === "g" ? "gram" : item.unit === "ml" ? "ml" : item.unit,
       minStock: item.minStock,
       purchasePrice: item.purchasePrice || "",
       supplier: item.supplier || ""
@@ -5598,6 +5704,8 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   const [messageType, setMessageType] = useState("");
   const [saving, setSaving] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState([]);
+  const [itemPickerOpen, setItemPickerOpen] = useState(false);
+  const [itemSearch, setItemSearch] = useState("");
 
   // Load local inventory items and recent transactions
   useEffect(() => {
@@ -5631,8 +5739,12 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
     return localItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
   }, [localItems, selectedOutletFilter, outlets]);
 
-  const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true);
-  const allItems = [...(rawMaterials || []), ...activeLocalItems];
+  const activeServerItems = Array.isArray(rawMaterials) ? rawMaterials.filter((item) => item?.isDeleted !== true) : [];
+  const hasServerInventory = activeServerItems.length > 0;
+  const activeLocalItems = filteredLocalItems.filter((item) => item?.isDeleted !== true && (!hasServerInventory || !item?._id));
+  const allItems = [...activeServerItems, ...activeLocalItems];
+  const matchingItems = allItems.filter((item) => item.name.toLowerCase().includes(itemSearch.trim().toLowerCase()));
+  const selectedItem = allItems.find((item) => item.id === selectedId);
 
   useEffect(() => {
     if (!allItems.find((item) => item.id === selectedId)) setSelectedId(allItems[0]?.id || "");
@@ -5763,19 +5875,58 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
         <form onSubmit={submit} className="rounded-[1.5rem] bg-white p-5 shadow-sm h-fit">
           <h3 className="font-black mb-3">Quick add stock</h3>
           <div className="space-y-4">
-            <select required className="field bg-stone-50" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
-              <option value="">Select item...</option>
-              {allItems.map((material) => {
-                const isLocal = localItems.find(i => i.id === material.id);
-                const qty = isLocal ? material.quantity : material.stock;
-                const unit = isLocal ? material.unit : material.unit;
-                return (
-                  <option key={material.id} value={material.id}>
-                    {material.name} ({qty}{unit} available)
-                  </option>
-                );
-              })}
-            </select>
+            <div className="relative">
+              <button
+                type="button"
+                className="field flex w-full items-center justify-between bg-stone-50 text-left"
+                aria-haspopup="listbox"
+                aria-expanded={itemPickerOpen}
+                onClick={() => setItemPickerOpen((open) => !open)}
+              >
+                <span className={selectedItem ? "text-stone-900" : "text-stone-500"}>
+                  {selectedItem ? `${selectedItem.name} (${selectedItem.stock ?? selectedItem.quantity ?? 0}${selectedItem.unit} available)` : "Select item..."}
+                </span>
+                <span aria-hidden="true">⌄</span>
+              </button>
+              {itemPickerOpen && (
+                <div className="absolute left-0 right-0 z-20 mt-2 max-h-80 overflow-hidden rounded-2xl border border-stone-200 bg-white p-2 shadow-lg">
+                  <label className="flex items-center gap-2 rounded-xl bg-stone-50 px-3 py-2">
+                    <Search size={16} className="shrink-0 text-stone-500" />
+                    <input
+                      autoFocus
+                      className="min-w-0 w-full bg-transparent text-sm font-bold outline-none"
+                      placeholder="Search items..."
+                      value={itemSearch}
+                      onChange={(event) => setItemSearch(event.target.value)}
+                    />
+                  </label>
+                  <div role="listbox" className="mt-2 max-h-60 overflow-y-auto">
+                    {matchingItems.length > 0 ? matchingItems.map((material) => {
+                      const isLocal = localItems.find(i => i.id === material.id);
+                      const qty = isLocal ? material.quantity : material.stock;
+                      return (
+                        <button
+                          key={material.id}
+                          type="button"
+                          role="option"
+                          aria-selected={material.id === selectedId}
+                          className="block w-full rounded-xl px-3 py-2 text-left text-sm font-bold hover:bg-stone-100"
+                          onClick={() => {
+                            setSelectedId(material.id);
+                            setItemPickerOpen(false);
+                            setItemSearch("");
+                          }}
+                        >
+                          {material.name} ({qty}{material.unit} available)
+                        </button>
+                      );
+                    }) : (
+                      <p className="px-3 py-3 text-sm font-bold text-stone-500">No items found</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
             <input required className="field bg-stone-50" type="number" min="0" step="any" placeholder="Quantity to add" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
             <input className="field bg-stone-50" type="number" min="0" step="any" placeholder="Purchase Price (optional)" value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} />
             <textarea className="field min-h-20 resize-none bg-stone-50" placeholder="Note (optional)" value={note} onChange={(event) => setNote(event.target.value)} />
@@ -5936,17 +6087,17 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
   }
 
   return (
-    <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-[1.5rem] bg-white p-4 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
+    <section className="grid min-w-0 gap-5 lg:grid-cols-[1fr_360px]">
+      <div className="min-w-0 rounded-[1.5rem] bg-white p-4 shadow-sm">
+        <div className="mb-4 flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="min-w-0">
             <h2 className="text-xl font-black">Recipe mapping</h2>
             <p className="mt-1 text-sm text-stone-600">Link menu items to raw material usage for automatic stock adjustment.</p>
           </div>
-          <div className="flex gap-2">
-            <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
-            <button type="button" onClick={handleDeleteRecipe} disabled={deleting} className="rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 disabled:opacity-50">{deleting ? "Deleting..." : "Delete recipe"}</button>
-            <button type="button" onClick={addIngredient} className="rounded-full bg-black px-4 py-2 text-xs font-black text-white">Add ingredient</button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <button type="button" onClick={handleSyncDefaultRecipes} disabled={syncLoading} className="w-full rounded-full bg-stone-700 px-4 py-2 text-xs font-black text-white hover:bg-stone-800 disabled:opacity-50 sm:w-auto">{syncLoading ? "Syncing..." : "Sync Defaults"}</button>
+            <button type="button" onClick={handleDeleteRecipe} disabled={deleting} className="w-full rounded-full bg-rose-50 px-4 py-2 text-xs font-black text-rose-700 disabled:opacity-50 sm:w-auto">{deleting ? "Deleting..." : "Delete recipe"}</button>
+            <button type="button" onClick={addIngredient} className="w-full rounded-full bg-black px-4 py-2 text-xs font-black text-white sm:w-auto">Add ingredient</button>
           </div>
         </div>
         <div className="space-y-4">
@@ -5954,7 +6105,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
             {recipeItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
           </select>
           {ingredients.map((ingredient, index) => (
-            <div key={index} className="grid gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
+            <div key={index} className="grid min-w-0 gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
               <select value={ingredient.rawMaterialId} onChange={(event) => updateIngredient(index, "rawMaterialId", event.target.value)} className="field bg-white">
                 <option value="">Select raw material</option>
                 {rawMaterials.map((material) => (
@@ -5975,8 +6126,8 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
           <button type="button" onClick={submit} disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
         </div>
       </div>
-      <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
-        <h2 className="text-xl font-black">Current recipe for {selectedItem?.name || "selected item"}</h2>
+      <div className="min-w-0 rounded-[1.5rem] bg-white p-5 shadow-sm">
+        <h2 className="break-words text-xl font-black">Current recipe for {selectedItem?.name || "selected item"}</h2>
         <div className="mt-4 space-y-3 text-sm text-stone-700">
           {(ingredients.length === 0) ? <p>No ingredients configured.</p> : ingredients.map((ingredient, index) => {
             const material = rawMaterials.find((mat) =>
@@ -6836,9 +6987,10 @@ function OrderHistory({ orders }) {
       const paymentStatus = normalizeStatus(order.paymentStatus);
       return ["payment rejected", "payment issue", "rejected"].includes(status) || ["payment rejected", "payment issue", "rejected"].includes(paymentStatus);
     },
+    staffFamily: (order) => STAFF_FAMILY_NAMES.includes(String(order.customerName || order.name || "").trim()),
     customDate: isCustomDateMatch
   };
-  const quickFilters = ["all", "pending", "cancelled", "paymentRejected", "completed"];
+  const quickFilters = ["all", "pending", "cancelled", "paymentRejected", "completed", "staffFamily"];
 
   const visibleOrders = useMemo(() => {
     let allOrders = orders || [];
@@ -6905,6 +7057,7 @@ function OrderHistory({ orders }) {
                 : filterKey === "pending" ? "Pending"
                 : filterKey === "cancelled" ? "Cancelled"
                 : filterKey === "paymentRejected" ? "Payment Rejected"
+                : filterKey === "staffFamily" ? "Staff & Family"
                 : filterKey;
               return (
                 <button
@@ -6993,7 +7146,12 @@ function OrderHistory({ orders }) {
               <div className="flex flex-nowrap items-start justify-between gap-2 sm:gap-3">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <h3 className="text-lg font-black sm:text-xl">{order.customerName}</h3>
+                    <h3 className="text-lg font-black sm:text-xl">
+                      {order.customerName}
+                      {STAFF_FAMILY_NAMES.includes(String(order.customerName || "").trim()) && (
+                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Staff/Family</span>
+                      )}
+                    </h3>
                     <span className="rounded-full bg-stone-100 px-2 py-1 text-[10px] font-black text-stone-700 sm:px-3 sm:text-sm">
                       {rupees(order.total ?? order.totalAmount ?? order.grandTotal ?? getOrderTotal(order))}
                     </span>
@@ -7116,7 +7274,8 @@ function PosBilling({ items, categories, onSaved }) {
       customerName: details.customerName || "OOC Customer",
       phone: details.phone || "0000000000",
       tableNumber: details.tableNumber || "OOC",
-      paymentMethod: paymentMethod,
+      paymentMethod: paymentMethod === "pending_payment" ? "pending" : paymentMethod,
+      ...(paymentMethod === "pending_payment" ? { paymentStatus: "pending" } : {}),
       orderType: "OOC",
       source: "ooc",
       items: cart.map((line) => ({ itemId: line.itemId, sizeId: line.sizeId, quantity: line.quantity, serveType: line.serveType, unitPrice: line.unitPrice, basePrice: line.basePrice, lineTotal: line.lineTotal, name: line.name, addons: line.addons })),
@@ -7198,7 +7357,7 @@ function PosBilling({ items, categories, onSaved }) {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {visibleItems.map((item) => (
-            <MenuItemCard key={item.id} item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} />
+            <MenuItemCard key={item.id} item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} isTableOrder />
           ))}
         </div>
       </div>
@@ -7209,7 +7368,7 @@ function PosBilling({ items, categories, onSaved }) {
       </div>
       {detail && <DetailModal item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && (
-        <CartDrawer cart={cart} total={total} onClose={() => setCartOpen(false)} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} />
+        <CartDrawer cart={cart} total={total} onClose={() => setCartOpen(false)} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder />
       )}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal

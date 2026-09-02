@@ -128,22 +128,22 @@ const MenuItemCard = React.memo(function MenuItemCard({ item, onDetail, onAdd, i
               )}
             </div>
             <div className="mt-3 flex items-start justify-between gap-2">
-              <h3 className="min-h-[2.4rem] max-w-full break-words whitespace-normal text-sm font-bold leading-tight text-[#1F1F1F] sm:text-[16px]">{item.name}</h3>
+              <h3 className={`min-h-[2.4rem] max-w-full break-words whitespace-normal text-sm font-bold leading-tight text-[#1F1F1F] sm:text-[16px] ${isTableOrder ? "text-center" : ""}`}>{item.name}</h3>
             </div>
           </button>
           <div className="mt-2 flex flex-1 flex-col gap-2.5">
             {displaySizes.length > 1 && <SizeSelector sizes={sizes} value={sizeId} setValue={setSizeId} compact />}
             {serveOptions.length === 1 ? (
               <div className="rounded-[16px] border border-[#ECE8E3] bg-[#FAF8F5] p-3 text-sm text-[#1F1F1F] shadow-none">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#6B6B6B]">Serve</p>
-                <p className="mt-1 text-[13px] font-semibold text-[#1F1F1F]">{serveOptions[0]}</p>
+                <p className={`text-[11px] font-black uppercase tracking-[0.22em] text-[#6B6B6B] ${isTableOrder ? "text-center" : ""}`}>Serve</p>
+                <p className={`mt-1 text-[13px] font-semibold text-[#1F1F1F] ${isTableOrder ? "text-center" : ""}`}>{serveOptions[0]}</p>
               </div>
             ) : serveOptions.length > 1 ? (
               <div className="rounded-[16px] border border-[#ECE8E3] bg-[#FAF8F5] p-3 text-sm text-[#1F1F1F] shadow-none">
-                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#6B6B6B]">Serve</p>
-                <div className="mt-2 grid grid-cols-2 gap-1.5">
+                <p className={`text-[11px] font-black uppercase tracking-[0.22em] text-[#6B6B6B] ${isTableOrder ? "text-center" : ""}`}>Serve</p>
+                <div className={`mt-2 flex flex-wrap gap-1.5 ${isTableOrder ? "items-center justify-center" : "items-start"}`}>
                   {serveOptions.map((option) => (
-                    <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full border px-3 py-2 text-xs font-black transition ${serveType === option ? "border-[#4A0006] bg-[#4A0006] text-[#FFF8F4]" : "border-[#ECE8E3] bg-[#FFFFFF] text-[#1F1F1F] hover:bg-[#FAF8F5]"}`}>
+                    <button key={option} type="button" onClick={() => setServeType(option)} className={`rounded-full border px-2.5 py-1.5 text-[11px] whitespace-nowrap font-black transition ${serveType === option ? "border-[#4A0006] bg-[#4A0006] text-[#FFF8F4]" : "border-[#ECE8E3] bg-[#FFFFFF] text-[#1F1F1F] hover:bg-[#FAF8F5]"}`}>
                       {option}
                     </button>
                   ))}
@@ -175,7 +175,7 @@ const MenuItemCard = React.memo(function MenuItemCard({ item, onDetail, onAdd, i
                 )}
               </div>
               <div className="mt-3 flex items-start justify-between gap-2">
-                <h3 className="min-h-[2.4rem] max-w-full break-words whitespace-normal text-sm font-bold leading-tight text-[#1F1F1F] sm:text-[16px]">{item.name}</h3>
+                <h3 className={`min-h-[2.4rem] max-w-full break-words whitespace-normal text-sm font-bold leading-tight text-[#1F1F1F] sm:text-[16px] ${isTableOrder ? "text-center" : ""}`}>{item.name}</h3>
               </div>
             </button>
           </div>

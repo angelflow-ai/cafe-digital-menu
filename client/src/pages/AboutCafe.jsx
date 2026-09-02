@@ -27,6 +27,7 @@ import {
 import { api } from "../services/apiClient";
 import { createEmptyWebsiteContent, normalizeWebsiteContentPayload } from "../services/websiteContentService";
 import cafeHeroVideo from "../assets/videos/cafe-hero-video.mp4";
+import homePageVideo from "../assets/videos/home-page-video.mp4";
 import cafeStoryVideo from "../assets/videos/cafe-story.mp4";
 import liveMusicVideo from "../assets/videos/live-music.mp4";
 import liveProjectorVideo from "../assets/videos/live-projector.mp4";
@@ -62,11 +63,11 @@ const facebookUrl = "https://facebook.com/theinfusionsaga";
 const twitterUrl = "https://x.com/theinfusionsaga";
 const feedbackUrl = "https://www.google.com/maps/place/THE+INFUSION+SAGA/@26.8225601,75.8622093,17z/data=!4m8!3m7!1s0x396dc966259bc005:0x6f80b79a5e8920d9!8m2!3d26.8225601!4d75.8622093!9m1!1b1!16s%2Fg%2F11z235wkw8?entry=ttu&g_ep=EgoyMDI2MDYxNi4wIKXMDSoASAFQAw%3D%3D";
 const googleReviewsUrl = "https://www.google.com/search?q=The+Infusion+Saga+reviews";
-const defaultSupportEmail = "theinfusionsaga@gmail.com";
+const defaultSupportEmail = "theinfusionsaga.tis@gmail.com";
 const orderNowUrl = "https://www.theinfusionsaga.com/order";
 const menuUrlExternal = "https://www.theinfusionsaga.com/menu";
-const nearSkitMapsUrl = "https://www.google.com/maps/search/?api=1&query=Near+SKIT+The+Infusion+Saga";
-const highStreetMapsUrl = "https://www.google.com/maps/search/?api=1&query=High+Street+Capital+Mall+The+Infusion+Saga";
+const nearSkitMapsUrl = "https://maps.app.goo.gl/smbVVrq7SzDcuNyK6";
+const highStreetMapsUrl = "https://maps.app.goo.gl/2MEyGSRxms1SJpe59";
 const mapPreviewPlaceholder = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='400' viewBox='0 0 640 400'%3E%3Crect width='640' height='400' fill='%23e6e2d5'/%3E%3Cpath d='M60 220c70-50 140-50 210 0 70 50 140 50 210 0' stroke='%239b8870' stroke-width='14' fill='none'/%3E%3Cpath d='M75 120c50-40 100-40 150 0 50 40 100 40 150 0' stroke='%239b8870' stroke-width='12' fill='none'/%3E%3Ccircle cx='520' cy='120' r='46' fill='%234a0006'/%3E%3Cpath d='M520 120l0 92' stroke='%23fff' stroke-width='8'/%3E%3Cpath d='M520 90 c-18 0 -32 14 -32 32 s14 32 32 32 32-14 32-32 -14-32 -32-32z' fill='none' stroke='%23fff' stroke-width='8'/%3E%3C/svg%3E";
 
 const defaultWebsiteContent = {
@@ -229,11 +230,11 @@ const legalContent = {
   },
   privacy: {
     title: "Privacy Policy",
-    body: "We collect only the basic details needed to process orders, support requests, and cafe communication, such as name, phone number, order details, and payment status. We do not sell customer information. For privacy queries, contact theinfusionsaga@gmail.com."
+    body: "We collect only the basic details needed to process orders, support requests, and cafe communication, such as name, phone number, order details, and payment status. We do not sell customer information. For privacy queries, contact theinfusionsaga.tis@gmail.com."
   },
   refund: {
     title: "Refund Policy",
-    body: "Refunds, if applicable, will be reviewed for failed payments, duplicate payments, or order issues. For support, contact theinfusionsaga@gmail.com."
+    body: "Refunds, if applicable, will be reviewed for failed payments, duplicate payments, or order issues. For support, contact theinfusionsaga.tis@gmail.com."
   }
 };
 
@@ -513,12 +514,13 @@ function VideoPlaceholder({ label, className = "", videoSrc }) {
       <div className="absolute inset-5 rounded-[1.25rem] border border-[#4A0006]/10 bg-white/25" />
       <div className="relative z-10 h-full min-h-inherit">
         {videoSrc ? (
-          <SafeVideo
+          <video
             src={videoSrc}
-            alt={label}
             className="h-full w-full rounded-[1.5rem] object-cover object-center"
-            fallbackImage={outletOneImage}
             controls
+            playsInline
+            preload="metadata"
+            loading="lazy"
             aria-label={label}
           />
         ) : (
@@ -708,7 +710,7 @@ export default function AboutCafe({ navigate }) {
   const bestForItems = (pageContent?.bestFor || []).map((item) => ({ ...item, icon: item.icon || Heart }));
   const visualMoments = (pageContent?.visualMoments || []).map((item) => ({ ...item, icon: item.icon || Trophy }));
   const customerExperiences = (pageContent?.customerReviews || []).map((item) => ({ name: item.name, review: item.review, rating: item.rating, videoUrl: item.videoUrl, customerImage: item.customerImage }));
-  const heroVideo = cafeStoryVideo;
+  const heroVideo = homePageVideo;
   const storyVideo = pageContent?.videos?.[0]?.url || pageContent?.hero?.videoUrl || "";
   const fssaiImagePath = pageContent?.fssai?.fileUrl || "/images/fssai.png";
   const ctaButtonLink = pageContent?.hero?.buttonLink || "/menu";
@@ -744,7 +746,7 @@ export default function AboutCafe({ navigate }) {
       name: "Near SKIT",
       description: "A colorful courtyard hangout for laid-back evenings and easy conversations.",
       address: "Near SKIT, Jaipur",
-      timings: "Daily • 10:00 AM – 11:00 PM",
+      timings: "Daily • 11:00 AM – 11:00 PM",
       image: nearSkitOutletImage,
       badge: "Open now",
       explorePath: "/near-skit",
@@ -760,12 +762,12 @@ export default function AboutCafe({ navigate }) {
       name: "Near High Street Capital Mall",
       description: "A rooftop garden escape with fountains, greenery, and city views above.",
       address: "Near High Street Capital Mall, Jaipur",
-      timings: "Daily • 10:00 AM – 11:00 PM",
+      timings: "Daily • 11:00 AM – 11:00 PM",
       image: nearHighStreetOutletImage,
       badge: "Open now",
       explorePath: "/near-high-street",
       menuPath: "/menu",
-      titleClassName: "max-w-[13rem] whitespace-nowrap text-[1.4rem] font-black leading-tight text-white sm:text-[1.55rem]",
+      titleClassName: "max-w-full whitespace-normal break-words text-center text-[clamp(1.1rem,6vw,1.4rem)] font-black leading-[1.1] text-white sm:max-w-[13rem] sm:whitespace-nowrap sm:text-left sm:text-[1.55rem]",
       gallery: [],
       heroContent: {},
       reviews: [],
@@ -875,7 +877,6 @@ export default function AboutCafe({ navigate }) {
           height: 100%;
           object-fit: cover;
           object-position: center;
-          animation: aboutHeroVideoZoom 18s ease-in-out infinite alternate;
           transform-origin: center center;
         }
         .about-hero-shell {
@@ -1044,16 +1045,17 @@ export default function AboutCafe({ navigate }) {
       >
         <div className="about-hero-shell">
           <video
-            src={heroVideo}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            className="about-hero-video"
-          />
+              src={heroVideo}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              className="about-hero-video"
+            />
           <div className="about-hero-overlay" />
           <div className="about-hero-fade relative z-10 flex max-w-3xl flex-col items-center justify-center px-6 pb-20 pt-16 text-center text-[#FFF8F4] sm:px-8 lg:px-12">
+            <img src={logoUrl} alt="The Infusion Saga logo" className="mx-auto h-14 w-auto mb-3" />
             <p className="text-sm font-semibold uppercase tracking-[0.38em] text-[#F7D9C8]">PREMIUM CAFE EXPERIENCE</p>
             <h1 className="mt-5 text-5xl font-black leading-[0.95] text-white sm:text-6xl lg:text-7xl">The Infusion Saga</h1>
             <p className="mt-5 text-xl font-semibold leading-8 text-[#F4E2DA] sm:text-2xl">Coffee. Conversations. Comfort.</p>
@@ -1130,14 +1132,26 @@ export default function AboutCafe({ navigate }) {
                         <ArrowRight size={16} />
                       </button>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => navigate?.(outlet.menuPath)}
-                      className="about-secondary-btn inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-black sm:w-auto"
-                    >
-                      View Menu
-                      <ArrowRight size={16} />
-                    </button>
+                    {(outlet.name === "Near SKIT" || outlet.name === "Near High Street Capital Mall") ? (
+                      <a
+                        href={outlet.name === "Near SKIT" ? "https://maps.app.goo.gl/EeScDw7MPNmp2zos9" : "https://maps.app.goo.gl/dEBg7yvHHEQtURPF9"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="about-secondary-btn inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-black sm:w-auto"
+                      >
+                        View Location
+                        <ArrowRight size={16} />
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => navigate?.(outlet.menuPath)}
+                        className="about-secondary-btn inline-flex w-full items-center justify-center gap-2 px-4 py-2.5 text-sm font-black sm:w-auto"
+                      >
+                        View Menu
+                        <ArrowRight size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </article>
@@ -1210,12 +1224,16 @@ export default function AboutCafe({ navigate }) {
                     className="h-60 w-full object-cover object-center transition duration-500 group-hover:scale-105"
                     fallbackImage={item.image || galleryOneImage}
                     autoPlay
+                    muted
+                    playsInline
+                    loop
                     aria-label={item.title}
                   />
                 ) : (
                   <SafeImage
                     src={item.image}
                     alt={item.title}
+                    loading="lazy"
                     className="h-60 w-full object-cover object-center transition duration-500 group-hover:scale-105"
                   />
                 )}
@@ -1234,17 +1252,18 @@ export default function AboutCafe({ navigate }) {
           <a
             href="#"
             aria-label="Order on Swiggy"
-            className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer"
+            className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer hidden"
           >
-            <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" />
+            <img src={swiggyIcon} alt="Swiggy" className="h-6 w-6 object-contain flex-shrink-0" loading="lazy" />
             <span className="text-sm font-semibold leading-none">Order on Swiggy</span>
           </a>
           <a
             href="#"
+            href="https://share.google/xRo3KIx22cFp1KpgD"
             aria-label="Order on Zomato"
             className="inline-flex items-center justify-center gap-3 h-14 w-[14rem] rounded-full bg-white text-[#4A0006] shadow-[0_18px_36px_rgba(74,0,6,0.14)] transition-transform duration-200 ease-out hover:-translate-y-0.5 cursor-pointer"
           >
-            <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" />
+            <img src={zomatoIcon} alt="Zomato" className="h-6 w-6 object-contain flex-shrink-0" loading="lazy" />
             <span className="text-sm font-semibold leading-none">Order on Zomato</span>
           </a>
         </div>
@@ -1265,6 +1284,7 @@ export default function AboutCafe({ navigate }) {
                 <img
                   src={item.image}
                   alt={item.title}
+                  loading="lazy"
                   className="h-full w-full object-cover object-center transition duration-700 ease-out group-hover:scale-105"
                 />
                 <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.40)_40%,rgba(0,0,0,0.08)_0%)] transition duration-500 group-hover:bg-[linear-gradient(180deg,rgba(0,0,0,0.55)_40%,rgba(0,0,0,0.12)_0%)]" />
@@ -1382,14 +1402,14 @@ export default function AboutCafe({ navigate }) {
                 <p className="text-base font-black tracking-[0.08em] text-[#fffaf6]">THE INFUSION SAGA</p>
               </div>
               <p className="mt-3 max-w-xs text-sm leading-6 text-white/75">
-                Where every cup begins with comfort, conversations, and handcrafted flavours.
+                Where Every Sip begins a Story
               </p>
               <div className="mt-4 space-y-2.5 text-sm text-white/80">
-                <a href="mailto:theinfusionsaga@gmail.com" className="group flex items-center gap-3 transition hover:text-white">
+                <a href="mailto:theinfusionsaga.tis@gmail.com" className="group flex items-center gap-3 transition hover:text-white">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[#fff0e8]">
                     <Mail size={14} />
                   </span>
-                  <span>theinfusionsaga@gmail.com</span>
+                  <span>theinfusionsaga.tis@gmail.com</span>
                 </a>
                 <div className="flex items-center gap-3 text-white/80">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-white/10 text-[#fff0e8]">
@@ -1397,7 +1417,7 @@ export default function AboutCafe({ navigate }) {
                   </span>
                   <span>
                     Open Daily
-                    <span className="ml-1 text-white/60">10:00 AM – 11:00 PM</span>
+                    <span className="ml-1 text-white/60">11:00 AM – 11:00 PM</span>
                   </span>
                 </div>
               </div>
