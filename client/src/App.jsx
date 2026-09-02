@@ -5972,7 +5972,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
             </div>
           ))}
           {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : messageType === "success" ? "text-emerald-700" : "text-stone-600"}`}>{message}</p>}
-          <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
+          <button type="button" onClick={submit} disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
         </div>
       </div>
       <div className="rounded-[1.5rem] bg-white p-5 shadow-sm">
