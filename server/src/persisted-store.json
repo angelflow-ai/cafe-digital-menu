@@ -4658,17 +4658,20 @@
         {
           "rawMaterialId": "coffee-powder",
           "amount": 4,
-          "unit": "g"
+          "unit": "g",
+          "serveType": ""
         },
         {
           "rawMaterialId": "water",
           "amount": 180,
-          "unit": "ml"
+          "unit": "ml",
+          "serveType": ""
         },
         {
           "rawMaterialId": "sugar",
           "amount": 5,
-          "unit": "g"
+          "unit": "g",
+          "serveType": ""
         }
       ],
       "outletId": "outlet-near-skit"

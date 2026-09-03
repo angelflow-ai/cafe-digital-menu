@@ -1616,6 +1616,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
   }
 
   async function submit(event) {
+    console.log("SUBMIT CALLED");
     event.preventDefault();
     if (saving) return;
     setMessage("");
@@ -5751,6 +5752,7 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   }, [allItems, selectedId]);
 
   async function submit(event) {
+    if (openDropdown) setOpenDropdown(null);
     event.preventDefault();
     if (saving) return;
     setMessage("");
@@ -5947,11 +5949,49 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
   const recipeItems = useMemo(() => (Array.isArray(items) ? items.filter((item) => !isPackagedMenuItem(item)) : []), [items]);
   const [selectedItemId, setSelectedItemId] = useState(recipeItems[0]?.id || "");
   const [ingredients, setIngredients] = useState([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const [ingredientSearchQueries, setIngredientSearchQueries] = useState({});
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
+
+  useEffect(() => {
+    const selectedItem = recipeItems.find((item) => item.id === selectedItemId);
+    setItemSearchQuery(selectedItem?.name || "");
+  }, [recipeItems, selectedItemId]);
+
+  useEffect(() => {
+    setIngredientSearchQueries((current) => {
+      const next = { ...current };
+      let changed = false;
+
+      ingredients.forEach((ingredient, index) => {
+        if (ingredient.rawMaterialId && !next[index]) {
+          const material = rawMaterials.find((item) => String(item.id) === String(ingredient.rawMaterialId));
+          if (material) {
+            next[index] = material.name;
+            changed = true;
+          }
+        }
+      });
+
+      return changed ? next : current;
+    });
+  }, [ingredients, rawMaterials]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (!event.target.closest(".recipe-search-dropdown")) {
+        setOpenDropdown(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (!recipeItems.length) {
@@ -5964,7 +6004,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
   }, [recipeItems, selectedItemId]);
 
   useEffect(() => {
-    const recipe = recipes.find((recipeItem) => recipeItem.itemId === selectedItemId);
+    const recipe = recipes.find((recipeItem) => recipeItem.itemId === selectedItemId && (!activeOutletId || String(recipeItem.outletId) === String(activeOutletId)));
     if (recipe) {
       setIngredients(recipe.ingredients.length ? recipe.ingredients.map((ingat) => ({ ...ingat })) : [{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
     } else {
@@ -6101,17 +6141,72 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
           </div>
         </div>
         <div className="space-y-4">
-          <select className="field bg-stone-50" value={selectedItemId} onChange={(event) => setSelectedItemId(event.target.value)}>
-            {recipeItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-          </select>
+          <div className="recipe-search-dropdown relative">
+            <input
+              className="field bg-stone-50"
+              placeholder="Search menu items..."
+              value={itemSearchQuery}
+              onFocus={() => setOpenDropdown("menu")}
+              onChange={(event) => {
+                setItemSearchQuery(event.target.value);
+                setOpenDropdown("menu");
+              }}
+            />
+            {openDropdown === "menu" && (
+              <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-stone-200 bg-white shadow-lg">
+                {recipeItems
+                  .filter((item) => String(item.name || "").toLowerCase().includes(itemSearchQuery.toLowerCase()))
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="block w-full px-4 py-3 text-left text-sm font-bold hover:bg-stone-100"
+                      onClick={() => {
+                        setSelectedItemId(item.id);
+                        setItemSearchQuery(item.name);
+                        setOpenDropdown(null);
+                      }}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+              </div>
+            )}
+          </div>
           {ingredients.map((ingredient, index) => (
             <div key={index} className="grid min-w-0 gap-3 rounded-3xl border border-stone-200 bg-stone-50 p-4 sm:grid-cols-[1.5fr_0.9fr_0.9fr_0.9fr_auto]">
-              <select value={ingredient.rawMaterialId} onChange={(event) => updateIngredient(index, "rawMaterialId", event.target.value)} className="field bg-white">
-                <option value="">Select raw material</option>
-                {rawMaterials.map((material) => (
-                  <option key={material.id} value={material.id}>{material.name}</option>
-                ))}
-              </select>
+              <div className="recipe-search-dropdown relative">
+                <input
+                  className="field bg-white"
+                  placeholder="Search raw material..."
+                  value={ingredientSearchQueries[index] || ""}
+                  onFocus={() => setOpenDropdown(`ingredient-${index}`)}
+                  onChange={(event) => {
+                    setIngredientSearchQueries((current) => ({ ...current, [index]: event.target.value }));
+                    setOpenDropdown(`ingredient-${index}`);
+                  }}
+                />
+                {openDropdown === `ingredient-${index}` && (
+                  <div className="absolute z-10 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-stone-200 bg-white shadow-lg">
+                    {rawMaterials
+                      .filter((material) => String(material.name || "").toLowerCase().includes((ingredientSearchQueries[index] || "").toLowerCase()))
+                      .map((material) => (
+                        <button
+                          key={material.id}
+                          type="button"
+                          className="block w-full px-4 py-3 text-left text-sm font-bold hover:bg-stone-100"
+                          onClick={() => {
+                            updateIngredient(index, "rawMaterialId", material.id);
+                            setIngredientSearchQueries((current) => ({ ...current, [index]: material.name }));
+                            setOpenDropdown(null);
+                          }}
+                        >
+                          {material.name}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
               <input className="field bg-white" placeholder="Amount" value={ingredient.amount} onChange={(event) => updateIngredient(index, "amount", event.target.value)} />
               <select className="field bg-white" value={ingredient.unit} onChange={(event) => updateIngredient(index, "unit", event.target.value)}>
                 <option value="g">g</option>
@@ -6123,7 +6218,15 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
             </div>
           ))}
           {message && <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : messageType === "success" ? "text-emerald-700" : "text-stone-600"}`}>{message}</p>}
-          <button type="button" onClick={submit} disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Save recipe"}</button>
+          <button
+            type="button"
+            onMouseDown={() => setOpenDropdown(null)}
+            onClick={submit}
+            disabled={saving}
+            className="relative z-30 w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400"
+          >
+            {saving ? "Saving..." : "Save recipe"}
+          </button>
         </div>
       </div>
       <div className="min-w-0 rounded-[1.5rem] bg-white p-5 shadow-sm">
