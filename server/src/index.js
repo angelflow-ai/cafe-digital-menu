@@ -386,6 +386,7 @@ function isAllowedEmailForRole(email, role) {
   return allowed.length === 0 || allowed.includes(normalizeEmail(email));
 }
 
+app.get('/health', (req, res) => res.status(200).send('OK'));
 app.get("/api/health", (_req, res) => res.json({ ok: true, usingMongo: usingMongo(), mongoError: globalThis.mongoConnectionError || null }));
 
 function createLoginResponse(user, req, res) {
