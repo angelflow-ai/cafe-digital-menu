@@ -2702,6 +2702,12 @@ async function deductInventoryForOrder(order) {
         const material = await getRawMaterial(ingredient.rawMaterialId, order.outletId);
         if (!material) throw new Error(`Inventory item missing: ${ingredient.rawMaterialId}`);
         const required = convertQuantity(ingredient.amount, ingredient.unit, material.unit) * item.quantity;
+        console.log("[inventory-deduction-debug]", {
+          rawMaterialId: ingredient.rawMaterialId,
+          ingredientUnit: ingredient.unit,
+          materialUnit: material.unit,
+          required
+        });
         if (material.stock < required) {
           throw new Error(`Low inventory for ${material.name} (${material.stock}${material.unit} available, ${required}${material.unit} required).`);
         }
