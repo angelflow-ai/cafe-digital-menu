@@ -1861,8 +1861,11 @@ export const store = {
     return memory.rawMaterials[index];
   },
   async adjustRawMaterialStock(id, change, note, orderId, query = {}, purchasePrice = null) {
-    const outletId = await getCurrentOutletId(query);
-    return adjustRawMaterialStock(id, change, note, orderId, outletId, purchasePrice);
+    const resolvedOutletId =
+      typeof query === "string" || query instanceof mongoose.Types.ObjectId || query?._id || query?.id
+        ? normalizeOutletId(query)
+        : await getCurrentOutletId(query);
+    return adjustRawMaterialStock(id, change, note, orderId, resolvedOutletId, purchasePrice);
   },
   async recipes(query = {}) {
     const outletId = await resolveCollectionOutletScope("recipes", query);
@@ -2590,7 +2593,7 @@ function getOrderItemAddOns(item = {}) {
 }
 
 async function adjustRawMaterialStock(rawMaterialId, change, note, orderId, outletId = null, purchasePrice = null) {
-  let targetOutletId = outletId;
+  let targetOutletId = outletId ? String(outletId) : null;
 
   if (usingMongo()) {
     if (!targetOutletId) {

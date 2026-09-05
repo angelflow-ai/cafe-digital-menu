@@ -41,7 +41,6 @@ import logoUrl from "./assets/infusion-saga-logo.png";
 import swiggyIcon from "./assets/icons/swiggy.webp";
 import zomatoIcon from "./assets/icons/zomato.webp";
 import ordersStore from "./ordersStore";
-import stockTransactionsStore from "./stockTransactionsStore";
 import sync from "./sync";
 import inventoryStore from "./inventoryStore";
 import demoMode from "./demoMode";
@@ -165,7 +164,7 @@ function getOwnerOutletSlugFromPath(pathname) {
   if (segments[0] !== "owner") return null;
   if (!segments[1]) return null;
   const candidate = normalizeOutletSlug(segments[1]);
-  const knownTabs = new Set(["inventory", "categories", "stock", "recipes", "lowstock", "reports", "history", "compare", "outlets"]);
+  const knownTabs = new Set(["inventory", "categories", "stock", "recipes", "lowstock", "reports", "history", "profit", "compare", "website", "outlets"]);
   return knownTabs.has(candidate) ? null : candidate;
 }
 
@@ -180,7 +179,9 @@ function getOwnerInitialTabFromPath(pathname) {
     lowstock: "lowstock",
     reports: "reports",
     history: "history",
+    profit: "profit",
     compare: "compare",
+    website: "website",
     outlets: "outlets"
   };
 
@@ -3991,7 +3992,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     return String(outletId);
   }
 
-  function itemMatchesOutletFilter(item, filter) {
+  function itemMatchesOutletFilter(item, filter, treatMissingAsShared = true) {
     if (filter === "all") return true;
     if (!item) return false;
 
@@ -4001,7 +4002,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     if (!itemOutletId) {
       // Shared catalog items may not carry an explicit outletId.
       // They should still be visible for any selected outlet.
-      return true;
+      return treatMissingAsShared;
     }
 
     const normalizedOutletId = String(itemOutletId).trim();
@@ -4048,12 +4049,12 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
 
   const filteredRawMaterials = useMemo(() => {
     if (selectedOutletFilter === "all") return rawMaterials;
-    return rawMaterials.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
+    return rawMaterials.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter, false));
   }, [rawMaterials, selectedOutletFilter, outlets]);
 
   const filteredLocalInventoryItems = useMemo(() => {
     if (selectedOutletFilter === "all") return localInventoryItems;
-    return localInventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
+    return localInventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter, false));
   }, [localInventoryItems, selectedOutletFilter, outlets]);
 
   const filteredRecipes = useMemo(() => {
@@ -4362,7 +4363,7 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
 
     return mergedItems.filter((item) => {
       if (!item || item?.isDeleted === true) return false;
-      if (!itemMatchesOutletFilter(item, selectedOutletFilter)) return false;
+      if (!itemMatchesOutletFilter(item, selectedOutletFilter, false)) return false;
       const key = String(item.id ?? item._id ?? item.name ?? "");
       if (!key || seen.has(key)) return false;
       seen.add(key);
@@ -5475,7 +5476,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   const inventoryStoreItems = useMemo(() => Array.isArray(rawMaterials) ? rawMaterials.map(normalizeServerInventoryItem).filter(Boolean) : [], [rawMaterials]);
   const filteredLocalItems = useMemo(() => {
     if (selectedOutletFilter === "all") return inventoryItems;
-    return inventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
+    return inventoryItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter, false));
   }, [inventoryItems, selectedOutletFilter, outlets]);
   const renderedInventory = useMemo(() => mergeInventoryItems(inventoryStoreItems, filteredLocalItems), [inventoryStoreItems, filteredLocalItems]);
 
@@ -5708,36 +5709,61 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   const [itemPickerOpen, setItemPickerOpen] = useState(false);
   const [itemSearch, setItemSearch] = useState("");
 
-  // Load local inventory items and recent transactions
+  // Load local inventory items and recent transactions from backend InventoryHistory
   useEffect(() => {
     const saved = loadLocalInventoryItems();
     setLocalItems(saved);
-    
-    // Load transactions
-    stockTransactionsStore.loadTransactions();
-    setRecentTransactions(stockTransactionsStore.getRecentTransactions(20));
-    
+
+    async function loadRecentHistory() {
+      try {
+        const history = await inventoryService.getInventoryHistory(activeOutletId);
+        const now = Date.now();
+        const cutoff = now - 48 * 60 * 60 * 1000;
+        const filtered = (Array.isArray(history) ? history : [])
+          .filter((record) => {
+            const ts = new Date(record?.createdAt || record?.timestamp || 0).getTime();
+            return Number.isFinite(ts) && ts >= cutoff;
+          })
+          .map((record) => {
+            const rawMaterialId = record?.rawMaterialId;
+            const material = rawMaterials.find((item) => String(item?.id || item?._id) === String(rawMaterialId));
+            const itemName = material?.name || record?.itemName || "Inventory Item";
+            const unit = material?.unit || record?.unit || "pcs";
+            const quantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+            const timestamp = record?.createdAt || record?.timestamp || new Date().toISOString();
+            return {
+              id: record?._id || record?.id || `${timestamp}-${itemName}`,
+              itemName,
+              quantityAdded,
+              unit,
+              timestamp,
+              note: record?.note || ""
+            };
+          });
+        setRecentTransactions(filtered.slice(0, 20));
+      } catch (error) {
+        console.error("Failed to load recent inventory history:", error);
+        setRecentTransactions([]);
+      }
+    }
+
+    loadRecentHistory();
+
     function handleInventoryUpdated(event) {
       const items = event?.detail ? normalizeLocalInventoryItems(event.detail) : loadLocalInventoryItems();
       setLocalItems(items);
     }
-    
-    // Subscribe to transaction updates
-    const unsubscribe = stockTransactionsStore.subscribe((transactions) => {
-      setRecentTransactions(transactions.slice(0, 20));
-    });
-    
+
     window.addEventListener("localInventoryUpdated", handleInventoryUpdated);
     return () => {
       window.removeEventListener("localInventoryUpdated", handleInventoryUpdated);
-      unsubscribe();
     };
-  }, []);
+  }, [activeOutletId, rawMaterials]);
 
   // Combine backend and local inventory
   const filteredLocalItems = useMemo(() => {
     if (selectedOutletFilter === "all") return localItems;
-    return localItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter));
+    return localItems.filter((item) => itemMatchesOutletFilter(item, selectedOutletFilter, false));
   }, [localItems, selectedOutletFilter, outlets]);
 
   const activeServerItems = Array.isArray(rawMaterials) ? rawMaterials.filter((item) => item?.isDeleted !== true) : [];
@@ -5752,7 +5778,6 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
   }, [allItems, selectedId]);
 
   async function submit(event) {
-    if (openDropdown) setOpenDropdown(null);
     event.preventDefault();
     if (saving) return;
     setMessage("");
@@ -5790,20 +5815,41 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
         setLocalItems(removeLocalInventoryItemsByIds([result.material.id]));
       }
       
-      // Create stock transaction record
+      // Refresh recent backend InventoryHistory after a successful stock update
       const selectedItem = allItems.find(i => i.id === selectedId);
       if (selectedItem) {
-        stockTransactionsStore.addTransaction(
-          selectedItem.name,
-          Number(quantity),
-          selectedItem.unit || "pcs",
-          note,
-          purchasePrice ? Number(purchasePrice) : null
-        );
-        // Dispatch event for immediate UI update
-        window.dispatchEvent(new CustomEvent("stockTransactionAdded"));
+        try {
+          const history = await inventoryService.getInventoryHistory(activeOutletId);
+          const now = Date.now();
+          const cutoff = now - 48 * 60 * 60 * 1000;
+          const filtered = (Array.isArray(history) ? history : [])
+            .filter((record) => {
+              const ts = new Date(record?.createdAt || record?.timestamp || 0).getTime();
+              return Number.isFinite(ts) && ts >= cutoff;
+            })
+            .map((record) => {
+              const rawMaterialId = record?.rawMaterialId;
+              const material = rawMaterials.find((item) => String(item?.id || item?._id) === String(rawMaterialId));
+              const itemName = material?.name || record?.itemName || "Inventory Item";
+              const unit = material?.unit || record?.unit || "pcs";
+              const quantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+              const timestamp = record?.createdAt || record?.timestamp || new Date().toISOString();
+              return {
+                id: record?._id || record?.id || `${timestamp}-${itemName}`,
+                itemName,
+                quantityAdded,
+                unit,
+                timestamp,
+                note: record?.note || ""
+              };
+            });
+          setRecentTransactions(filtered.slice(0, 20));
+        } catch (error) {
+          console.error("Failed to refresh recent inventory history:", error);
+          setRecentTransactions([]);
+        }
       }
-      
+
       setQuantity("");
       setNote("");
       setPurchasePrice("");

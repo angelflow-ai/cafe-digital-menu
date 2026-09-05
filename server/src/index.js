@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import Twilio from "twilio";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
-import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store, usingMongo, getCurrentOutletId } from "./db.js";
+import { connectDatabase, findStaffAccountByEmail, getConfiguredStaffEmails, isCompletedSale, setStaffPassword, store, usingMongo, getCurrentOutletId, resolveCollectionOutletScope } from "./db.js";
 import { defaultRecipes } from "./seed.js";
 import outletService from "./services/outletService.js";
 import { deleteWebsiteMediaForOutlet, getWebsiteContentForOutlet, publishWebsiteContentForOutlet, saveWebsiteContentDraftForOutlet } from "./services/websiteContentService.js";
@@ -1071,6 +1071,14 @@ app.get("/api/inventory", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.get("/api/inventory/history", requireAdmin, async (req, res, next) => {
+  try {
+    res.json(await store.inventoryHistory(req.query));
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.post("/api/inventory", requireAdmin, async (req, res, next) => {
   try {
     const payload = { ...normalizeInventoryUnitPayload(req.body), ...req.query };
@@ -1114,17 +1122,21 @@ app.patch("/api/inventory/:id/restore", requireAdmin, async (req, res, next) => 
 app.post("/api/inventory/:id/purchase", requireAdmin, async (req, res, next) => {
   try {
     const { quantity, unit, note, purchasePrice } = req.body;
-    const material = await store.rawMaterial(req.params.id, req.query);
+    const material = await store.rawMaterial(req.params.id, { ...req.query, ...req.body });
+    console.log("PURCHASE LOOKUP outletId received:", req.params.id, JSON.stringify({ ...req.query, ...req.body }));
+    console.log("PURCHASE LOOKUP material found:", !!material, material?.outletId);
     if (!material) return res.status(404).json({ message: "Inventory item not found." });
     const amount = Number(quantity || 0);
     if (!Number.isFinite(amount) || amount <= 0) return res.status(400).json({ message: "Invalid purchase quantity." });
     const actualUnit = String(unit || material.unit).trim().toLowerCase();
+    const outletId = (await resolveCollectionOutletScope("inventory", { ...req.query, ...req.body })) || material.outletId;
+    const outletScope = { ...req.query, ...req.body, ...(outletId ? { outletId } : {}) };
     const result = await store.adjustRawMaterialStock(
       req.params.id,
       amount,
       note || "Stock purchase",
       req.params.id,
-      req.query,
+      outletScope,
       purchasePrice ? Number(purchasePrice) : null
     );
     res.json({

@@ -27,4 +27,17 @@ export async function purchaseInventory(id, payload) {
   return api(`/inventory/${id}/purchase`, { method: "POST", body: JSON.stringify(payload) });
 }
 
-export default { getInventoryItems, createInventoryItem, updateInventoryItem, deleteInventoryItem, restoreInventoryItem, purchaseInventory };
+export async function getInventoryHistory(outletId) {
+  const params = outletId ? `?outletId=${encodeURIComponent(outletId)}` : "";
+  return api(`/inventory/history${params}`);
+}
+
+export default {
+  getInventoryItems,
+  createInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+  restoreInventoryItem,
+  purchaseInventory,
+  getInventoryHistory
+};
