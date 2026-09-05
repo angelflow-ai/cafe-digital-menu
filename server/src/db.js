@@ -187,6 +187,7 @@ const rawMaterialSchema = new mongoose.Schema(
     name: { type: String, required: true },
     category: { type: String, default: "Inventory" },
     unit: { type: String, enum: ["g", "ml", "pcs"], required: true },
+    displayUnit: { type: String, default: null },
     stock: { type: Number, default: 0 },
     minStock: { type: Number, default: 0 },
     costPerUnit: { type: Number, default: 0 },
@@ -1786,11 +1787,13 @@ export const store = {
     const stockValue = Number(payload.stock ?? payload.quantity ?? 0);
     const minStockValue = Number(payload.minStock ?? payload.minimumStock ?? 0);
     const costValue = Number(payload.costPerUnit ?? payload.purchasePrice ?? payload.price ?? 0);
+    const validDisplayUnits = ["kg", "kilogram", "kilograms", "gram", "grams", "g", "litre", "liter", "litres", "liters", "l", "ml", "pcs", "pc", "piece", "pieces"];
     const clean = {
       id: String(payload.id || payload.name).toLowerCase().replace(/[^a-z0-9]+/g, "-"),
       name: String(payload.name || "").trim(),
       category: String(payload.category || "Inventory").trim(),
       unit: ["g", "ml", "pcs"].includes(payload.unit) ? payload.unit : "pcs",
+      displayUnit: validDisplayUnits.includes(String(payload.displayUnit || "").toLowerCase()) ? String(payload.displayUnit).toLowerCase() : null,
       stock: Number.isFinite(stockValue) ? stockValue : 0,
       minStock: Number.isFinite(minStockValue) ? minStockValue : 0,
       costPerUnit: Number.isFinite(costValue) ? costValue : 0,
@@ -2605,8 +2608,37 @@ async function adjustRawMaterialStock(rawMaterialId, change, note, orderId, outl
     }
     const existing = await findRawMaterialById(rawMaterialId, targetOutletId);
     if (!existing) throw new Error(`Inventory item not found: ${rawMaterialId}`);
-    const updated = await RawMaterial.findOneAndUpdate({ _id: existing._id }, { $inc: { stock: change } }, { new: true }).lean();
-    await InventoryHistory.create({ rawMaterialId, change, note, orderId, purchasePrice, outletId: targetOutletId });
+
+    const oldStock = Number(existing.stock || 0);
+    const oldCostPerUnit = Number(existing.costPerUnit ?? 0);
+    const addedQty = Number(change || 0);
+    const effectivePurchasePrice = purchasePrice != null && purchasePrice !== "" && Number.isFinite(Number(purchasePrice))
+      ? Number(purchasePrice)
+      : oldCostPerUnit;
+    const nextStock = oldStock + addedQty;
+    const nextCostPerUnit = nextStock > 0
+      ? ((oldStock * oldCostPerUnit) + (addedQty * effectivePurchasePrice)) / nextStock
+      : oldCostPerUnit;
+
+    const updated = await RawMaterial.findOneAndUpdate(
+      { _id: existing._id },
+      {
+        $inc: { stock: change },
+        $set: {
+          costPerUnit: Number.isFinite(nextCostPerUnit) ? Number(nextCostPerUnit) : oldCostPerUnit
+        }
+      },
+      { new: true }
+    ).lean();
+
+    await InventoryHistory.create({
+      rawMaterialId,
+      change,
+      note,
+      orderId,
+      purchasePrice: effectivePurchasePrice,
+      outletId: targetOutletId
+    });
     return {
       material: updated,
       isLowStock: isLowStockItem(updated)
@@ -2619,13 +2651,27 @@ async function adjustRawMaterialStock(rawMaterialId, change, note, orderId, outl
   if (!targetOutletId) {
     throw new Error("Raw material must be associated with a valid outlet.");
   }
-  material.stock = Number(material.stock || 0) + Number(change || 0);
+
+  const oldStock = Number(material.stock || 0);
+  const oldCostPerUnit = Number(material.costPerUnit ?? 0);
+  const addedQty = Number(change || 0);
+  const effectivePurchasePrice = purchasePrice != null && purchasePrice !== "" && Number.isFinite(Number(purchasePrice))
+    ? Number(purchasePrice)
+    : oldCostPerUnit;
+  const nextStock = oldStock + addedQty;
+  const nextCostPerUnit = nextStock > 0
+    ? ((oldStock * oldCostPerUnit) + (addedQty * effectivePurchasePrice)) / nextStock
+    : oldCostPerUnit;
+
+  material.stock = nextStock;
+  material.costPerUnit = Number.isFinite(nextCostPerUnit) ? Number(nextCostPerUnit) : oldCostPerUnit;
+
   memory.inventoryHistory.push({
     rawMaterialId,
     change,
     note,
     orderId,
-    purchasePrice,
+    purchasePrice: effectivePurchasePrice,
     outletId: targetOutletId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()

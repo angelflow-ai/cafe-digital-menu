@@ -394,6 +394,82 @@ function normalizeInventoryUnitForApi(quantity, minStock, unit) {
   };
 }
 
+function getInventoryUnitFactor(unit) {
+  const rawUnit = String(unit || "pcs").trim().toLowerCase();
+  const map = {
+    kg: 1000,
+    kilogram: 1000,
+    kilograms: 1000,
+    gram: 1,
+    grams: 1,
+    g: 1,
+    litre: 1000,
+    liter: 1000,
+    litres: 1000,
+    liters: 1000,
+    l: 1000,
+    ml: 1,
+    pcs: 1,
+    pc: 1,
+    piece: 1,
+    pieces: 1
+  };
+  return Number(map[rawUnit] ?? 1);
+}
+
+function normalizePurchasePriceForBaseUnit(price, unit) {
+  const numericPrice = Number(price);
+  if (!Number.isFinite(numericPrice) || numericPrice <= 0) return 0;
+  const factor = getInventoryUnitFactor(unit);
+  return factor > 1 ? numericPrice / factor : numericPrice;
+}
+
+function getInventoryDisplayUnit(item) {
+  const displayUnit = String(item?.displayUnit || item?.unit || "pcs").trim().toLowerCase();
+  return displayUnit === "gram" ? "g" : displayUnit === "liter" ? "litre" : displayUnit;
+}
+
+function convertBaseQuantityToDisplay(quantity, unit) {
+  const value = Number(quantity);
+  if (!Number.isFinite(value)) return 0;
+  const factor = getInventoryUnitFactor(unit);
+  return factor > 1 ? value / factor : value;
+}
+
+function convertDisplayQuantityToBase(quantity, unit) {
+  const value = Number(quantity);
+  if (!Number.isFinite(value)) return 0;
+  const factor = getInventoryUnitFactor(unit);
+  return factor > 1 ? value * factor : value;
+}
+
+function convertBasePriceToDisplay(price, unit) {
+  const value = Number(price);
+  if (!Number.isFinite(value)) return 0;
+  const factor = getInventoryUnitFactor(unit);
+  return factor > 1 ? value * factor : value;
+}
+
+function formatInventoryQuantityForDisplay(item) {
+  const displayUnit = getInventoryDisplayUnit(item);
+  const rawValue = Number(item?.quantity ?? item?.stock ?? 0) || 0;
+  const converted = convertBaseQuantityToDisplay(rawValue, displayUnit);
+  return `${converted} ${displayUnit}`;
+}
+
+function formatInventoryPriceForDisplay(item) {
+  const rawCost = Number(item?.purchasePrice ?? item?.costPerUnit ?? item?.price ?? 0) || 0;
+  const totalValue = item.quantity * rawCost;
+  return `₹${totalValue.toFixed(2)}`;
+}
+
+function formatInventoryMinStockForDisplay(item) {
+  const displayUnit = getInventoryDisplayUnit(item);
+  const rawValue = Number(item?.minStock ?? item?.minimumStock ?? 0) || 0;
+  const converted = convertBaseQuantityToDisplay(rawValue, displayUnit);
+  return converted;
+}
+
 function getInventoryLowStockThreshold(item) {
   const minStock = Number(item?.minStock ?? item?.minimumStock ?? 0) || 0;
   if (minStock > 0) return minStock;
@@ -5250,12 +5326,18 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
   function normalizeServerInventoryItem(item) {
     if (!item || typeof item !== "object") return null;
+    const serverUnit = String(item.unit || item.measurementUnit || "pcs").trim() || "pcs";
+    const displayUnit = getInventoryDisplayUnit({
+      displayUnit: item.displayUnit,
+      unit: serverUnit
+    });
     return {
       ...item,
       id: String(item.id ?? item._id ?? item.name ?? ""),
       name: String(item.name || "").trim(),
       quantity: Number(item.quantity ?? item.stock ?? 0) || 0,
-      unit: String(item.unit || item.measurementUnit || "pcs").trim() || "pcs",
+      unit: serverUnit,
+      displayUnit,
       minStock: Number(item.minStock ?? item.minimumStock ?? 0) || 0,
       purchasePrice: Number(item.purchasePrice ?? item.costPerUnit ?? item.price ?? 0) || 0,
       supplier: String(item.supplier || "").trim(),
@@ -5368,14 +5450,17 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
     setSaving(true);
     try {
-      const purchasePriceValue = form.purchasePrice === "" ? editingItem?.purchasePrice : Number(form.purchasePrice);
+      const enteredTotalPrice = form.purchasePrice === "" ? (editingItem?.quantity * editingItem?.purchasePrice || 0) : Number(form.purchasePrice);
+      const displayUnit = String(form.unit || "pcs").trim().toLowerCase();
       const normalizedUnit = normalizeInventoryUnitForApi(form.quantity, form.minStock, form.unit);
+      const costPerUnit = normalizedUnit.stock > 0 ? enteredTotalPrice / normalizedUnit.stock : 0;
       const payload = {
         id: editingItem?.id || form.id || undefined,
         name: form.name.trim(),
         ...normalizedUnit,
-        costPerUnit: purchasePriceValue,
-        purchasePrice: purchasePriceValue,
+        displayUnit,
+        costPerUnit: costPerUnit,
+        purchasePrice: costPerUnit,
         supplier: form.supplier.trim(),
         active: true,
         ...(activeOutletId ? { outletId: activeOutletId } : {})
@@ -5404,13 +5489,14 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
 
   function handleEdit(item) {
     setEditingItem(item);
+    const displayUnit = getInventoryDisplayUnit(item);
     setForm({
       id: item.id,
       name: item.name,
-      quantity: item.quantity,
-      unit: item.unit === "g" ? "gram" : item.unit === "ml" ? "ml" : item.unit,
-      minStock: item.minStock,
-      purchasePrice: item.purchasePrice || "",
+      quantity: convertBaseQuantityToDisplay(item.quantity, displayUnit),
+      unit: displayUnit,
+      minStock: convertBaseQuantityToDisplay(item.minStock, displayUnit),
+      purchasePrice: (item.quantity * item.purchasePrice) || "",
       supplier: item.supplier || ""
     });
     setMessage("");
@@ -5573,11 +5659,15 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="text-base font-black">{item.name}</h3>
-                      <p className="text-sm text-stone-600">{item.quantity} {item.unit} • {rupees(item.purchasePrice || 0)}</p>
+                      <p className="text-sm text-stone-600">
+                        {formatInventoryQuantityForDisplay(item)} • {formatInventoryPriceForDisplay(item)}
+                      </p>
                     </div>
                     <span className={`rounded-full px-3 py-1 text-xs font-black ${statusClass}`}>{status}</span>
                   </div>
-                  <p className="mt-2 text-sm text-stone-500">Min stock: {item.minStock} {item.unit} • Supplier: {item.supplier || "-"}</p>
+                  <p className="mt-2 text-sm text-stone-500">
+                    Min stock: {formatInventoryMinStockForDisplay(item)} {getInventoryDisplayUnit(item)} • Supplier: {item.supplier || "-"}
+                  </p>
                   {selectedOutletFilter !== "all" && (
                     <div className="mt-3 flex flex-wrap gap-2">
                       <button onClick={() => handleDecreaseStock(item.id)} className="rounded-full bg-white px-3 py-2 text-xs font-black shadow-sm">-</button>
@@ -5631,10 +5721,16 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
                     return (
                       <tr key={item.id} className="border-b last:border-0">
                         <td className="py-3 pr-3 font-black align-top">{item.name}</td>
-                        <td className="align-top text-sm text-stone-700">{item.quantity} {item.unit}</td>
-                        <td className="align-top pl-2 pr-3 text-sm text-stone-700">{item.minStock} {item.unit}</td>
+                        <td className="align-top text-sm text-stone-700">
+                          {convertBaseQuantityToDisplay(item.quantity, getInventoryDisplayUnit(item))} {getInventoryDisplayUnit(item)}
+                        </td>
+                        <td className="align-top pl-2 pr-3 text-sm text-stone-700">
+                          {convertBaseQuantityToDisplay(item.minStock, getInventoryDisplayUnit(item))} {getInventoryDisplayUnit(item)}
+                        </td>
                         <td className="align-top px-3"><span className={`text-xs font-bold ${statusClass}`}>{status}</span></td>
-                        <td className="align-top pl-4 pr-2 text-sm text-stone-700">{rupees(item.purchasePrice || 0)}</td>
+                        <td className="align-top pl-4 pr-2 text-sm text-stone-700">
+                          {formatInventoryPriceForDisplay(item)}
+                        </td>
                         <td className="align-top text-xs text-stone-500">{item.supplier || "-"}</td>
                         <td className="align-top text-xs text-stone-500">{new Date(item.lastUpdated).toLocaleDateString()}</td>
                         <td className="align-top text-right">
@@ -5728,8 +5824,10 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
             const rawMaterialId = record?.rawMaterialId;
             const material = rawMaterials.find((item) => String(item?.id || item?._id) === String(rawMaterialId));
             const itemName = material?.name || record?.itemName || "Inventory Item";
-            const unit = material?.unit || record?.unit || "pcs";
-            const quantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+            const displayUnit = material ? getInventoryDisplayUnit(material) : (record?.unit || "pcs");
+            const unit = displayUnit;
+            const baseQuantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+            const quantityAdded = convertBaseQuantityToDisplay(baseQuantityAdded, displayUnit);
             const timestamp = record?.createdAt || record?.timestamp || new Date().toISOString();
             return {
               id: record?._id || record?.id || `${timestamp}-${itemName}`,
@@ -5792,21 +5890,40 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
       setMessageType("error");
       return;
     }
+    if (!purchasePrice || isNaN(Number(purchasePrice)) || Number(purchasePrice) <= 0) {
+      setMessage("Purchase price is required.");
+      setMessageType("error");
+      return;
+    }
 
     setSaving(true);
     try {
       const item = activeLocalItems.find(i => i.id === selectedId);
+      const selectedMaterial = allItems.find((entry) => entry.id === selectedId);
+      const selectedDisplayUnit = getInventoryDisplayUnit(selectedMaterial || { unit: "pcs" });
+      const displayQuantity = Number(quantity);
+      const displayPrice = Number(purchasePrice);
       if (item) {
         // Update local inventory item
         const updatedItems = localItems.map(i =>
           i.id === selectedId
-            ? { ...i, quantity: i.quantity + Number(quantity), lastUpdated: new Date().toISOString() }
+            ? {
+                ...i,
+                quantity: i.quantity + convertDisplayQuantityToBase(displayQuantity, selectedDisplayUnit),
+                lastUpdated: new Date().toISOString()
+              }
             : i
         );
         setLocalItems(saveLocalInventoryItems(updatedItems));
       } else {
         // Try backend API for server-managed materials
-        const body = { quantity: Number(quantity), note, purchasePrice: purchasePrice ? Number(purchasePrice) : null };
+        const baseUnitQuantity = convertDisplayQuantityToBase(displayQuantity, selectedDisplayUnit);
+        const batchRatePerBaseUnit = baseUnitQuantity > 0 ? displayPrice / baseUnitQuantity : 0;
+        const body = {
+          quantity: baseUnitQuantity,
+          note,
+          purchasePrice: batchRatePerBaseUnit > 0 ? batchRatePerBaseUnit : null
+        };
         if (activeOutletId) {
           body.outletId = activeOutletId;
         }
@@ -5831,8 +5948,10 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
               const rawMaterialId = record?.rawMaterialId;
               const material = rawMaterials.find((item) => String(item?.id || item?._id) === String(rawMaterialId));
               const itemName = material?.name || record?.itemName || "Inventory Item";
-              const unit = material?.unit || record?.unit || "pcs";
-              const quantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+              const displayUnit = material ? getInventoryDisplayUnit(material) : (record?.unit || "pcs");
+              const unit = displayUnit;
+              const baseQuantityAdded = Number(record?.change ?? record?.quantityAdded ?? 0);
+              const quantityAdded = convertBaseQuantityToDisplay(baseQuantityAdded, displayUnit);
               const timestamp = record?.createdAt || record?.timestamp || new Date().toISOString();
               return {
                 id: record?._id || record?.id || `${timestamp}-${itemName}`,
@@ -5932,7 +6051,9 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
                 onClick={() => setItemPickerOpen((open) => !open)}
               >
                 <span className={selectedItem ? "text-stone-900" : "text-stone-500"}>
-                  {selectedItem ? `${selectedItem.name} (${selectedItem.stock ?? selectedItem.quantity ?? 0}${selectedItem.unit} available)` : "Select item..."}
+                  {selectedItem
+                    ? `${selectedItem.name} (${convertBaseQuantityToDisplay(selectedItem.stock ?? selectedItem.quantity ?? 0, getInventoryDisplayUnit(selectedItem))} ${getInventoryDisplayUnit(selectedItem)} available)`
+                    : "Select item..."}
                 </span>
                 <span aria-hidden="true">⌄</span>
               </button>
@@ -5952,6 +6073,7 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
                     {matchingItems.length > 0 ? matchingItems.map((material) => {
                       const isLocal = localItems.find(i => i.id === material.id);
                       const qty = isLocal ? material.quantity : material.stock;
+                      const displayUnit = getInventoryDisplayUnit(material);
                       return (
                         <button
                           key={material.id}
@@ -5965,7 +6087,7 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
                             setItemSearch("");
                           }}
                         >
-                          {material.name} ({qty}{material.unit} available)
+                          {material.name} ({convertBaseQuantityToDisplay(qty, displayUnit)} {displayUnit} available)
                         </button>
                       );
                     }) : (
@@ -5976,14 +6098,14 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
               )}
             </div>
             <input required className="field bg-stone-50" type="number" min="0" step="any" placeholder="Quantity to add" value={quantity} onChange={(event) => setQuantity(event.target.value)} />
-            <input className="field bg-stone-50" type="number" min="0" step="any" placeholder="Purchase Price (optional)" value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} />
+            <input className="field bg-stone-50" type="number" min="0" step="any" placeholder="Purchase Price" value={purchasePrice} onChange={(event) => setPurchasePrice(event.target.value)} />
             <textarea className="field min-h-20 resize-none bg-stone-50" placeholder="Note (optional)" value={note} onChange={(event) => setNote(event.target.value)} />
             {message && (
               <p className={`text-sm font-bold ${messageType === "error" ? "text-red-700" : "text-emerald-700"}`}>
                 {message}
               </p>
             )}
-            <button disabled={saving} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Add to stock"}</button>
+            <button disabled={saving || !quantity || Number(quantity) <= 0 || !purchasePrice || Number(purchasePrice) <= 0} className="w-full rounded-full bg-black px-5 py-4 font-black text-white disabled:cursor-not-allowed disabled:bg-stone-400">{saving ? "Saving..." : "Add to stock"}</button>
           </div>
         </form>
       )}
