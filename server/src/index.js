@@ -1109,6 +1109,16 @@ app.delete("/api/inventory/:id", requireAdmin, async (req, res, next) => {
   }
 });
 
+app.delete("/api/inventory/:id/permanent", requireAdmin, async (req, res, next) => {
+  try {
+    const deleted = await store.permanentlyDeleteRawMaterial(req.params.id, req.query);
+    if (!deleted) return res.status(404).json({ message: "Inventory item not found." });
+    return res.json({ success: true, id: req.params.id });
+  } catch (error) {
+    next(error);
+  }
+});
+
 app.patch("/api/inventory/:id/restore", requireAdmin, async (req, res, next) => {
   try {
     const item = await store.restoreRawMaterial(req.params.id, req.query);

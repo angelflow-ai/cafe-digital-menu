@@ -4152,14 +4152,13 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
     if (loadPromiseRef.current) return loadPromiseRef.current;
     loadPromiseRef.current = (async () => {
     try {
-      const [freshOrders, freshInventory, allInventoryData, categoryData, itemData, deletedCategoryData, deletedItemData, cocData, recipeData, reportData] = await Promise.all([
+      const [freshOrders, freshInventory, allInventoryData, categoryData, allItemData, deletedCategoryData, cocData, recipeData, reportData] = await Promise.all([
         orderService.listOrders("limit=500&outletId=all&outletSlug=all").catch(() => sync.getOrdersFromStorage()),
         inventoryStore.loadInventory("outletId=all&outletSlug=all").catch(() => sync.getInventoryFromStorage()),
         inventoryService.getInventoryItems({ includeDeleted: true, outletId: "all", outletSlug: "all" }).catch(() => []),
         menuService.getCategories().catch(() => []),
-        menuService.getMenu({ includeInactive: true }).catch(() => []),
-        menuService.getCategories({ includeDeleted: true }).catch(() => []),
         menuService.getMenu({ includeInactive: true, includeDeleted: true }).catch(() => []),
+        menuService.getCategories({ includeDeleted: true }).catch(() => []),
         orderService.listCocRequests("outletId=all&outletSlug=all").catch(() => []),
         menuService.getRecipes("outletId=all&outletSlug=all").catch(() => []),
         menuService.getReports("outletId=all&outletSlug=all").catch(() => ({}))
@@ -4169,6 +4168,8 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
       const safeAllInventory = Array.isArray(allInventoryData) ? allInventoryData : [];
       try { sync.saveOrders(safeOrders); } catch (error) {}
       try { sync.saveInventory(safeInventory); } catch (error) {}
+      const itemData = (allItemData || []).filter(item => item?.isDeleted !== true);
+      const deletedItemData = allItemData;
       const safeCategories = normalizeOwnerCategories(categoryData);
       const safeItems = normalizeOwnerMenuItems(itemData, safeCategories);
       setCategories(safeCategories);
@@ -4342,6 +4343,12 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
       } else if (action.type === "permanent-inventory") {
         const nextItems = loadLocalInventoryItems().filter((item) => item.id !== action.id);
         saveLocalInventoryItems(nextItems);
+        try {
+          await inventoryService.permanentlyDeleteInventoryItem(action.id);
+        } catch (error) {
+          console.error("Server-side permanent delete failed (item may be local-only):", error);
+        }
+        dispatchOwnerDataUpdated({ source: "inventoryPermanentlyDeleted", id: action.id });
       }
       setEditingItem(null);
       load();
