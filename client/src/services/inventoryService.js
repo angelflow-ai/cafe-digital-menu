@@ -19,6 +19,10 @@ export async function deleteInventoryItem(id) {
   return api(`/inventory/${id}`, { method: "DELETE" });
 }
 
+export async function permanentlyDeleteInventoryItem(id) {
+  return api(`/inventory/${id}/permanent`, { method: "DELETE" });
+}
+
 export async function restoreInventoryItem(id) {
   return api(`/inventory/${id}/restore`, { method: "PATCH" });
 }
@@ -37,6 +41,7 @@ export default {
   createInventoryItem,
   updateInventoryItem,
   deleteInventoryItem,
+  permanentlyDeleteInventoryItem,
   restoreInventoryItem,
   purchaseInventory,
   getInventoryHistory

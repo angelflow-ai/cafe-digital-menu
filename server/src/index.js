@@ -768,7 +768,7 @@ app.use((req, _res, next) => {
 });
 
 app.post("/api/uploads", requireAdmin, (req, res, next) => {
-  upload.single("photo")(req, res, (error) => {
+  imageUpload.single("photo")(req, res, (error) => {
     if (error) return next(error);
     if (!req.file) return res.status(400).json({ message: "Please choose an image file to upload." });
     return res.json({ url: `/uploads/${req.file.filename}` });
@@ -1104,6 +1104,16 @@ app.delete("/api/inventory/:id", requireAdmin, async (req, res, next) => {
     const item = await store.deleteRawMaterial(req.params.id, req.query);
     if (!item) return res.status(404).json({ message: "Inventory item not found." });
     return res.json(item);
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete("/api/inventory/:id/permanent", requireAdmin, async (req, res, next) => {
+  try {
+    const deleted = await store.permanentlyDeleteRawMaterial(req.params.id, req.query);
+    if (!deleted) return res.status(404).json({ message: "Inventory item not found." });
+    return res.json({ success: true, id: req.params.id });
   } catch (error) {
     next(error);
   }

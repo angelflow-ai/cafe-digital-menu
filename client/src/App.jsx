@@ -3180,13 +3180,13 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, s
     setSubmitting(true);
     setError("");
 
-    if (!isStaffFamilyCustomer && !isValidName(customerName)) {
+    if (!isStaffFamilyCustomer && customerName.trim() !== "" && !isValidName(customerName)) {
       setError("Name should contain only letters and spaces.");
       setSubmitting(false);
       return;
     }
 
-    if (!isStaffFamilyCustomer && !isValidPhone(phone)) {
+    if (!isStaffFamilyCustomer && phone.trim() !== "" && !isValidPhone(phone)) {
       setError("Phone number must be exactly 10 digits.");
       setSubmitting(false);
       return;
@@ -3279,14 +3279,12 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, s
               </div>
             )}
             <input
-              required
               value={customerName}
               onChange={(event) => setCustomerName(event.target.value.replace(/[^A-Za-z ]/g, ""))}
               placeholder="Name"
               className="field py-3"
             />
             <input
-              required={!isStaffFamilyCustomer}
               value={phone}
               onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 10))}
               placeholder="Phone"
@@ -4342,6 +4340,12 @@ function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletS
       } else if (action.type === "permanent-inventory") {
         const nextItems = loadLocalInventoryItems().filter((item) => item.id !== action.id);
         saveLocalInventoryItems(nextItems);
+        try {
+          await inventoryService.permanentlyDeleteInventoryItem(action.id);
+        } catch (error) {
+          console.error("Server-side permanent delete failed (item may be local-only):", error);
+        }
+        dispatchOwnerDataUpdated({ source: "inventoryPermanentlyDeleted", id: action.id });
       }
       setEditingItem(null);
       load();
@@ -7529,8 +7533,8 @@ function PosBilling({ items, categories, onSaved }) {
 
     if (paymentMethod === "online") {
       setPendingPaymentData({
-        customerName: details.customerName || "OOC Customer",
-        phone: details.phone || "0000000000",
+        customerName: details.customerName || "Guest",
+        phone: details.phone || "",
         tableNumber: details.tableNumber || "OOC",
         orderId: generateOrderId(),
         items: cart.map((line) => ({ itemId: line.itemId, sizeId: line.sizeId, quantity: line.quantity, serveType: line.serveType, unitPrice: line.unitPrice, basePrice: line.basePrice, lineTotal: line.lineTotal, name: line.name, addons: line.addons })),
@@ -7542,8 +7546,8 @@ function PosBilling({ items, categories, onSaved }) {
     }
 
     const payload = {
-      customerName: details.customerName || "OOC Customer",
-      phone: details.phone || "0000000000",
+      customerName: details.customerName || "Guest",
+      phone: details.phone || "",
       tableNumber: details.tableNumber || "OOC",
       paymentMethod: paymentMethod === "pending_payment" ? "pending" : paymentMethod,
       ...(paymentMethod === "pending_payment" ? { paymentStatus: "pending" } : {}),

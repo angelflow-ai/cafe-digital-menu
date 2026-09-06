@@ -159,8 +159,8 @@ const orderSchema = new mongoose.Schema(
   {
     outletId: outletReference,
     orderId: { type: String, required: true, unique: true },
-    customerName: { type: String, required: true },
-    phone: { type: String, required: true },
+    customerName: { type: String, default: "Guest" },
+    phone: { type: String, default: "" },
     tableNumber: { type: String, required: true },
     tableNo: { type: String, required: true },
     paymentMethod: { type: String, enum: ["online", "cash", "pending", "UPI_STATIC_QR", "UPI_INTENT_OR_STATIC_QR"], required: true },
@@ -1846,6 +1846,20 @@ export const store = {
     }
     return { modifiedCount: 0 };
   },
+  async permanentlyDeleteRawMaterial(id, query = {}) {
+    const outletId = await resolveCollectionOutletScope("inventory", query);
+    if (usingMongo()) {
+      const existing = await findRawMaterialById(id, outletId);
+      if (!existing || existing.isDeleted !== true) return null;
+      const result = await RawMaterial.deleteOne({ _id: existing._id });
+      return result.deletedCount > 0 ? existing : null;
+    }
+    const index = memory.rawMaterials.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
+    if (index < 0 || memory.rawMaterials[index]?.isDeleted !== true) return null;
+    const [deleted] = memory.rawMaterials.splice(index, 1);
+    savePersistedMemory(memory);
+    return deleted || null;
+  },
   async restoreRawMaterial(id, query = {}) {
     const outletId = await resolveCollectionOutletScope("inventory", query);
     if (usingMongo()) {
@@ -2457,7 +2471,7 @@ async function buildOrder(payload) {
     ...(payload.outletId ? { outletId: payload.outletId } : {}),
     orderId: payload.orderId,
     customerName: payload.customerName || "Guest",
-    phone: payload.phone || "Not provided",
+    phone: payload.phone || "",
     tableNumber: String(payload.tableNumber),
     tableNo: String(payload.tableNumber),
     paymentMethod: payload.paymentMethod,
