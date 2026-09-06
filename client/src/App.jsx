@@ -1759,7 +1759,7 @@ function ItemForm({ categories, editingItem, onCancelEdit, onSaved }) {
         {form.image ? (
           <div className="rounded-2xl border border-stone-200 bg-white p-3">
             <p className="text-xs font-bold text-stone-500">Photo preview</p>
-            <img src={imageUrl(form.image, editingItem?.updatedAt || editingItem?.imageUpdatedAt)} alt="Item preview" className="mt-2 h-36 w-full rounded-xl object-cover" />
+            <img src={imageUrl(form.image, editingItem?.updatedAt || editingItem?.imageUpdatedAt)} alt="Item preview" className="mt-2 h-36 w-full rounded-xl object-cover" loading="lazy" decoding="async" />
           </div>
         ) : null}
         <textarea className="field min-h-24 resize-none bg-stone-50" placeholder="Description" value={form.description} onChange={(event) => setForm({ ...form, description: event.target.value })} />
@@ -2757,7 +2757,7 @@ function DetailModal({ item, onClose, onAdd }) {
             {showCigaretteFallback ? (
               <div className="grid h-[180px] w-full place-items-center rounded-[28px] bg-transparent text-[3rem] text-rose-700 shadow-sm ring-1 ring-white/20">🚬</div>
             ) : (
-              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image !h-[170px]" onError={handleMenuImageError} />
+              <img src={imageUrl(item.image, item.updatedAt || item.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt={item.name} className="detail-image !h-[170px]" onError={handleMenuImageError} loading="lazy" decoding="async" />
             )}
           </div>
 
@@ -3221,7 +3221,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, s
             return (
               <div key={safeLine.key || `${safeName}-${Math.random()}`} className="flex gap-3 rounded-3xl bg-white/65 p-2.5">
                 {hasImage ? (
-                  <img src={imageUrl(safeLine.image, safeLine.updatedAt || safeLine.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt="" className="h-16 w-16 rounded-2xl object-cover" onError={handleMenuImageError} />
+                  <img src={imageUrl(safeLine.image, safeLine.updatedAt || safeLine.imageUpdatedAt) || imageUrl(DEFAULT_MENU_IMAGE)} alt="" className="h-16 w-16 rounded-2xl object-cover" onError={handleMenuImageError} loading="lazy" decoding="async" />
                 ) : (
                   <div className={`grid h-16 w-16 place-items-center rounded-2xl text-2xl shadow-sm ring-1 ${safeCategory.includes("cigarette") || safeName.toLowerCase().includes("cigarette") ? "bg-rose-100/90 text-rose-700 ring-rose-200" : safeCategory.includes("water") || safeName.toLowerCase().includes("water bottle") ? "bg-blue-100/90 text-blue-700 ring-blue-200" : "bg-stone-100/90 text-stone-700 ring-stone-200"}`}>
                     {fallbackIcon}
@@ -3499,21 +3499,21 @@ function BillerApp({ navigate }) {
     loadPromiseRef.current = (async () => {
     try {
       setLoadError("");
-      const [cocResult, itemResult, categoryResult] = await Promise.allSettled([
+      const [cocResult, itemResult, categoryResult, ordersResult] = await Promise.allSettled([
         orderService.listCocRequests(),
         menuService.getMenu({ includeInactive: true }),
-        menuService.getCategories()
+        menuService.getCategories(),
+        orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected").catch(() => sync.getOrdersFromStorage())
       ]);
 
       const cocData = cocResult.status === "fulfilled" ? cocResult.value : [];
       const itemData = itemResult.status === "fulfilled" ? itemResult.value : [];
       const categoryData = categoryResult.status === "fulfilled" ? categoryResult.value : defaultCategories;
+      const freshOrders = ordersResult.status === "fulfilled" ? ordersResult.value : [];
 
       if (cocResult.status === "rejected") {
         setLoadError("COC requests could not be loaded. Live orders are still available.");
       }
-
-      const freshOrders = await orderService.listOrders("limit=100&status=new,pending,pending_verification,confirmed,preparing,ready,payment_rejected,payment_issue,rejected").catch(() => sync.getOrdersFromStorage());
       const safeCategories = ensureActiveCategories(categoryData);
       const safeItems = ensureActiveMenuItems(itemData, safeCategories);
       setOrders(Array.isArray(freshOrders) ? freshOrders : []);
