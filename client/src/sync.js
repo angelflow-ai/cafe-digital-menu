@@ -1,5 +1,22 @@
 const INVENTORY_KEY = "infusion-inventory";
 const IS_DEV = import.meta.env.DEV;
+const STORAGE_WRITE_DELAY = 500;
+const pendingOrderWrites = new Map();
+const pendingInventoryWrites = new Map();
+
+function scheduleStorageWrite(pendingWrites, key, value) {
+  const pending = pendingWrites.get(key);
+  if (pending) clearTimeout(pending.timer);
+
+  const timer = setTimeout(() => {
+    pendingWrites.delete(key);
+    try {
+      localStorage.setItem(key, JSON.stringify(value || []));
+    } catch (e) {}
+  }, STORAGE_WRITE_DELAY);
+
+  pendingWrites.set(key, { timer });
+}
 
 export function getOrdersKey() {
   try {
@@ -12,9 +29,8 @@ export function getOrdersKey() {
 }
 
 export function saveOrders(orders) {
-  try {
-    localStorage.setItem(getOrdersKey(), JSON.stringify(orders || []));
-  } catch (e) {}
+  const key = getOrdersKey();
+  scheduleStorageWrite(pendingOrderWrites, key, orders);
   try {
     window.dispatchEvent(new CustomEvent("ordersUpdated", { detail: orders }));
   } catch (e) {}
@@ -31,10 +47,10 @@ export function getOrdersFromStorage() {
 
 
 export function saveInventory(inventory) {
+  scheduleStorageWrite(pendingInventoryWrites, INVENTORY_KEY, inventory);
   try {
-    localStorage.setItem(INVENTORY_KEY, JSON.stringify(inventory || []));
+    window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: inventory }));
   } catch (e) {}
-  try { window.dispatchEvent(new CustomEvent("inventoryUpdated", { detail: inventory })); } catch (e) {}
   if (IS_DEV) {
     try { console.log("Inventory saved and event dispatched", inventory); } catch (e) {}
   }
