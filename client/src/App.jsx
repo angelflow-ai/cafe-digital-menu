@@ -8,7 +8,7 @@ const STAFF_FAMILY_NAMES = [
   "Sonu",
   "Didi"
 ];
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   CakeSlice,
@@ -3507,7 +3507,7 @@ function BillerApp({ navigate }) {
     }
   }, [availableOutlets, currentOutlet, selectOutlet]);
 
-  async function load() {
+  const load = useCallback(async () => {
     if (loadPromiseRef.current) return loadPromiseRef.current;
     loadPromiseRef.current = (async () => {
     try {
@@ -3569,7 +3569,7 @@ function BillerApp({ navigate }) {
     } finally {
       loadPromiseRef.current = null;
     }
-  }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -5812,7 +5812,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
   );
 }
 
-function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutletId, outlets = [] }) {
+const AddStockPage = React.memo(function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutletId, outlets = [] }) {
   const [localItems, setLocalItems] = useState([]);
   const [selectedId, setSelectedId] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -6131,7 +6131,7 @@ function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutle
       )}
     </section>
   );
-}
+});
 
 function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFilter, activeOutletId }) {
   const recipeItems = useMemo(() => (Array.isArray(items) ? items.filter((item) => !isPackagedMenuItem(item)) : []), [items]);
