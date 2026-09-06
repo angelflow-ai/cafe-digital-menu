@@ -198,6 +198,22 @@ const rawMaterialSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const permanentlyDeletedItemSchema = new mongoose.Schema({
+  collectionName: { type: String, required: true },
+  itemId: { type: String, required: true },
+  deletedAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+permanentlyDeletedItemSchema.index(
+  { collectionName: 1, itemId: 1 },
+  { unique: true }
+);
+
+const PermanentlyDeletedItem = mongoose.model(
+  "PermanentlyDeletedItem",
+  permanentlyDeletedItemSchema
+);
+
 const recipeIngredientSchema = new mongoose.Schema(
   {
     rawMaterialId: { type: String, required: true },
@@ -1359,13 +1375,22 @@ export async function seedDatabase() {
   const existingRawMaterials = await RawMaterial.find({}, { id: 1, name: 1, _id: 1 }).lean();
   const existingIds = new Set(existingRawMaterials.map((item) => String(item.id || "").trim().toLowerCase()));
   const existingNames = new Set(existingRawMaterials.map((item) => String(item.name || "").trim().toLowerCase()));
+  const deletedRegistry = await PermanentlyDeletedItem.find(
+    { collectionName: "rawMaterials" },
+    { itemId: 1 }
+  ).lean();
+  const deletedIds = new Set(deletedRegistry.map((item) => item.itemId));
   const existingRecipes = await Recipe.find({}, { id: 1, itemId: 1, _id: 1 }).lean();
   const existingRecipeKeys = new Set(existingRecipes.flatMap((item) => [String(item.id || "").trim().toLowerCase(), String(item.itemId || "").trim().toLowerCase()]));
 
   const materialsToInsert = seedRawMaterials.filter((item) => {
     const normalizedId = String(item.id || "").trim().toLowerCase();
     const normalizedName = String(item.name || "").trim().toLowerCase();
-    return !(existingIds.has(normalizedId) || existingNames.has(normalizedName));
+    return !(
+      existingIds.has(normalizedId) ||
+      existingNames.has(normalizedName) ||
+      deletedIds.has(normalizedId)
+    );
   }).map((item) => ({
     ...item,
     id: String(item.id || item.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-"),
@@ -1852,6 +1877,12 @@ export const store = {
       const existing = await findRawMaterialById(id, outletId);
       if (!existing || existing.isDeleted !== true) return null;
       const result = await RawMaterial.deleteOne({ _id: existing._id });
+      if (result.deletedCount > 0) {
+        await PermanentlyDeletedItem.create({
+          collectionName: "rawMaterials",
+          itemId: id
+        }).catch(() => {});
+      }
       return result.deletedCount > 0 ? existing : null;
     }
     const index = memory.rawMaterials.findIndex((item) => item.id === id && matchesOutlet(item, outletId));
