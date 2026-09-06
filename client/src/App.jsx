@@ -2332,14 +2332,34 @@ function OrderTracking({ orderId }) {
   useEffect(() => {
     let mounted = true;
     let attempts = 0;
-    const MAX_RETRIES = 15; // 15 retries * 3000ms = 45 seconds max wait
-    const RETRY_INTERVAL = 3000;
+    const POLL_START_INTERVAL = 2500;
+    const POLL_MAX_INTERVAL = 10000;
+    const POLL_MAX_DURATION = 5 * 60 * 1000;
+    const pollingStartedAt = Date.now();
+    let pollTimer = null;
+    let nextPollInterval = POLL_START_INTERVAL;
+
     const markFailedAttempt = () => {
       attempts += 1;
       setRetryCount(attempts);
-      if (attempts >= MAX_RETRIES) {
+    };
+
+    const scheduleNextPoll = () => {
+      const remainingTime = POLL_MAX_DURATION - (Date.now() - pollingStartedAt);
+
+      if (remainingTime <= 0) {
         setNotFound(true);
+        return;
       }
+
+      pollTimer = setTimeout(async () => {
+        if (!mounted) return;
+        await load();
+        if (!mounted) return;
+
+        nextPollInterval = Math.min(nextPollInterval * 2, POLL_MAX_INTERVAL);
+        scheduleNextPoll();
+      }, Math.min(nextPollInterval, remainingTime));
     };
 
     async function load() {
@@ -2380,18 +2400,11 @@ function OrderTracking({ orderId }) {
       }
     }
 
-    load();
-    const timer = setInterval(() => {
-      if (attempts >= MAX_RETRIES) {
-        clearInterval(timer);
-        return;
-      }
-      load();
-    }, RETRY_INTERVAL);
+    load().then(scheduleNextPoll);
 
     return () => {
       mounted = false;
-      clearInterval(timer);
+      if (pollTimer) clearTimeout(pollTimer);
     };
   }, [orderId]);
 
