@@ -1045,10 +1045,10 @@ function CustomerApp({ navigate, route, counterMode = false }) {
     setCartOpen(true);
   }
 
-  function closeCart() {
+  const closeCart = useCallback(() => {
     setCartOpen(false);
     setOrderOnCounter(false);
-  }
+  }, []);
 
   useEffect(() => {
     const pendingCocOrder = readPendingCocOrder();
@@ -1314,9 +1314,9 @@ function CustomerApp({ navigate, route, counterMode = false }) {
     setCart((current) => addCartItem(current, item, sizeId, quantity, serveType, options));
   }
 
-  function handleUpdateQuantity(key, delta) {
+  const handleUpdateQuantity = useCallback((key, delta) => {
     setCart((current) => updateCartQuantity(current, key, delta));
-  }
+  }, []);
 
   function handleAddQuickAccessWaterBottle(quantity = 1) {
     const waterBottleItem = findQuickAccessMenuItem(items, "Water Bottle", "water-bottles", categoryMap);
@@ -1357,7 +1357,7 @@ function CustomerApp({ navigate, route, counterMode = false }) {
     setCigarettesModalOpen(false);
   }
 
-  async function placeOrder(customer) {
+  const placeOrder = useCallback(async (customer) => {
     const outletId = activeOutlet?._id || activeOutlet?.id;
     const outletSlug = activeOutlet?.slug;
 
@@ -1438,7 +1438,7 @@ function CustomerApp({ navigate, route, counterMode = false }) {
     setCartOpen(false);
     setOrderPlaced(order);
     try { await ordersStore.loadOrders(); } catch (error) {}
-  }
+  }, [activeOutlet, cart, cartTotals]);
 
   async function handleIHavePaid() {
     if (!pendingPaymentData) return;
@@ -3156,7 +3156,7 @@ function getCartFallbackIcon(line) {
   return <span className="text-[1.15rem] leading-none" aria-hidden="true">🍽️</span>;
 }
 
-function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false }) {
+const CartDrawer = React.memo(function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false }) {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [tableNumber, setTableNumber] = useState(() => {
@@ -3386,7 +3386,7 @@ function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, s
       </aside>
     </div>
   );
-}
+});
 
 function OrderSuccess({ order, onClose, showFallbackAction = false, onFallbackAction }) {
   const isPendingApproval = Boolean(order?.pendingApproval);
@@ -5339,7 +5339,7 @@ function CocAdmin({ cocRequests, onSaved }) {
   );
 }
 
-function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChanged, selectedOutletFilter, activeOutletId, outlets = [] }) {
+const InventoryAdmin = React.memo(function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChanged, selectedOutletFilter, activeOutletId, outlets = [] }) {
   const [inventoryItems, setInventoryItems] = useState([]);
 
   function normalizeServerInventoryItem(item) {
@@ -5808,7 +5808,7 @@ function InventoryAdmin({ rawMaterials, recipes = [], onSaved, onInventoryChange
       />
     </section>
   );
-}
+});
 
 const AddStockPage = React.memo(function AddStockPage({ rawMaterials, onSaved, selectedOutletFilter, activeOutletId, outlets = [] }) {
   const [localItems, setLocalItems] = useState([]);
@@ -6131,7 +6131,7 @@ const AddStockPage = React.memo(function AddStockPage({ rawMaterials, onSaved, s
   );
 });
 
-function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFilter, activeOutletId }) {
+const RecipeMapping = React.memo(function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFilter, activeOutletId }) {
   const recipeItems = useMemo(() => (Array.isArray(items) ? items.filter((item) => !isPackagedMenuItem(item)) : []), [items]);
   const [selectedItemId, setSelectedItemId] = useState(recipeItems[0]?.id || "");
   const [ingredients, setIngredients] = useState([{ rawMaterialId: "", amount: "", unit: "g", serveType: "" }]);
@@ -6439,7 +6439,7 @@ function RecipeMapping({ items, rawMaterials, recipes, onSaved, selectedOutletFi
       </div>
     </section>
   );
-}
+});
 
 function LowStockAlerts({ rawMaterials, localInventoryItems = [] }) {
   const allMaterials = [...(rawMaterials || []), ...(localInventoryItems || [])].filter((material) => !isHiddenInventoryItem(material));
@@ -7488,6 +7488,9 @@ function PosBilling({ items, categories, onSaved }) {
   const [pendingPaymentData, setPendingPaymentData] = useState(null);
   const [waterBottleModalOpen, setWaterBottleModalOpen] = useState(false);
   const [cigarettesModalOpen, setCigarettesModalOpen] = useState(false);
+  const closeCart = useCallback(() => {
+    setCartOpen(false);
+  }, []);
 
   const visibleItems = items.filter((item) => (!query || item.name.toLowerCase().includes(query.toLowerCase())) && (activeCategory === "all" || item.categoryId === activeCategory));
   const liveWaterBottleItem = useMemo(() => findBillerQuickAccessMenuItem(items, "Water Bottle", "water-bottles"), [items]);
@@ -7536,13 +7539,13 @@ function PosBilling({ items, categories, onSaved }) {
     setCigarettesModalOpen(false);
   }
 
-  function handleUpdateQty(key, delta) {
+  const handleUpdateQty = useCallback((key, delta) => {
     setCart((current) => updateCartQuantity(current, key, delta));
-  }
+  }, []);
 
   const total = cartTotals.total;
 
-  async function handleCheckout(details) {
+  const handleCheckout = useCallback(async (details) => {
     const paymentMethod = details.paymentMethod || "cash";
 
     if (paymentMethod === "online") {
@@ -7575,7 +7578,7 @@ function PosBilling({ items, categories, onSaved }) {
     setCart([]);
     setCartOpen(false);
     onSaved();
-  }
+  }, [cart, total, onSaved]);
 
   async function handleIHavePaid() {
     if (!pendingPaymentData) return;
@@ -7657,7 +7660,7 @@ function PosBilling({ items, categories, onSaved }) {
       </div>
       {detail && <DetailModal item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && (
-        <CartDrawer cart={cart} total={total} onClose={() => setCartOpen(false)} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder />
+        <CartDrawer cart={cart} total={total} onClose={closeCart} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder />
       )}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal
