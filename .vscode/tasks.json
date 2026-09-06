@@ -13,6 +13,15 @@
 			"problemMatcher": [
 				"$tsc"
 			]
+		},
+		{
+			"label": "Diff and syntax verify permanent inventory delete",
+			"type": "shell",
+			"command": "git diff -- server/src/index.js server/src/db.js client/src/services/inventoryService.js client/src/App.jsx && echo \"--- NODE CHECK ---\" && node --check server/src/index.js && echo \"index ok\" && node --check server/src/db.js && echo \"db ok\" && node --check client/src/App.jsx && echo \"app ok\"",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "test"
 		}
 	]
 }
