@@ -8,7 +8,7 @@ const STAFF_FAMILY_NAMES = [
   "Sonu",
   "Didi"
 ];
-import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import React, { Suspense, useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { createRoot } from "react-dom/client";
 import {
   CakeSlice,
@@ -67,6 +67,8 @@ import menuService from "./services/menuService";
 import inventoryService from "./services/inventoryService";
 import { PAYMENT_CONFIG } from "./config/paymentConfig";
 import { useOutlet } from "./context/OutletContext";
+
+const Dashboard = React.lazy(() => import("./pages/OwnerDashboard.jsx"));
 
 // Subcategory config persistence helpers
 const SUBCATEGORY_CONFIG_KEY = "subCategories";
@@ -3449,7 +3451,11 @@ function OwnerApp({ navigate, route, outletSlug, initialTab = "items" }) {
 
   if (authLoading) return <OwnerShell><p className="font-bold">Loading...</p></OwnerShell>;
   if (!owner) return <Login role="admin" onLogin={setOwner} navigate={navigate} />;
-  return <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} initialTab={initialTab} urlOutletSlug={outletSlug} />;
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Dashboard owner={owner} onLogout={() => setOwner(null)} navigate={navigate} initialTab={initialTab} urlOutletSlug={outletSlug} />
+    </Suspense>
+  );
 }
 
 function BillerApp({ navigate }) {
@@ -4011,7 +4017,7 @@ function OutletQrManager() {
   );
 }
 
-function Dashboard({ owner, onLogout, navigate, initialTab = "items", urlOutletSlug }) {
+function DashboardImplementation({ owner, onLogout, navigate, initialTab = "items", urlOutletSlug }) {
   const [categories, setCategories] = useState([]);
   const [items, setItems] = useState([]);
   const [deletedCategories, setDeletedCategories] = useState([]);
@@ -7693,4 +7699,53 @@ function QrOrders({ orders, onSaved }) {
 }
 
 export default App;
+
+export {
+  DashboardImplementation,
+  AddStockPage,
+  CategoryAdmin,
+  CompareOutlets,
+  ConfirmDialog,
+  InventoryAdmin,
+  ItemForm,
+  LowStockAlerts,
+  OutletQrManager,
+  RecipeMapping,
+  RecentlyDeletedPanel,
+  ReportsPage,
+  TotalProfitPage,
+  BillerPage,
+  WebsiteManagement,
+  OwnerShell,
+  DEFAULT_OUTLETS,
+  SUBCATEGORY_CONFIG_KEY,
+  DELETED_SUBCATEGORY_CONFIG_KEY,
+  INVENTORY_ITEMS_KEY,
+  normalizeOutletSlug,
+  loadSubcategoryConfig,
+  loadDeletedSubcategoryConfig,
+  normalizeOwnerCategories,
+  normalizeOwnerMenuItems,
+  ensureActiveMenuItems,
+  normalizeLocalInventoryItems,
+  loadLocalInventoryItems,
+  saveLocalInventoryItems,
+  removeLocalInventoryItemsByIds,
+  getInventoryLowStockThreshold,
+  mergeOrderHistoryRecords,
+  restoreDeletedSubcategory,
+  permanentlyDeleteSubcategory,
+  dispatchOwnerDataUpdated,
+  clearDashboardCache,
+  logLoadStats,
+  rupees,
+  orderService,
+  ordersStore,
+  inventoryStore,
+  inventoryService,
+  menuService,
+  authService,
+  sync,
+  useOutlet
+};
 
