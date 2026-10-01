@@ -3156,7 +3156,7 @@ function getCartFallbackIcon(line) {
   return <span className="text-[1.15rem] leading-none" aria-hidden="true">🍽️</span>;
 }
 
-const CartDrawer = React.memo(function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false }) {
+const CartDrawer = React.memo(function CartDrawer({ cart, total, onClose, onQty, onCheckout, orderOnCounter, showStaffFamilyQuickOrder = false, allowGenericPending = false }) {
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
   const [tableNumber, setTableNumber] = useState(() => {
@@ -3375,6 +3375,20 @@ const CartDrawer = React.memo(function CartDrawer({ cart, total, onClose, onQty,
                       className="h-4 w-4 accent-black"
                     />
                     Pending
+                  </label>
+                )}
+                {allowGenericPending && (
+                  <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${paymentMethod === "pending" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="pending"
+                      checked={paymentMethod === "pending"}
+                      onChange={() => setPaymentMethod("pending")}
+                      required
+                      className="h-4 w-4 accent-black"
+                    />
+                    Pending (OOC)
                   </label>
                 )}
               </div>
@@ -7568,6 +7582,7 @@ function PosBilling({ items, categories, onSaved }) {
       tableNumber: details.tableNumber || "OOC",
       paymentMethod: paymentMethod === "pending_payment" ? "pending" : paymentMethod,
       ...(paymentMethod === "pending_payment" ? { paymentStatus: "pending" } : {}),
+      ...(paymentMethod === "pending" ? { paymentStatus: "pending" } : {}),
       orderType: "OOC",
       source: "ooc",
       items: cart.map((line) => ({ itemId: line.itemId, sizeId: line.sizeId, quantity: line.quantity, serveType: line.serveType, unitPrice: line.unitPrice, basePrice: line.basePrice, lineTotal: line.lineTotal, name: line.name, addons: line.addons })),
@@ -7660,7 +7675,7 @@ function PosBilling({ items, categories, onSaved }) {
       </div>
       {detail && <DetailModal item={detail} onClose={() => setDetail(null)} onAdd={handleAddToCart} />}
       {cartOpen && (
-        <CartDrawer cart={cart} total={total} onClose={closeCart} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder />
+        <CartDrawer cart={cart} total={total} onClose={closeCart} onQty={handleUpdateQty} onCheckout={handleCheckout} orderOnCounter={false} showStaffFamilyQuickOrder allowGenericPending />
       )}
       {paymentModalOpen && pendingPaymentData && (
         <PaymentModal
