@@ -27,10 +27,6 @@ export async function restoreInventoryItem(id) {
   return api(`/inventory/${id}/restore`, { method: "PATCH" });
 }
 
-export async function permanentlyDeleteInventoryItem(id) {
-  return api(`/inventory/${id}/permanent`, { method: "DELETE" });
-}
-
 export async function purchaseInventory(id, payload) {
   return api(`/inventory/${id}/purchase`, { method: "POST", body: JSON.stringify(payload) });
 }
