@@ -117,6 +117,14 @@ function cacheOrder(order) {
   }
 }
 
+function toPublicOrder(order) {
+  if (!order || typeof order !== "object") return order;
+  const plain = typeof order.toObject === "function" ? order.toObject() : { ...order };
+  delete plain.editHistory;
+  delete plain.editedBy;
+  return plain;
+}
+
 async function findPublicOrder(identifier) {
   const key = String(identifier || "").trim();
   if (!key) return null;
@@ -189,14 +197,14 @@ app.use("/uploads", express.static(uploadsDir));
 
 const emailTransporter = process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS
   ? nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: Number(process.env.SMTP_PORT || 465),
-      secure: process.env.SMTP_SECURE === "true",
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    })
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 465),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  })
   : null;
 
 const emailFrom = process.env.EMAIL_FROM || process.env.SMTP_FROM || process.env.SMTP_USER || "theinfusionsaga@theinfusionsaga.com";
@@ -577,7 +585,14 @@ app.post("/api/auth/reset-password", async (req, res) => {
   return res.json({ ok: true, message: "Password updated successfully." });
 });
 
-app.get("/api/_debug/orders", async (_req, res, next) => { try { res.json(await store.orders()); } catch (err) { next(err); } });
+app.get("/api/_debug/orders", async (_req, res, next) => {
+  try {
+    const orders = await store.orders();
+    res.json((Array.isArray(orders) ? orders : []).map(toPublicOrder));
+  } catch (err) {
+    next(err);
+  }
+});
 
 app.get("/api/categories", async (_req, res, next) => {
   try {
@@ -928,7 +943,7 @@ app.get("/api/orders/public/:id", async (req, res, next) => {
   try {
     const order = await findPublicOrder(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found." });
-    return res.json(order);
+    return res.json(toPublicOrder(order));
   } catch (error) {
     next(error);
   }
@@ -941,8 +956,8 @@ app.post("/api/orders/public/:id/retry", async (req, res, next) => {
     if (!order) return res.status(404).json({ message: "Order not found." });
     const updated = await store.updateOrder(order._id || order.id, { paymentStatus: "pending_verification", status: "pending" }, { outletId: order.outletId || "all" });
     cacheOrder(updated);
-    res.json(updated);
-    try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }, updated.outletId); } catch (e) {}
+    res.json(toPublicOrder(updated));
+    try { sendSseEvent("order:updated", { id: updated._id || updated.id, orderId: updated.orderId, status: updated.status }, updated.outletId); } catch (e) { }
   } catch (error) {
     next(error);
   }
@@ -1029,7 +1044,7 @@ app.post("/api/coc-requests", async (req, res, next) => {
     res.status(201).json(request);
     try {
       sendSseEvent("coc:created", { id: request.id, createdAt: request.createdAt }, request.outletId);
-    } catch (e) {}
+    } catch (e) { }
   } catch (error) {
     next(error);
   }
@@ -1057,7 +1072,7 @@ app.patch("/api/coc-requests/:id", requireStaff, async (req, res, next) => {
     scheduleOrderReadySms(order);
     try {
       sendSseEvent("order:updated", { id: order._id || order.id, orderId: order.orderId, status: order.status, paymentStatus: order.paymentStatus }, order.outletId);
-    } catch (e) {}
+    } catch (e) { }
   } catch (error) {
     next(error);
   }
@@ -1218,7 +1233,7 @@ app.get("/api/reports", requireAdmin, async (req, res, next) => {
       });
     });
     const topItems = Object.entries(itemCount)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 6)
       .map(([itemId, quantity]) => ({ itemId, quantity }));
     res.json({ totalSales, totalOrders, inventoryValue, lowStockCount: lowStockItems.length, lowStockItems, topItems });
@@ -1259,7 +1274,16 @@ app.get("/api/orders/history", requireAdmin, async (req, res, next) => {
 
 app.patch("/api/orders/:id", requireStaff, async (req, res, next) => {
   try {
-    const order = await store.updateOrder(req.params.id, req.body, req.query);
+    const body = { ...(req.body || {}) };
+    delete body.editHistory;
+    delete body.editedBy;
+    const editedBy = req.authUser?.email || req.session?.user?.email;
+    const order = await store.updateOrder(
+      req.params.id,
+      body,
+      req.query,
+      editedBy ? { editedBy } : {}
+    );
     if (!order) return res.status(404).json({ message: "Order not found." });
     cacheOrder(order);
 

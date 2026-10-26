@@ -155,6 +155,27 @@ const orderItemSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const orderEditChangeSchema = new mongoose.Schema(
+  {
+    itemId: String,
+    name: String,
+    size: String,
+    delta: Number
+  },
+  { _id: false }
+);
+
+const orderEditRevisionSchema = new mongoose.Schema(
+  {
+    at: Date,
+    changes: [orderEditChangeSchema],
+    oldTotal: Number,
+    newTotal: Number,
+    editedBy: String
+  },
+  { _id: false }
+);
+
 const orderSchema = new mongoose.Schema(
   {
     outletId: outletReference,
@@ -175,7 +196,8 @@ const orderSchema = new mongoose.Schema(
     confirmedAt: { type: Date },
     rejectedAt: { type: Date },
     deductionStatus: { type: String, enum: ["pending", "deducted"], default: "pending" },
-    warnings: { type: [String], default: [] }
+    warnings: { type: [String], default: [] },
+    editHistory: { type: [orderEditRevisionSchema] }
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -516,6 +538,108 @@ function shouldDeductInventoryOnCreate(order) {
   const paymentStatus = normalizeSalesStatus(order?.paymentStatus);
   // Only deduct when order is truly finalized: status=completed OR paymentStatus in [paid, verified]
   return status === "completed" || ["paid", "verified"].includes(paymentStatus);
+}
+
+function canEditOrderItems(order) {
+  const status = normalizeSalesStatus(order?.status);
+  if (["confirmed", "preparing", "ready", "completed"].includes(status)) return false;
+  if (String(order?.deductionStatus || "").toLowerCase() === "deducted") return false;
+  return true;
+}
+
+function recalculateOrderItemsAndTotals(items) {
+  const normalizedItems = (Array.isArray(items) ? items : []).map((item) => {
+    const quantity = Math.max(1, Number(item?.quantity ?? item?.qty ?? 1) || 1);
+    const unitPrice = Number(item?.unitPrice ?? item?.price ?? item?.basePrice ?? 0) || 0;
+    const lineTotal = Math.round(unitPrice * quantity);
+    return {
+      ...item,
+      quantity,
+      unitPrice,
+      lineTotal,
+      finalLineTotal: lineTotal
+    };
+  });
+  const total = normalizedItems.reduce((sum, item) => sum + Number(item.lineTotal || 0), 0);
+  return { items: normalizedItems, total, totalAmount: total };
+}
+
+// Mirrors client createCartKey / addCartItem merge key (itemId:sizeId:serveType:addons).
+function orderLineDiffKey(line = {}) {
+  const itemId = String(line.itemId || "").trim();
+  const sizeId = String(line.sizeId || "").trim();
+  const serveType = String(line.serveType || "").trim();
+  const addons = line.addons && typeof line.addons === "object" && !Array.isArray(line.addons)
+    ? line.addons
+    : Array.isArray(line.addOns)
+      ? { selectedAddons: line.addOns }
+      : Array.isArray(line.addons)
+        ? { selectedAddons: line.addons }
+        : {};
+  const selectedAddonIds = Array.isArray(addons?.selectedAddons)
+    ? addons.selectedAddons.map((addon) => String(addon.id || addon.name || "")).filter(Boolean).sort().join(",")
+    : "";
+  const extraFlag = selectedAddonIds ? `addons:${selectedAddonIds}` : addons && addons.extraCheese ? "extraCheese" : "noExtra";
+  return `${itemId}:${sizeId}:${serveType || "default"}:${extraFlag}`;
+}
+
+function computeOrderItemsDiff(oldItems, newItems) {
+  function accumulate(list) {
+    const map = new Map();
+    for (const line of Array.isArray(list) ? list : []) {
+      if (!line?.itemId) continue;
+      const key = orderLineDiffKey(line);
+      const quantity = Number(line.quantity ?? line.qty ?? 0) || 0;
+      const existing = map.get(key);
+      if (existing) {
+        existing.quantity += quantity;
+      } else {
+        map.set(key, {
+          itemId: String(line.itemId || ""),
+          name: String(line.name || line.title || line.itemId || "Item"),
+          size: String(line.sizeName || line.size || line.variant || "").trim(),
+          quantity
+        });
+      }
+    }
+    return map;
+  }
+
+  const oldMap = accumulate(oldItems);
+  const newMap = accumulate(newItems);
+  const keys = new Set([...oldMap.keys(), ...newMap.keys()]);
+  const changes = [];
+  for (const key of keys) {
+    const before = oldMap.get(key);
+    const after = newMap.get(key);
+    const oldQty = before ? before.quantity : 0;
+    const newQty = after ? after.quantity : 0;
+    const delta = newQty - oldQty;
+    if (!delta) continue;
+    const meta = after || before;
+    changes.push({
+      itemId: meta.itemId,
+      name: meta.name,
+      size: meta.size,
+      delta
+    });
+  }
+  return changes;
+}
+
+function matchesOrderIdentity(record, id, updated) {
+  const candidate = String(id || "").trim();
+  const keys = [
+    record?.id,
+    record?.requestId,
+    record?.orderId,
+    record?._id,
+    updated?.id,
+    updated?.requestId,
+    updated?.orderId,
+    updated?._id
+  ].map((value) => String(value || "").trim()).filter(Boolean);
+  return Boolean(candidate && keys.includes(candidate));
 }
 
 export function isCompletedSale(order) {
@@ -2132,13 +2256,16 @@ export const store = {
     }) || null;
   },
   async createOrder(payload) {
-    const outletId = await getExplicitOutletId(payload);
+    const safePayload = { ...payload };
+    delete safePayload.editHistory;
+    delete safePayload.editedBy;
+    const outletId = await getExplicitOutletId(safePayload);
     if (!outletId) {
       throw new Error("Invalid or missing outletId. Orders must be associated with a valid outlet.");
     }
-    const order = await buildOrder({ ...payload, outletId });
-    order.orderType = payload.orderType || payload.type || order.orderType || inferOrderType(payload) || "COC";
-    order.source = payload.source || payload.createdFrom || payload._source || (order.orderType === "OOC" ? "ooc" : order.orderType === "COC" ? "coc" : "qr");
+    const order = await buildOrder({ ...safePayload, outletId });
+    order.orderType = safePayload.orderType || safePayload.type || order.orderType || inferOrderType(safePayload) || "COC";
+    order.source = safePayload.source || safePayload.createdFrom || safePayload._source || (order.orderType === "OOC" ? "ooc" : order.orderType === "COC" ? "coc" : "qr");
     order.orderId = order.orderId || generateOrderId();
     order.deductionStatus = "pending";
     if (shouldDeductInventoryOnCreate(order)) {
@@ -2157,15 +2284,18 @@ export const store = {
   },
   async createCocRequest(payload) {
     // build a COC request with resolved item names, prices, and total so admin sees correct details
-    const outletId = await getExplicitOutletId(payload);
+    const safePayload = { ...payload };
+    delete safePayload.editHistory;
+    delete safePayload.editedBy;
+    const outletId = await getExplicitOutletId(safePayload);
     if (!outletId) {
       throw new Error("Invalid or missing outletId. COC requests must be associated with a valid outlet.");
     }
-    const order = await buildOrder({ ...payload, outletId });
-    order.orderType = payload.orderType || payload.type || order.orderType || inferOrderType(payload) || "COC";
-    order.source = payload.source || payload.createdFrom || payload._source || "coc";
-    order.status = payload.status || "pending";
-    order.paymentStatus = payload.paymentStatus || "pending";
+    const order = await buildOrder({ ...safePayload, outletId });
+    order.orderType = safePayload.orderType || safePayload.type || order.orderType || inferOrderType(safePayload) || "COC";
+    order.source = safePayload.source || safePayload.createdFrom || safePayload._source || "coc";
+    order.status = safePayload.status || "pending";
+    order.paymentStatus = safePayload.paymentStatus || "pending";
     order.orderId = order.orderId || generateOrderId();
     order.deductionStatus = "pending";
 
@@ -2267,23 +2397,85 @@ export const store = {
 
     return null;
   },
-  async updateOrder(id, payload, query = {}) {
+  async updateOrder(id, payload, query = {}, options = {}) {
     const selector = buildOrderLookup(id);
     if (!selector) return null;
+    const cleanPayload = { ...payload };
+    delete cleanPayload.editHistory;
+    delete cleanPayload.editedBy;
+    if (cleanPayload.status !== undefined) cleanPayload.status = normalizeSalesStatus(cleanPayload.status);
+    if (cleanPayload.paymentStatus !== undefined) cleanPayload.paymentStatus = normalizeSalesStatus(cleanPayload.paymentStatus);
+    if (cleanPayload.tableNumber !== undefined) {
+      cleanPayload.tableNumber = String(cleanPayload.tableNumber);
+      cleanPayload.tableNo = cleanPayload.tableNumber;
+    }
+
+    function applyItemEditRules(existing) {
+      if (!Array.isArray(cleanPayload.items)) return;
+      // Inventory may already be deducted after confirm/complete — block item/qty changes.
+      if (existing && !canEditOrderItems(existing)) {
+        delete cleanPayload.items;
+        delete cleanPayload.total;
+        delete cleanPayload.totalAmount;
+        return;
+      }
+      const recalculated = recalculateOrderItemsAndTotals(cleanPayload.items);
+      cleanPayload.items = recalculated.items;
+      cleanPayload.total = recalculated.total;
+      cleanPayload.totalAmount = recalculated.totalAmount;
+    }
+
+    function buildItemRevision(existing) {
+      if (!Array.isArray(cleanPayload.items)) return null;
+      const changes = computeOrderItemsDiff(existing?.items, cleanPayload.items);
+      if (!changes.length) return null;
+      const revision = {
+        at: new Date(),
+        changes,
+        oldTotal: Number(existing?.total ?? existing?.totalAmount ?? 0) || 0,
+        newTotal: Number(cleanPayload.total ?? cleanPayload.totalAmount ?? 0) || 0
+      };
+      if (options?.editedBy) revision.editedBy = String(options.editedBy);
+      return revision;
+    }
+
     if (usingMongo()) {
       const outletId = await getCurrentOutletId(query);
-      const cleanPayload = { ...payload };
-      if (cleanPayload.status !== undefined) cleanPayload.status = normalizeSalesStatus(cleanPayload.status);
-      if (cleanPayload.paymentStatus !== undefined) cleanPayload.paymentStatus = normalizeSalesStatus(cleanPayload.paymentStatus);
       const filter = { ...selector };
       if (outletId) filter.outletId = outletId;
+      const existing = await Order.findOne(filter).lean();
+      if (!existing) return null;
+      applyItemEditRules(existing);
+      const revision = buildItemRevision(existing);
+      if (revision) {
+        return Order.findOneAndUpdate(
+          filter,
+          { $set: cleanPayload, $push: { editHistory: revision } },
+          { new: true }
+        ).lean();
+      }
       return Order.findOneAndUpdate(filter, cleanPayload, { new: true }).lean();
     }
     const outletId = await getCurrentOutletId(query);
-    const index = memory.orders.findIndex((item) => (item.id === id || item.orderId === id || String(item._id || "") === String(id)) && matchesOutlet(item, outletId));
+    const index = memory.orders.findIndex((item) => (
+      item.id === id || item.orderId === id || item.requestId === id || String(item._id || "") === String(id)
+    ) && matchesOutlet(item, outletId));
     if (index < 0) return null;
-    const updated = { ...memory.orders[index], ...payload, updatedAt: new Date().toISOString() };
+    const existingMemory = memory.orders[index];
+    applyItemEditRules(existingMemory);
+    const revision = buildItemRevision(existingMemory);
+    const updated = { ...existingMemory, ...cleanPayload, updatedAt: new Date().toISOString() };
+    delete updated.editedBy;
+    if (revision) {
+      updated.editHistory = [...(Array.isArray(existingMemory.editHistory) ? existingMemory.editHistory : []), revision];
+    }
     memory.orders[index] = updated;
+    // Keep memory COC request mirror in sync with the orders record.
+    memory.cocRequests = (memory.cocRequests || []).map((request) => (
+      matchesOrderIdentity(request, id, updated)
+        ? { ...request, ...cleanPayload, updatedAt: updated.updatedAt }
+        : request
+    ));
     savePersistedMemory(memory);
     return updated;
   },

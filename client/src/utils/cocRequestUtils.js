@@ -22,7 +22,8 @@ export function isCocTerminalState(order) {
     "cancelled",
     "completed",
     "failed",
-    "unpaid"
+    "unpaid",
+    "paid"
   ]);
 
   return terminalStatuses.has(status) || terminalStatuses.has(paymentStatus) || terminalStatuses.has(requestStatus);

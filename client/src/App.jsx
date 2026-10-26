@@ -1,4 +1,4 @@
-const STAFF_FAMILY_QUICK_NAMES = ["Ajit Uncle/Aunty", "Sanam", "Nancy"];
+﻿const STAFF_FAMILY_QUICK_NAMES = ["Ajit Uncle/Aunty", "Sanam", "Nancy"];
 const STAFF_FAMILY_NAMES = [
   ...STAFF_FAMILY_QUICK_NAMES,
   "Manish",
@@ -53,11 +53,11 @@ import CustomerMenu from "./components/CustomerMenu";
 import MenuItemCard from "./components/MenuItemCard";
 import AboutCafe from "./pages/AboutCafe";
 import WebsiteManagement from "./components/WebsiteManagement";
-import { addToCart as addCartItem, calculateTotals, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
+import { addToCart as addCartItem, calculateTotals, createCartKey, loadCartFromStorage, parseCartStorageValue, saveCartToStorage, updateQuantity as updateCartQuantity } from "./utils/cartHelpers";
 import { createOrderStatusUpdatePayload, endOfDay, generateOrderId, getBillerOrderClassification, getOrderDate, getOrderSourceLabel, getOrderStatusLabel, isValidSalesOrder, isCompletedSale, normalizeOrder, normalizeStatus, preparePrintableOrder, startOfDay } from "./utils/orderHelpers";
 import { calculateInventoryCostForLine, calculateTodayTotalProfit, isPackagedMenuItem } from "./utils/profitHelpers";
 import { buildUpiString, createQrDataUrl, getPaymentFlowState, getPaymentOutcomeCopy } from "./utils/paymentHelpers";
-import { getCocRequestIdentityKeys, isCocTerminalState, mergeCocRequestEntries as mergeCocRequestEntriesFromHelper, resolveCocRequestId } from "./utils/cocRequestUtils";
+import { getCocRequestIdentityKeys, isCocTerminalState, isMongoObjectId, mergeCocRequestEntries as mergeCocRequestEntriesFromHelper, resolveCocRequestId } from "./utils/cocRequestUtils";
 import { formatOrderItemLine, getAddonEntries, getBasePrice, getAddonDisplay, getAddonEachText, getFinalItemTotal, getOrderTotal, normalizeVisibleSizeLabel } from "./utils/orderDisplayFormatter";
 import { api, API, API_ROOT } from "./services/apiClient";
 import orderService from "./services/orderService";
@@ -3793,6 +3793,7 @@ function BillerApp({ navigate }) {
                     {[
                       { key: "orders", label: "Live Orders" },
                       { key: "coc", label: "COC Requests" },
+                      { key: "oocOrders", label: "Order on Counter" },
                       { key: "verify", label: "Pending Verification" }
                     ].map((tabItem) => (
                       <button
@@ -4835,12 +4836,47 @@ function mergeBillerOrders(orders, cocRequests) {
   });
 }
 
+function isOocOrderRecord(order) {
+  return getOrderSourceLabel(order) === "OOC"
+    || normalizeStatus(order?.orderType || order?.type || "") === "ooc"
+    || normalizeStatus(order?.source || order?.createdFrom || order?._source || "") === "ooc";
+}
+
+function canEditOrderItems(order) {
+  const status = normalizeStatus(order?.status);
+  if (["confirmed", "preparing", "ready", "completed"].includes(status)) return false;
+  if (normalizeStatus(order?.paymentStatus) === "paid") return false;
+  if (String(order?.deductionStatus || "").toLowerCase() === "deducted") return false;
+  return true;
+}
+
+function getOrderTableDisplay(order) {
+  const table = String(order?.tableNumber ?? order?.tableNo ?? order?.table ?? "").trim();
+  return table || "Counter";
+}
+
+function isActiveUnpaidOocOrder(order) {
+  return isOocOrderRecord(order)
+    && normalizeStatus(order?.paymentStatus) !== "paid"
+    && normalizeStatus(order?.status) !== "cancelled";
+}
+
+function resolveOrderPatchId(order) {
+  if (isMongoObjectId(order?._id)) return String(order._id).trim();
+  if (order?.orderId) return String(order.orderId).trim();
+  if (order?.id) return String(order.id).trim();
+  return resolveCocRequestId(order);
+}
+
 function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab = null, onChangeTab, initialTab = null }) {
   const [internalTab, setInternalTab] = useState((activeTab ?? initialTab) || "orders");
   const [seenPendingVerificationCount, setSeenPendingVerificationCount] = useState(0);
   const [hasPendingVerificationAlert, setHasPendingVerificationAlert] = useState(false);
   const [seenCocRequestCount, setSeenCocRequestCount] = useState(0);
   const [hasCocAlert, setHasCocAlert] = useState(false);
+  const [oocOrders, setOocOrders] = useState([]);
+  const [oocOrdersLoading, setOocOrdersLoading] = useState(false);
+  const [oocOrdersError, setOocOrdersError] = useState("");
   const billerTab = activeTab ?? internalTab;
   const firstBillerRender = useRef(true);
 
@@ -4856,6 +4892,33 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
     return (liveOrders || []).filter((order) => getBillerOrderClassification(order).isLiveOrder).length;
   }, [liveOrders]);
   const cocRequestCount = (effectiveCocRequests || []).length;
+  const oocOrderCount = (oocOrders || []).length;
+
+  useEffect(() => {
+    let cancelled = false;
+    setOocOrdersLoading(true);
+    setOocOrdersError("");
+    orderService.listOrders("limit=200")
+      .then((data) => {
+        if (cancelled) return;
+        const filtered = (Array.isArray(data) ? data : [])
+          .filter(isActiveUnpaidOocOrder)
+          .sort((left, right) => {
+            const leftTime = new Date(left?.createdAt || left?.updatedAt || 0).getTime();
+            const rightTime = new Date(right?.createdAt || right?.updatedAt || 0).getTime();
+            return rightTime - leftTime;
+          });
+        setOocOrders(filtered);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setOocOrdersError(error.message || "Failed to load Order on Counter orders.");
+      })
+      .finally(() => {
+        if (!cancelled) setOocOrdersLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [orders, cocRequests]);
 
   useEffect(() => {
     if (firstBillerRender.current) {
@@ -4905,6 +4968,7 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
         {[
           { key: "orders", label: "Live Orders" },
           { key: "coc", label: "COC Requests" },
+          { key: "oocOrders", label: "Order on Counter" },
           { key: "verify", label: "Pending Verification" }
         ].map((t) => (
           <button key={t.key} onClick={() => handleTabChange(t.key)} className={`rounded-full px-4 py-2.5 text-sm font-black ${billerTab === t.key ? "bg-black text-white" : "bg-white"}`}>
@@ -4925,14 +4989,27 @@ function BillerPage({ orders, cocRequests, items, categories, onSaved, activeTab
                   {cocRequestCount}
                 </span>
               )}
+              {t.key === "oocOrders" && oocOrderCount > 0 && (
+                <span className="inline-flex h-6 min-w-[1.5rem] items-center justify-center rounded-full bg-stone-700 px-2 text-[11px] font-black text-white">
+                  {oocOrderCount}
+                </span>
+              )}
             </span>
           </button>
         ))}
       </div>
 
       <div>
-        {billerTab === "orders" && <OrderAdmin orders={liveOrders} onSaved={onSaved} hideWarnings={true} />}
-        {billerTab === "coc" && <CocAdmin cocRequests={effectiveCocRequests} onSaved={onSaved} />}
+        {billerTab === "orders" && <OrderAdmin orders={liveOrders} onSaved={onSaved} hideWarnings={true} menuItems={items} />}
+        {billerTab === "coc" && <CocAdmin cocRequests={effectiveCocRequests} onSaved={onSaved} menuItems={items} />}
+        {billerTab === "oocOrders" && (
+          oocOrdersLoading
+            ? <p className="rounded-[1.5rem] bg-white p-4 font-bold text-stone-500">Loading Order on Counter orders...</p>
+            : <>
+                {oocOrdersError && <div className="mb-2.5 rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-700">Error: {oocOrdersError}</div>}
+                <OrderAdmin orders={oocOrders} onSaved={onSaved} hideWarnings={true} filterLiveOnly={false} menuItems={items} showPaidButton />
+              </>
+        )}
         {billerTab === "pos" && <PosBilling items={items} categories={categories} onSaved={onSaved} />}
         {billerTab === "verify" && <PendingVerification orders={liveOrders} onSaved={onSaved} />}
       </div>
@@ -5056,10 +5133,268 @@ function PendingVerification({ orders, onSaved }) {
 }
 
 
-function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
+function normalizeEditorLineItems(list) {
+  return (Array.isArray(list) ? list : []).map((item) => {
+    const sizeId = item.sizeId || "default";
+    const quantity = Math.max(1, Number(item.quantity || 1) || 1);
+    const unitPrice = Number(item.unitPrice ?? item.price ?? item.basePrice ?? 0) || 0;
+    const lineTotal = Math.round(unitPrice * quantity);
+    return {
+      ...item,
+      key: item.key || createCartKey(item.itemId, sizeId, item.serveType || "", "default", item.addons || {}),
+      itemId: item.itemId,
+      name: item.name || item.title || item.itemId || "Item",
+      sizeId,
+      sizeName: item.sizeName || item.size || "",
+      serveType: item.serveType || "",
+      basePrice: Number(item.basePrice ?? item.originalPrice ?? unitPrice) || unitPrice,
+      unitPrice,
+      quantity,
+      lineTotal,
+      finalLineTotal: lineTotal,
+      addons: item.addons || {}
+    };
+  });
+}
+
+function OrderInlineEditor({ order, onSaved, onClose, menuItems = [] }) {
+  const itemsEditable = canEditOrderItems(order);
+  const [customerName, setCustomerName] = useState(order?.customerName || "");
+  const [tableNumber, setTableNumber] = useState(String(order?.tableNumber ?? order?.table ?? ""));
+  const [notes, setNotes] = useState(order?.notes || order?.note || "");
+  const [items, setItems] = useState(() => normalizeEditorLineItems(order?.items));
+  const [menuQuery, setMenuQuery] = useState("");
+  const [detailItem, setDetailItem] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  function updateItemQuantity(index, delta) {
+    if (!itemsEditable) return;
+    setItems((current) => current.map((item, itemIndex) => {
+      if (itemIndex !== index) return item;
+      const nextQty = Math.max(1, Number(item.quantity || 1) + delta);
+      const unitPrice = Number(item.unitPrice ?? item.price ?? item.basePrice ?? 0) || 0;
+      const lineTotal = Math.round(unitPrice * nextQty);
+      return { ...item, quantity: nextQty, lineTotal, finalLineTotal: lineTotal };
+    }));
+  }
+
+  function removeItem(index) {
+    if (!itemsEditable) return;
+    setItems((current) => (current.length <= 1 ? current : current.filter((_, itemIndex) => itemIndex !== index)));
+  }
+
+  function handleAddMenuItem(item, sizeId, quantity = 1, serveType = "", options = {}) {
+    if (!itemsEditable) return;
+    setItems((current) => addCartItem(current, item, sizeId, quantity, serveType, { ...options, serveTypeFallback: "" }));
+  }
+
+  const searchableMenuItems = (Array.isArray(menuItems) ? menuItems : []).filter((item) => {
+    if (!menuQuery.trim()) return true;
+    return String(item?.name || "").toLowerCase().includes(menuQuery.trim().toLowerCase());
+  }).slice(0, 12);
+
+  async function saveEdits() {
+    const patchId = resolveOrderPatchId(order);
+    if (!patchId) {
+      setError("Missing order id.");
+      return;
+    }
+    if (itemsEditable && items.length === 0) {
+      setError("Order must have at least one item.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const payload = {
+        customerName: customerName.trim() || "Guest",
+        tableNumber: String(tableNumber || "").trim(),
+        notes
+      };
+      if (itemsEditable) {
+        payload.items = items;
+      }
+      await orderService.patchOrder(patchId, payload);
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to update order.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function cancelOrder() {
+    const patchId = resolveOrderPatchId(order);
+    if (!patchId) {
+      setError("Missing order id.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await orderService.patchOrder(patchId, { status: "cancelled" });
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to cancel order.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="mt-3 rounded-[1.25rem] border border-stone-200 bg-stone-50 p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <p className="text-sm font-black">Edit order</p>
+        <button type="button" onClick={onClose} className="rounded-full bg-white px-3 py-1.5 text-xs font-black">Close</button>
+      </div>
+      {error && <div className="mb-2 rounded-xl bg-red-50 p-2 text-xs font-bold text-red-700">{error}</div>}
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="text-xs font-bold text-stone-600">Customer
+          <input className="field mt-1 w-full bg-white" value={customerName} onChange={(event) => setCustomerName(event.target.value)} />
+        </label>
+        <label className="text-xs font-bold text-stone-600">Table
+          <input className="field mt-1 w-full bg-white" value={tableNumber} onChange={(event) => setTableNumber(event.target.value)} />
+        </label>
+        <label className="text-xs font-bold text-stone-600 sm:col-span-2">Notes
+          <input className="field mt-1 w-full bg-white" value={notes} onChange={(event) => setNotes(event.target.value)} />
+        </label>
+      </div>
+      <div className="mt-3 space-y-2">
+        <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-500">
+          Items {itemsEditable ? "" : "— Items locked"}
+        </p>
+        {!itemsEditable && (
+          <p className="text-xs font-semibold text-stone-500">Items locked (order confirmed, paid, or inventory deducted).</p>
+        )}
+        {items.map((item, index) => (
+          <div key={item.key || index} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold">
+            <span>{item.name || item.title || item.itemId || "Item"}</span>
+            <div className="flex items-center gap-2">
+              {itemsEditable ? (
+                <>
+                  <button type="button" onClick={() => updateItemQuantity(index, -1)} className="rounded-full bg-stone-100 px-2 py-1 font-black">-</button>
+                  <span>{item.quantity || 1}</span>
+                  <button type="button" onClick={() => updateItemQuantity(index, 1)} className="rounded-full bg-stone-100 px-2 py-1 font-black">+</button>
+                  <button type="button" onClick={() => removeItem(index)} disabled={items.length <= 1} className="rounded-full bg-rose-50 px-2 py-1 text-xs font-black text-rose-700 disabled:opacity-40">Remove</button>
+                </>
+              ) : (
+                <span>Qty {item.quantity || 1}</span>
+              )}
+            </div>
+          </div>
+        ))}
+        {itemsEditable && (
+          <div className="rounded-xl border border-dashed border-stone-300 bg-white p-3">
+            <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-500">Add menu item</p>
+            <input
+              className="field mt-2 w-full bg-stone-50"
+              placeholder="Search menu"
+              value={menuQuery}
+              onChange={(event) => setMenuQuery(event.target.value)}
+            />
+            <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+              {searchableMenuItems.map((item) => (
+                <button
+                  key={item.id || item._id}
+                  type="button"
+                  onClick={() => setDetailItem(item)}
+                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold text-stone-800 hover:bg-stone-100"
+                >
+                  <span>{item.name}</span>
+                  <span className="text-xs font-black text-stone-500">Add</span>
+                </button>
+              ))}
+              {searchableMenuItems.length === 0 && (
+                <p className="px-1 py-2 text-xs font-semibold text-stone-500">No menu items match.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button type="button" disabled={saving || (itemsEditable && items.length === 0)} onClick={saveEdits} className="rounded-full bg-black px-4 py-2 text-sm font-black text-white disabled:opacity-60">{saving ? "Saving..." : "Save changes"}</button>
+        <button type="button" disabled={saving} onClick={cancelOrder} className="rounded-full bg-rose-100 px-4 py-2 text-sm font-black text-rose-800 disabled:opacity-60">Cancel order</button>
+      </div>
+      {detailItem && (
+        <DetailModal item={detailItem} onClose={() => setDetailItem(null)} onAdd={handleAddMenuItem} />
+      )}
+    </div>
+  );
+}
+
+function PaidPaymentModal({ order, onClose, onSaved }) {
+  const [mode, setMode] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const tableLabel = getOrderTableDisplay(order);
+  const orderLabel = order?.orderId || order?.id || order?._id || "-";
+  const total = Number(order?.total ?? order?.totalAmount ?? order?.grandTotal ?? 0) || 0;
+
+  async function confirmPaid() {
+    if (!mode || saving) return;
+    const patchId = resolveOrderPatchId(order);
+    if (!patchId) {
+      setError("Missing order id.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await orderService.patchOrder(patchId, {
+        paymentStatus: "paid",
+        paymentMethod: mode
+      });
+      onSaved();
+      onClose();
+    } catch (err) {
+      setError(err.message || "Failed to mark order as paid.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.5)" }}>
+      <div className="w-full max-w-md rounded-[1.5rem] bg-white p-5 shadow-lg">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-xl font-black">Mark as Paid</h2>
+            <p className="mt-1 text-sm font-bold text-stone-600">Table {tableLabel} • Order {orderLabel}</p>
+            <p className="mt-1 text-2xl font-black">{rupees(total)}</p>
+          </div>
+          <button type="button" onClick={onClose} className="rounded-full bg-stone-100 px-3 py-2 text-xs font-black">Close</button>
+        </div>
+        <div className="mt-4 space-y-2">
+          <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-500">Payment mode</p>
+          <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${mode === "cash" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+            <input type="radio" name="paidPaymentMode" className="sr-only" checked={mode === "cash"} onChange={() => setMode("cash")} />
+            Cash
+          </label>
+          <label className={`flex cursor-pointer items-center gap-2 rounded-3xl border px-3 py-2.5 text-sm font-semibold transition ${mode === "UPI_INTENT_OR_STATIC_QR" ? "border-black bg-black text-white" : "border-stone-200 bg-white text-stone-800"}`}>
+            <input type="radio" name="paidPaymentMode" className="sr-only" checked={mode === "UPI_INTENT_OR_STATIC_QR"} onChange={() => setMode("UPI_INTENT_OR_STATIC_QR")} />
+            UPI
+          </label>
+        </div>
+        {error && <div className="mt-3 rounded-xl bg-red-50 p-2 text-xs font-bold text-red-700">{error}</div>}
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" disabled={!mode || saving} onClick={confirmPaid} className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white disabled:opacity-60">
+            {saving ? "Saving..." : "Confirm paid"}
+          </button>
+          <button type="button" disabled={saving} onClick={onClose} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black">Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderAdmin({ orders, onSaved, hideWarnings = false, filterLiveOnly = true, menuItems = [], showPaidButton = false }) {
   const [updateError, setUpdateError] = useState("");
   const [updateMessage, setUpdateMessage] = useState("");
   const [printConfig, setPrintConfig] = useState({});
+  const [editingOrderKey, setEditingOrderKey] = useState("");
+  const [paidOrder, setPaidOrder] = useState(null);
 
   async function updateOrderStatus(orderId, newStatus) {
     try {
@@ -5197,19 +5532,23 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
     <section className="space-y-2.5">
       {updateError && <div className="rounded-[1.5rem] bg-red-50 p-4 text-sm font-bold text-red-700">Error: {updateError}</div>}
       {updateMessage && <div className="rounded-[1.5rem] bg-emerald-50 p-4 text-sm font-bold text-emerald-700">{updateMessage}</div>}
-      {((orders || []).filter((o) => isLiveOrderVisible(o))).map((order) => {
+      {((orders || []).filter((o) => (filterLiveOnly ? isLiveOrderVisible(o) : true))).map((order) => {
         const safeOrder = order || {};
+        const orderKey = String(safeOrder._id || safeOrder.id || safeOrder.orderId || "");
         const orderItems = Array.isArray(safeOrder.items) ? safeOrder.items : [];
         const orderWarnings = Array.isArray(safeOrder.warnings) ? safeOrder.warnings : [];
         const sourceLabel = getBillerOrderClassification(safeOrder).sourceBadge;
         const statusValue = STANDARD_ORDER_STATUSES.includes(String(safeOrder.status || "").toLowerCase()) ? String(safeOrder.status || "").toLowerCase() : 'pending';
 
+        const isPaidOrder = normalizeStatus(safeOrder.paymentStatus) === "paid";
+
         return (
-          <article key={safeOrder._id || safeOrder.id} className="rounded-[1.5rem] border-2 border-black bg-white p-4 shadow-sm">
+          <article key={orderKey || safeOrder.orderId} className="rounded-[1.5rem] border-2 border-black bg-white p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black">{safeOrder.customerName || "Customer"}</h2>
-              <p className="text-sm font-bold text-stone-500">Order {safeOrder.orderId || safeOrder.id || safeOrder._id || "-"} • Table {safeOrder.tableNumber ?? safeOrder.table ?? "-"} • {safeOrder.phone || "-"} • {rupees(safeOrder.total || 0)}</p>
+              <h2 className="text-xl font-black">Table {getOrderTableDisplay(safeOrder)}</h2>
+              <p className="text-sm font-bold text-stone-500">{safeOrder.customerName || "Customer"}</p>
+              <p className="text-sm font-bold text-stone-500">Order {safeOrder.orderId || safeOrder.id || safeOrder._id || "-"} • {safeOrder.phone || "-"} • {rupees(safeOrder.total || 0)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {sourceLabel && (
@@ -5217,11 +5556,17 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
                   {sourceLabel}
                 </span>
               )}
-              <select value={statusValue} onChange={(event) => updateOrderStatus(safeOrder._id || safeOrder.id, event.target.value)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black">
+              <select value={statusValue} onChange={(event) => updateOrderStatus(resolveOrderPatchId(safeOrder) || safeOrder._id || safeOrder.id, event.target.value)} className="rounded-full bg-stone-100 px-4 py-2 text-sm font-black">
                 {STANDARD_ORDER_STATUSES.map((status) => (
                   <option key={status} value={status}>{getOrderStatusLabel({ status })}</option>
                 ))}
               </select>
+              <button onClick={() => setEditingOrderKey(editingOrderKey === orderKey ? "" : orderKey)} className="rounded-full bg-white px-4 py-2 text-sm font-black ring-1 ring-stone-200">
+                {editingOrderKey === orderKey ? "Close edit" : "Edit"}
+              </button>
+              {showPaidButton && !isPaidOrder && (
+                <button onClick={() => setPaidOrder(safeOrder)} className="rounded-full bg-emerald-700 px-4 py-2 text-sm font-black text-white">Paid</button>
+              )}
               <button onClick={() => openPreview(safeOrder, 'customer')} className="rounded-full bg-black px-4 py-2 text-sm font-black text-white">Print Customer Bill</button>
               <button onClick={() => openPreview(safeOrder, 'kitchen')} className="rounded-full bg-stone-800 px-4 py-2 text-sm font-black text-white">Print Kitchen Copy</button>
               <button onClick={() => openPreview(safeOrder, 'both')} className="rounded-full bg-stone-600 px-4 py-2 text-sm font-black text-white">Print Both</button>
@@ -5238,10 +5583,25 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
           <div className="mt-3 grid gap-2 text-sm font-semibold text-stone-700">
             {orderItems.map((line, index) => <OrderLineCard key={index} line={line} order={safeOrder} highlightDetails />)}
           </div>
+          {editingOrderKey === orderKey && (
+            <OrderInlineEditor
+              order={safeOrder}
+              onSaved={onSaved}
+              onClose={() => setEditingOrderKey("")}
+              menuItems={menuItems}
+            />
+          )}
         </article>
         );
       })}
       {(orders || []).length === 0 && <p className="rounded-[1.5rem] bg-white p-4 font-bold text-stone-500">No orders yet.</p>}
+      {paidOrder && (
+        <PaidPaymentModal
+          order={paidOrder}
+          onClose={() => setPaidOrder(null)}
+          onSaved={onSaved}
+        />
+      )}
       {/* In-page receipt preview modal for admin */}
       {showPreview && previewOrder && (
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{background:'rgba(0,0,0,0.5)'}}>
@@ -5276,9 +5636,10 @@ function OrderAdmin({ orders, onSaved, hideWarnings = false }) {
   );
 }
 
-function CocAdmin({ cocRequests, onSaved }) {
+function CocAdmin({ cocRequests, onSaved, menuItems = [] }) {
   const [error, setError] = useState("");
   const [isStaff, setIsStaff] = useState(false);
+  const [editingRequestKey, setEditingRequestKey] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -5310,6 +5671,7 @@ function CocAdmin({ cocRequests, onSaved }) {
       {(cocRequests || []).map((req) => {
         const safeRequest = req || {};
         const requestId = resolveCocRequestId(safeRequest);
+        const editKey = String(safeRequest._id || requestId || safeRequest.id || "");
         const requestItems = Array.isArray(safeRequest.items) ? safeRequest.items : [];
         const sourceLabel = getBillerOrderClassification(safeRequest).sourceBadge;
 
@@ -5317,14 +5679,20 @@ function CocAdmin({ cocRequests, onSaved }) {
           <article key={requestId || safeRequest._id || safeRequest.id} className="rounded-[1.5rem] bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <h2 className="text-xl font-black">{safeRequest.customerName || "Customer"} • Table {safeRequest.tableNumber ?? safeRequest.table ?? "-"}</h2>
+              <h2 className="text-xl font-black">Table {getOrderTableDisplay(safeRequest)}</h2>
+              <p className="text-sm font-bold text-stone-500">{safeRequest.customerName || "Customer"}</p>
               <p className="text-sm font-bold text-stone-500">{safeRequest.phone || "-"} • {rupees(safeRequest.total || 0)} • {safeRequest.paymentMethod === 'cash' ? 'Cash on Counter' : 'Online'}</p>
             </div>
-            {sourceLabel && (
-              <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
-                {sourceLabel}
-              </span>
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {sourceLabel && (
+                <span className="rounded-full bg-stone-100 px-2 py-1 text-[11px] font-black uppercase tracking-[0.04em] text-stone-700">
+                  {sourceLabel}
+                </span>
+              )}
+              <button onClick={() => setEditingRequestKey(editingRequestKey === editKey ? "" : editKey)} className="rounded-full bg-white px-4 py-2 text-sm font-black ring-1 ring-stone-200">
+                {editingRequestKey === editKey ? "Close edit" : "Edit"}
+              </button>
+            </div>
           </div>
           <div className="mt-4 border-t border-slate-200/80 pt-4">
             <div className="grid gap-3 text-sm text-stone-700">
@@ -5333,6 +5701,14 @@ function CocAdmin({ cocRequests, onSaved }) {
               ))}
             </div>
           </div>
+          {editingRequestKey === editKey && (
+            <OrderInlineEditor
+              order={safeRequest}
+              onSaved={onSaved}
+              onClose={() => setEditingRequestKey("")}
+              menuItems={menuItems}
+            />
+          )}
           <div className="mt-4 border-t border-slate-200/80 pt-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs uppercase tracking-[0.2em] text-stone-500">Only staff can approve COC requests.</p>
@@ -7237,6 +7613,61 @@ function CompareOutlets({ orders, rawMaterials, recipes, items }) {
   );
 }
 
+function OrderEditHistoryBlock({ editHistory }) {
+  const revisions = useMemo(() => {
+    return [...(Array.isArray(editHistory) ? editHistory : [])].sort((left, right) => {
+      const leftTime = new Date(left?.at || 0).getTime();
+      const rightTime = new Date(right?.at || 0).getTime();
+      return rightTime - leftTime;
+    });
+  }, [editHistory]);
+  const [expanded, setExpanded] = useState(false);
+  if (!revisions.length) return null;
+  const needsCollapse = revisions.length > 2;
+  const visibleRevisions = needsCollapse && !expanded ? revisions.slice(0, 2) : revisions;
+
+  return (
+    <div className="mt-3 border-t border-stone-200 pt-3">
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-stone-500">Item edits</p>
+      <div className="mt-2 space-y-3">
+        {visibleRevisions.map((revision, revisionIndex) => (
+          <div key={`${revision?.at || "rev"}-${revisionIndex}`} className="rounded-xl bg-stone-50 px-3 py-2">
+            <p className="text-[11px] font-semibold text-stone-500">
+              {revision?.at ? formatOrderDateTime(revision.at) : "Unknown time"}
+              {revision?.editedBy ? ` • ${revision.editedBy}` : ""}
+              {" • "}
+              {rupees(revision?.oldTotal || 0)} → {rupees(revision?.newTotal || 0)}
+            </p>
+            <div className="mt-1 space-y-0.5 font-mono text-sm font-semibold">
+              {(Array.isArray(revision?.changes) ? revision.changes : []).map((change, changeIndex) => {
+                const delta = Number(change?.delta || 0);
+                const qty = Math.abs(delta);
+                const sizeLabel = String(change?.size || "").trim();
+                const label = `${change?.name || change?.itemId || "Item"}${sizeLabel ? ` (${sizeLabel})` : ""}`;
+                const isAdd = delta > 0;
+                return (
+                  <p key={changeIndex} className={isAdd ? "text-emerald-700" : "text-rose-700"}>
+                    {isAdd ? "+" : "-"} {label} ×{qty}
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      {needsCollapse && (
+        <button
+          type="button"
+          onClick={() => setExpanded((current) => !current)}
+          className="mt-2 rounded-full bg-white px-3 py-1.5 text-xs font-black ring-1 ring-stone-200"
+        >
+          {expanded ? "Show fewer edits" : `Show all ${revisions.length} edits`}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function OrderHistory({ orders }) {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState("all");
@@ -7450,17 +7881,20 @@ function OrderHistory({ orders }) {
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                     <h3 className="text-lg font-black sm:text-xl">
-                      {order.customerName}
-                      {STAFF_FAMILY_NAMES.includes(String(order.customerName || "").trim()) && (
-                        <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Staff/Family</span>
-                      )}
+                      Table {getOrderTableDisplay(order)}
                     </h3>
                     <span className="rounded-full bg-stone-100 px-2 py-1 text-[10px] font-black text-stone-700 sm:px-3 sm:text-sm">
                       {rupees(order.total ?? order.totalAmount ?? order.grandTotal ?? getOrderTotal(order))}
                     </span>
                   </div>
+                  <p className="mt-1 text-sm font-bold text-stone-600">
+                    {order.customerName || "Customer"}
+                    {STAFF_FAMILY_NAMES.includes(String(order.customerName || "").trim()) && (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">Staff/Family</span>
+                    )}
+                  </p>
                   <p className="mt-1 text-xs text-stone-500">{order.orderId ? `Order ID: ${order.orderId}` : "Order ID unavailable"}</p>
-                  <p className="text-sm text-stone-500">Table {order.tableNumber || order.tableNo || order.table || "-"} • {order.phone}</p>
+                  <p className="text-sm text-stone-500">{order.phone}</p>
                 </div>
                 <div className="shrink-0 flex flex-col items-end gap-2">
                   <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-2">
@@ -7479,6 +7913,9 @@ function OrderHistory({ orders }) {
                   <p key={index}>{formatOrderItemLine(line)}</p>
                 ))}
               </div>
+              {Array.isArray(order.editHistory) && order.editHistory.length > 0 && (
+                <OrderEditHistoryBlock editHistory={order.editHistory} />
+              )}
             </article>
           );
         })
@@ -7506,7 +7943,13 @@ function PosBilling({ items, categories, onSaved }) {
     setCartOpen(false);
   }, []);
 
-  const visibleItems = items.filter((item) => (!query || item.name.toLowerCase().includes(query.toLowerCase())) && (activeCategory === "all" || item.categoryId === activeCategory));
+  const visibleItems = useMemo(() => {
+    const filtered = items.filter((item) => (!query || item.name.toLowerCase().includes(query.toLowerCase())) && (activeCategory === "all" || item.categoryId === activeCategory));
+    const pinnedIndex = filtered.findIndex((item) => String(item?.name || "").trim().toLowerCase() === "signature infusion chai");
+    if (pinnedIndex < 0) return filtered;
+    const pinned = filtered[pinnedIndex];
+    return [pinned, ...filtered.filter((_, index) => index !== pinnedIndex)];
+  }, [items, query, activeCategory]);
   const liveWaterBottleItem = useMemo(() => findBillerQuickAccessMenuItem(items, "Water Bottle", "water-bottles"), [items]);
   const liveCigaretteItems = useMemo(() => getBillerQuickAccessCigaretteItems(items), [items]);
   const cartTotals = useMemo(() => calculateTotals(cart), [cart]);
@@ -7663,9 +8106,14 @@ function PosBilling({ items, categories, onSaved }) {
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {visibleItems.map((item) => (
-            <MenuItemCard key={item.id} item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} isTableOrder />
-          ))}
+          {visibleItems.map((item, index) => {
+            const isPinnedChai = index === 0 && String(item?.name || "").trim().toLowerCase() === "signature infusion chai";
+            return (
+              <div key={item.id} className={isPinnedChai ? "rounded-[1.5rem] bg-stone-50 p-1 ring-1 ring-stone-200" : undefined}>
+                <MenuItemCard item={item} onDetail={() => setDetail(item)} onAdd={handleAddToCart} isTableOrder />
+              </div>
+            );
+          })}
         </div>
       </div>
       <div className="rounded-[1.5rem] bg-stone-50 p-5 shadow-sm">
